@@ -9,7 +9,7 @@ AShooterHUD::AShooterHUD()
 	bShowHUD = false;
 }
 
-void AShooterHUD::BeginPlay()
+void AShooterHUD::Initialize()
 {
 	Combat = Cast<AShooter>(PlayerOwner->GetPawn())->GetCombat();
 }

@@ -15,10 +15,9 @@ class UNREALPLAYGROUND_API AShooterHUD : public AHUD
 public:
 	AShooterHUD();
 	virtual void Tick(float DeltaTime) override;
+	void Initialize();
 
 protected:
-	virtual void BeginPlay() override;
-
 	/** Max ammo that can be stored in this weapon after reloading*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HUD")
 		int MaxAmmoInWeapon;
@@ -39,6 +38,7 @@ protected:
 		uint8 bPlayerHasWeapon : 1;
 
 private:
+
 	/** Combat component attached to player*/
 	UCombatComponent* Combat;
 };

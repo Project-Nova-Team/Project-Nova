@@ -4,11 +4,26 @@
 void AShooterController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
-	//MyHUD->bShowHUD = true;
+
+	if (MyHUD != nullptr)
+	{
+		MyHUD->bShowHUD = true;
+
+		if (!bHUDInit)
+		{
+			bHUDInit = true;
+			AShooterHUD* HUD = Cast<AShooterHUD>(MyHUD);
+			HUD->Initialize();
+		}
+	}
 }
 
 void AShooterController::OnUnPossess()
 {
 	Super::OnUnPossess();
-	//MyHUD->bShowHUD = false;
+
+	if (MyHUD != nullptr)
+	{
+		MyHUD->bShowHUD = false;
+	}
 }
