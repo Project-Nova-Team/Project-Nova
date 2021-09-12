@@ -117,6 +117,9 @@ protected:
 	/** Checks if the shooter is on the ground */
 	virtual bool IsOnGround();
 
+	/** If the current movement base is dynamic, adjust position if it moves*/
+	virtual void HandleBaseMovement() const;
+
 	/** Short hand pointer to the container class with all movement related variables*/
 	UShooterMovementComponent* Movement;
 

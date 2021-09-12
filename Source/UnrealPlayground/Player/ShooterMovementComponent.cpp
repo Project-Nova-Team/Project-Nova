@@ -11,7 +11,7 @@ UShooterMovementComponent::UShooterMovementComponent()
 	InteractionDistance = 300.f;
 
 	MaxSurfaceAngle = 45.f;
-	MaxStepHeight = 5.f;
+	MaxStepHeight = 20.f;
 	StandingHeight = 90.f;
 	CollisionRadius = 30.f;
 
