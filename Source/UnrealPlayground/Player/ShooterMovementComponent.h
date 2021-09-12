@@ -4,12 +4,24 @@
 #include "GameFramework/PawnMovementComponent.h"
 #include "ShooterMovementComponent.generated.h"
 
-/** This component contains values used for gameplay 
-*	Designers can access all the properties from the shooter blueprint and adjust accordingly
-*	USMovementState and its children read these values to perform game logic
-* 
-*	TODO this may be better written as some kind of serialized POD class/struct
-*/
+/** 
+ * This component contains values used for gameplay 
+ * Designers can access all the properties from the shooter blueprint and adjust accordingly
+ * USMovementState and its children read these values to perform game logic
+ */
+
+
+struct FBaseInfo
+{
+	/** The collider we are standing on*/
+	UPrimitiveComponent* BaseObject;
+
+	/** If this base can move and if so should we update position when standing on it*/
+	uint8 bIsDynamic : 1;
+
+	/** Position of the base last tick*/
+	FVector OldLocation;
+};
 
 UCLASS()
 class UNREALPLAYGROUND_API UShooterMovementComponent : public UPawnMovementComponent
@@ -169,6 +181,9 @@ public:
 	//bad var name technically this is the minslopez
 	/** The maximum Z component of the ground impact normal for the player to be grounded */
 	float MaxSlopeZ;
+
+	/** Information regarding the floor we are standing on and whether we should move with it*/
+	FBaseInfo Base;
 
 protected:
 	virtual void BeginPlay() override;

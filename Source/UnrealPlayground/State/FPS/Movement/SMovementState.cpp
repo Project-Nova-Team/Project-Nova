@@ -24,6 +24,7 @@ void USMovementState::OnEnter()
 
 void USMovementState::Tick(const float DeltaTime)
 {
+	HandleBaseMovement();
 	Movement->bIsOnGround = IsOnGround();
 	RotateCameraFromInput(DeltaTime);
 	Movement->CameraRelativeInput = ConvertInputRelativeToCamera();
@@ -253,16 +254,8 @@ void USMovementState::MoveShooter(const FVector DeltaMovement, FHitResult& OutCo
 		CurrentLocation.Z = Movement->GroundHitData.ImpactPoint.Z + HalfHeight + FLOOR_DIST;
 		Collider->SetWorldLocation(CurrentLocation);
 	}
-	
-	if (&OutCollisionResult != nullptr)
-	{
-		Collider->SetWorldLocation(CurrentLocation + DeltaMovement, true, &OutCollisionResult);
-	}
 
-	else
-	{
-		Collider->SetWorldLocation(CurrentLocation + DeltaMovement, true);
-	}
+	Collider->SetWorldLocation(CurrentLocation + DeltaMovement, true, &OutCollisionResult);
 }
 
 FVector USMovementState::CalculateSurfaceMovement(FVector DeltaMovement, const FHitResult SurfaceHit) const
@@ -334,8 +327,8 @@ void USMovementState::CorrectCollision(const float DeltaTime, FVector Delta, FHi
 
 	const float CurrentZ = Collider->GetComponentLocation().Z;
 
-	//Hit a wall above the mid point of the collider, adjust velocity as if we hit a wall
-	if (CollisionHit.ImpactPoint.Z > CurrentZ)
+	//Hit a wall above the base of the collider, adjust velocity as if we hit a wall
+	if (CollisionHit.ImpactPoint.Z > CurrentZ - Collider->GetScaledCapsuleHalfHeight_WithoutHemisphere())
 	{
 		//Top of the collider was hit by something
 		if (CollisionHit.ImpactNormal.Z < -KINDA_SMALL_NUMBER && Movement->Velocity.Z > 0)
@@ -349,7 +342,6 @@ void USMovementState::CorrectCollision(const float DeltaTime, FVector Delta, FHi
 		const FVector NewDelta = Movement->Velocity * DeltaTime;
 		FVector NewDeltaMovement = CalculateSurfaceMovement(NewDelta, Movement->GroundHitData);
 		MoveShooter(NewDeltaMovement, CollisionHit);
-
 	}
 
 	//Hit a barricade of some kind, either step up or slow down
@@ -417,7 +409,7 @@ bool USMovementState::CanStepOntoSurface(const FHitResult CollisionData, FVector
 {	
 	const FVector CurrentLocation = Collider->GetComponentLocation();
 	const float HalfHeight = Collider->GetScaledCapsuleHalfHeight();
-	const FVector PushAmount = Movement->Velocity.GetSafeNormal2D() * 0.05f;
+	const FVector PushAmount = Movement->Velocity.GetSafeNormal2D() * 0.05f; //TODO magic number
 
 	FVector TraceEnd = CollisionData.ImpactPoint + PushAmount;
 	TraceEnd.Z = CurrentLocation.Z - HalfHeight;
@@ -506,6 +498,33 @@ bool USMovementState::IsOnGround()
 #endif
 
 	Movement->GroundHitData = Hit;
+
+	if (Hit.IsValidBlockingHit())
+	{
+		Movement->Base.BaseObject = Hit.GetComponent();
+		Movement->Base.bIsDynamic = Movement->Base.BaseObject->Mobility == EComponentMobility::Movable;
+
+		if (Movement->Base.bIsDynamic)
+		{
+			Movement->Base.OldLocation = Movement->Base.BaseObject->GetComponentLocation();
+		}
+	}
 	//If the surface isn't too steep and the sweep hit something we are on ground
 	return (bHit && Hit.ImpactNormal.Z >= Movement->MaxSlopeZ);
+}
+
+void USMovementState::HandleBaseMovement() const
+{
+	if (Movement->bIsOnGround && Movement->Base.bIsDynamic)
+	{
+		const FVector Delta = Movement->Base.BaseObject->GetComponentLocation() - Movement->Base.OldLocation;
+		
+		if (!Delta.IsNearlyZero())
+		{
+			FHitResult Collision;
+			MoveShooter(Delta, Collision);
+			
+			///TODO check for hits and move based on time
+		}
+	}
 }
