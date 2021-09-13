@@ -6,6 +6,8 @@
 #include "../Player/WeaponInput.h"
 #include "CombatComponent.generated.h"
 
+class UDelayedActionManager;
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class UNREALPLAYGROUND_API UCombatComponent : public UActorComponent
 {
@@ -51,6 +53,7 @@ protected:
 	/** Switches out the primary and secondary weapons*/
 	void SwapWeapons();
 
+	void ResetLockout() { bIsLockedOut = false; }
 private:
 
 	/** The currently active weapon. This is the weapon that will be fired, reloaded, etc.*/
@@ -62,8 +65,16 @@ private:
 	AWeapon* SecondaryWeapon;
 
 	/** Once a weapon switch is executed, how long to wait before the weapon is ready to fire?*/
-	UPROPERTY(Category = Weapons, EditAnywhere)
+	UPROPERTY(Category = "Weapons | Lockout", EditAnywhere)
 	float SwapLockoutTime;
+
+	/** Once a grenade is thrown, how long to wait before we can perform other actions?*/
+	UPROPERTY(Category = "Weapons | Lockout", EditAnywhere)
+	float ThrowLockoutTime;
+
+	/** Once a melee attack is executed, how long to wait before we can perform other actions?*/
+	UPROPERTY(Category = "Weapons | Lockout", EditAnywhere)
+	float MeleeLockoutTime;
 
 	/** If no weapon is being held, what should recoil fall off default to*/
 	UPROPERTY(Category = Weapons, EditAnywhere)
@@ -80,17 +91,20 @@ private:
 	UPROPERTY(Category = Weapons, EditAnywhere)
 	float NoWeaponBloom;
 
-	/**The scene component belonging to the owning pawn that we use to track where we initially begin a trace when firing*/
+	/** The scene component belonging to the owning pawn that we use to track where we initially begin a trace when firing*/
 	USceneComponent* TraceOrigin;
 
-	/**The skeletal mesh component that holds the actual weapon mesh on the owning pawn*/
+	/** The skeletal mesh component that holds the actual weapon mesh on the owning pawn*/
 	USkeletalMeshComponent* WeaponMesh;
 
-	/**Input values belonging to the owning pawn used to perform actions on this component (firing, reloading, etc) */
+	/** Input values belonging to the owning pawn used to perform actions on this component (firing, reloading, etc) */
 	FWeaponInput* Input;
 
-	/** Whether or not the component has just swapped primary and secondary weapons and needs some time before ready to fire*/
-	uint8 bIsInSwapLockout;
+	/** Shorthand pointer to the delayed action manager*/
+	UDelayedActionManager* DelayManager;
+
+	/** Whether or not the component has recently performed an action that would prevent it from performing other actions*/
+	uint8 bIsLockedOut;
 
 	/**
 	 * Whether or not the weapon is being aimed down the sights
@@ -99,12 +113,16 @@ private:
 	 */
 	uint8 bIsAimed : 1;
 
+	/**
+	 * True if the pawn owner is controlled by an AI
+	 * AI are not effected by recoil or bloom
+	 * Missing shots are instead determined by the AI's instruction component
+	 */
+	uint8 bOwnerIsAI : 1;
+
 	/** Value used to determine how much to sway the camera by*/
 	float RecoilVelocity;
 
 	/** Current amount of bloom applied to the primary weapon (in degrees)*/
 	float CurrentBloom;
-	
-	/** Returns true if the weapon isn't blocked other actions like reloading and swapping*/
-	bool CanFire();
 };

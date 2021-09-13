@@ -1,11 +1,16 @@
 #include "CombatComponent.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "../ShooterGameMode.h"
+#include "../Utility/DelayedActionManager.h"
+#include "AIController.h"
 
 UCombatComponent::UCombatComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 
 	SwapLockoutTime = 0.8f;
+	ThrowLockoutTime = 0.8f;
+	MeleeLockoutTime = 1.5f;
 
 	NoWeaponRecoilFallOff = 2000.f;
 	NoWeaponBloomFallOff = 100.f;
@@ -16,9 +21,19 @@ void UCombatComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
+	AShooterGameMode* GameMode = GetWorld()->GetAuthGameMode<AShooterGameMode>();
+	DelayManager = GameMode->GetDelayedActionManager();
+
+	//Determine if we are owned by an AI
+	APawn* OwnerAsPawn = Cast<APawn>(GetOwner());
+	AController* Controller = OwnerAsPawn->GetController();
+	bOwnerIsAI = Controller->IsA<AAIController>();
+
 	if (PrimaryWeapon != nullptr)
 	{
 		PrimaryWeapon->SetOwningComponent(this, TraceOrigin);
+		USkeletalMesh* const NewMesh = PrimaryWeapon->GetSkeletalMesh();
+		WeaponMesh->SetSkeletalMesh(NewMesh);
 	}
 
 	if (SecondaryWeapon != nullptr)
@@ -34,65 +49,110 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	//We need to reset recoil/bloom if the weapon is lost so we hard code a fall off value
 	const bool bNoWeapon = PrimaryWeapon == nullptr;
 
-	float RecoilFallOff;
-	float BloomFallOff;
-	float MinBloom;
-
-	if (bNoWeapon)
+	if (!bOwnerIsAI)
 	{
-		RecoilFallOff = NoWeaponRecoilFallOff;
-		BloomFallOff = NoWeaponBloomFallOff;
-		MinBloom = NoWeaponBloom;
-	}
+		float RecoilFallOff;
+		float BloomFallOff;
+		float MinBloom;
 
-	else
-	{
-		RecoilFallOff = PrimaryWeapon->RecoilFallOff;
-		BloomFallOff = PrimaryWeapon->BloomFallOff;
-			
-		switch (Input->Stance)
+		if (bNoWeapon)
 		{
-		case WFS_Standing:
-			MinBloom = PrimaryWeapon->BloomWalkBase;
-			break;
-		case WFS_Crouching:
-			MinBloom = PrimaryWeapon->BloomCrouchBase;
-			break;
-		case WFS_Proning:
-			MinBloom = PrimaryWeapon->BloomProneBase;
-			break;
+			RecoilFallOff = NoWeaponRecoilFallOff;
+			BloomFallOff = NoWeaponBloomFallOff;
+			MinBloom = NoWeaponBloom;
 		}
+
+		else
+		{
+			RecoilFallOff = PrimaryWeapon->RecoilFallOff;
+			BloomFallOff = PrimaryWeapon->BloomFallOff;
+			
+			switch (Input->Stance)
+			{
+			case WFS_Standing:
+				MinBloom = PrimaryWeapon->BloomWalkBase;
+				break;
+			case WFS_Crouching:
+				MinBloom = PrimaryWeapon->BloomCrouchBase;
+				break;
+			case WFS_Proning:
+				MinBloom = PrimaryWeapon->BloomProneBase;
+				break;
+			}
+		}
+
+		//careful about not having a weapon here
+		const float BloomMultiplier = (Input->bIsMoving && !bNoWeapon) ? GetPrimaryWeapon()->BloomBaseMovementMultiplier : 1.f;
+		MinBloom *= BloomMultiplier;
+
+		RecoilVelocity -= DeltaTime * RecoilFallOff;
+		RecoilVelocity = RecoilVelocity < 0.f ? 0 : RecoilVelocity;
+		CurrentBloom -= DeltaTime * BloomFallOff;
+		CurrentBloom = CurrentBloom < MinBloom ? MinBloom : CurrentBloom;
 	}
 
-	//careful about not having a weapon here
-	const float BloomMultiplier = (Input->bIsMoving && !bNoWeapon) ? GetPrimaryWeapon()->BloomBaseMovementMultiplier : 1.f;
-	MinBloom *= BloomMultiplier;
-
-	RecoilVelocity -= DeltaTime * RecoilFallOff;
-	RecoilVelocity = RecoilVelocity < 0.f ? 0 : RecoilVelocity;
-	CurrentBloom -= DeltaTime * BloomFallOff;
-	CurrentBloom = CurrentBloom < MinBloom ? MinBloom : CurrentBloom;
-
-	//Don't bother with the rest of the tick function if theres no weapon
-	if (bNoWeapon)
+	//We are locked out of performing actions, break early
+	if (bIsLockedOut)
 	{
 		return;
 	}
 
-	if (Input->bIsTryingToSwap)
+	if (Input->bIsTryingToMelee)
+	{
+		//TODO melee attack implementation
+		Input->bIsTryingToMelee = false;
+		DelayManager->StartDelayedAction(this, &UCombatComponent::ResetLockout, MeleeLockoutTime);
+	}
+
+	else if (Input->bIsTryingToThrowPrimary)
+	{
+		//TODO primary throw implementation
+		Input->bIsTryingToThrowPrimary = false;
+		DelayManager->StartDelayedAction(this, &UCombatComponent::ResetLockout, ThrowLockoutTime);
+	}
+
+	else if (Input->bIsTryingToThrowSecondary)
+	{
+		//TODO secondary throw implementation
+		Input->bIsTryingToThrowSecondary = false;
+		DelayManager->StartDelayedAction(this, &UCombatComponent::ResetLockout, ThrowLockoutTime);
+	}
+
+	//Don't bother with the rest of the tick function if theres no weapon or if a previous action locks us out
+	if (bNoWeapon || bIsLockedOut)
+	{
+		return;
+	}
+
+	else if (Input->bIsTryingToReload)
+	{
+		Input->bIsTryingToReload = false;
+		//We probably want to use the animation to reset lockout and actually call the reload function on the weapon
+		//Lets figure out how to do that instead of using the DelayedActionManager
+	}
+
+	else if (Input->bIsTryingToSwap)
 	{
 		SwapWeapons();
 		Input->bIsTryingToSwap = false;
-	}
-
-	else if (Input->bIsTryingToAim)
-	{
-		bIsAimed = true;
+		DelayManager->StartDelayedAction(this, &UCombatComponent::ResetLockout, SwapLockoutTime);
 	}
 
 	else if (Input->bIsTryingToFire)
 	{
 		PrimaryWeapon->Fire();
+	}
+
+
+	//Check if aim state needs to change
+	if (!bIsAimed && Input->bIsTryingToAim)
+	{
+		bIsAimed = true;
+	}
+
+	else if (bIsAimed && !Input->bIsTryingToFire)
+	{
+		bIsAimed = false;
 	}
 }
 
