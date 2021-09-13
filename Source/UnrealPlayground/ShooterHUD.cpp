@@ -11,12 +11,22 @@ AShooterHUD::AShooterHUD()
 
 void AShooterHUD::Initialize()
 {
-	Combat = Cast<AShooter>(PlayerOwner->GetPawn())->GetCombat();
+	const APawn* Pawn = PlayerOwner->GetPawn();
+
+	if (Pawn->IsA(AShooter::StaticClass()))
+	{
+		Combat = Cast<AShooter>(Pawn)->GetCombat();
+	}
 }
 
 void AShooterHUD::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	if (Combat == nullptr)
+	{
+		return;
+	}
 
 	bPlayerHasWeapon = Combat->GetPrimaryWeapon() != nullptr;
 	Bloom = Combat->GetCurrentBloom();
