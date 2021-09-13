@@ -6,6 +6,8 @@
 #include "AIBase.generated.h"
 
 class UInstructionComponent;
+class UCombatComponent;
+class UHealthComponent;
 
 UCLASS()
 class UNREALPLAYGROUND_API AAIBase : public ACharacter
@@ -24,6 +26,18 @@ protected:
 	
 	FWeaponInput Input;
 
+	UPROPERTY(Category = Mesh, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	USkeletalMeshComponent* WeaponMesh;
+
+	UPROPERTY(Category = Combat, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	USceneComponent* TraceOrigin;
+
 	UPROPERTY(Category = Instruction, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	UInstructionComponent* Instruction;	
+	UInstructionComponent* Instruction;
+
+	UPROPERTY(Category = Combat, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UCombatComponent* Combat;
+
+	UPROPERTY(Category = Health, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UHealthComponent* Health;
 };
