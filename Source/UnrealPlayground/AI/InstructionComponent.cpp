@@ -8,10 +8,8 @@ UInstructionComponent::UInstructionComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 }
 
-void UInstructionComponent::BeginPlay()
+void UInstructionComponent::Initialize()
 {
-	Super::BeginPlay();
-
 	Owner = Cast<ACharacter>(GetOwner());
 	Movement = Owner->GetCharacterMovement();
 
@@ -23,13 +21,7 @@ void UInstructionComponent::BeginPlay()
 
 FVector UInstructionComponent::GetNavigablePatrolPoint() const
 {
-	const int32 TargetIndex = GetNextPatrolPoint(PatrolIndex);
-	const FVector RawLocation = PatrolPath->GetLocationAtSplinePoint(TargetIndex, ESplineCoordinateSpace::World);
-
-	//TODO check if this is a valid point to try and move to? Maybe just trust designers
-	//TODO line trace down to find the ground point?
-
-	return RawLocation;
+	return PatrolPath->GetLocationAtSplinePoint(PatrolIndex, ESplineCoordinateSpace::World);
 }
 
 int32 UInstructionComponent::GetNextPatrolPoint(const int32 CurrentPoint) const
@@ -53,12 +45,55 @@ int32 UInstructionComponent::GetNextPatrolPoint(const int32 CurrentPoint) const
 
 	else
 	{
-		//TODO figure out the best way to implement bIsRevered along a non looped track
-		return 0;
+		if (!bIsReversedOnPath)
+		{
+			//We are at the last point, turn around
+			if (CurrentPoint == PointCount - 1)
+			{
+				return PointCount - 2;
+			}
+
+			//Just advanced forwards
+			else
+			{
+				return CurrentPoint + 1;
+			}
+		}
+
+		else
+		{
+			//We reached the beginning point, turn around
+			if (CurrentPoint == 0)
+			{
+				return 1;
+			}
+
+			//Move towards the first point
+			else
+			{
+				return CurrentPoint - 1;
+			}
+		}
 	}
 }
 
 void UInstructionComponent::UpdatePatrolIndex()
 {
+	const int32 Previous = PatrolIndex;
 	PatrolIndex = GetNextPatrolPoint(PatrolIndex);
+
+	if (!bIsReversedOnPath && PatrolIndex < Previous)
+	{
+		bIsReversedOnPath = true;
+	}
+
+	else if (bIsReversedOnPath && PatrolIndex > Previous)
+	{
+		bIsReversedOnPath = false;
+	}
+}
+
+bool UInstructionComponent::HasPatrolPath()
+{
+	return PatrolPath != nullptr;
 }

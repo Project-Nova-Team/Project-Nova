@@ -7,11 +7,15 @@ void AAIBaseController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	const FName Instruction = "Instruction";
 	const AAIBase* OwnerAsBase = Cast<AAIBase>(GetPawn());
+	UInstructionComponent* const InstructionComp = OwnerAsBase->GetInstruction();
+	InstructionComp->Initialize();
+	UBlackboardComponent* const Comp = GetBlackboardComponent();
 
-	UBlackboardComponent* Comp = GetBlackboardComponent();
-	UInstructionComponent* InstructionComp = OwnerAsBase->GetInstruction();
-
+	const FName Instruction = "Instruction";
 	Comp->SetValueAsObject(Instruction, InstructionComp);
+
+	const bool bHasPath = InstructionComp->HasPatrolPath();
+	const FName Path = "HasPatrolPath";
+	Comp->SetValueAsBool(Path, bHasPath);
 }
