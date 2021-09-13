@@ -62,29 +62,8 @@ public:
 	/** Whether or not crouch input has been held long enough go prone*/
 	uint8 bIsTryingToProne : 1;
 
-	/**
-	* Whether or not the player is pressing the interact button
-	* Used to pick up items, press buttons, etc
-	*/
-	uint8 bIsTryingToInteract : 1;
-
-	/** Whether or not the player is pressing the melee button*/
-	uint8 bIsTryingToMelee : 1;
-
 	/** Whether or not the player is pressing the sprint button*/
 	uint8 bIsTryingToSprint : 1;
-
-	/** 
-	*  Whether or not the player is pressing the throw primary button
-	*  Used for grenades, throwing knives, etc.
-	*/
-	uint8 bIsTryingToThrowPrimary : 1;
-
-	/** 
-	* Whether or not the player is pressing the throw secondary button
-	* Used for flashbangs, concussions, etc.
-	*/
-	uint8 bIsTryingToThrowSecondary : 1;
 };
 
 UCLASS()
