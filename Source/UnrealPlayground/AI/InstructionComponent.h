@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Perception/AIPerceptionTypes.h"
 #include "InstructionComponent.generated.h"
 
 class ACharacter;
@@ -21,7 +22,16 @@ public:
 	void Initialize();
 
 	/** Returns true if this instruction have a patrol path attached to it which is assigned in the editor*/
-	bool HasPatrolPath();
+	bool HasPatrolPath() const;
+
+	/**
+	 * Event invoked when this controller senses a disturbance in the environment
+	 *
+	 * @param	Invoker				The actor who caused the stimulus
+	 * @param	Stimulus			The actual stimulus that the controller picked up
+	 */
+	UFUNCTION()
+	void OnStimulus(AActor* Invoker, FAIStimulus Stimulus);
 
 protected:
 	/** Actor in the level that contains a spline component the AI will patrol*/
@@ -49,6 +59,22 @@ protected:
 	/** Sets the patrol index to the next point on the patrol path*/
 	UFUNCTION(BlueprintCallable)
 	void UpdatePatrolIndex();
+
+	
+
+	///Begin search
+
+	/** True if the behavior tree is in combat mode meaning we ignore any stimulus*/
+	uint8 bIsInCombat : 1;
+
+	/** True if the AI is currently following the player position in an effort to reveal them*/
+	uint8 bIsFollowing : 1;
+
+	/** True if the AI is moving to the player's last known location*/
+	uint8 bIsTracking : 1;
+
+	/** True or not the AI is moving to a previous stimulus location*/
+	uint8 bIsInvestigating : 1;
 
 private:
 	ACharacter* Owner;

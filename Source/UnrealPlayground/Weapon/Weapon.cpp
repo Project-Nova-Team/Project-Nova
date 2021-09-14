@@ -171,7 +171,7 @@ void AWeapon::Fire()
 	const float RecoilFactor = bIsAimed ? RecoilAimFactor : 1.f;
 	OwningComponent->AddRecoilVelocity(Recoil * RecoilFactor);
 
-	if (Hit.IsValidBlockingHit())
+	if (Hit.IsValidBlockingHit() && Hit.Actor != nullptr)
 	{
 		float DamageFactor = BodyMultiplier;
 

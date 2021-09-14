@@ -8,6 +8,7 @@
 #include "../State/FPS/ShooterStateMachine.h"
 #include "../Weapon/CombatComponent.h"
 #include "../Gameplay/HealthComponent.h"
+#include "Perception/AIPerceptionStimuliSourceComponent.h"
 
 void FShooterInput::Tick(const float DeltaTime)
 {
@@ -72,6 +73,7 @@ AShooter::AShooter()
 	Combat->SetUpConstruction(Camera, WeaponMesh);
 
 	Health = CreateDefaultSubobject<UHealthComponent>(TEXT("Health"));
+	PerceptionSource = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("Stimulus Source"));
 }
 
 void AShooter::BeginPlay()
@@ -107,7 +109,7 @@ void AShooter::ScanInteractiveObject()
 	const bool bHit = GetWorld()->LineTraceSingleByChannel(ScanHit, TraceStart, TraceEnd, ECC_Camera, QueryParams);
 
 	//We're looking at an object that is interactive
-	if(bHit && ScanHit.Actor->Implements<UInteractiveObject>())
+	if(bHit && ScanHit.Actor != nullptr && ScanHit.Actor->Implements<UInteractiveObject>())
 	{	
 		//Lets us do UI things in blueprint
 		OnScanHit.Broadcast(ScanHit);
