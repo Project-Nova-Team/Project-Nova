@@ -244,11 +244,11 @@ void USMovementState::SetNewLocation(const float DeltaTime) const
 	}
 }
 
-void USMovementState::MoveShooter(const FVector DeltaMovement, FHitResult& OutCollisionResult) const
+void USMovementState::MoveShooter(const FVector DeltaMovement, FHitResult& OutCollisionResult, const bool bAdjustZ /*=true*/) const
 {
 	FVector CurrentLocation = Collider->GetComponentLocation();
 
-	if (Movement->bIsOnGround)
+	if (bAdjustZ && Movement->bIsOnGround)
 	{
 		const float HalfHeight = Collider->GetScaledCapsuleHalfHeight();
 		CurrentLocation.Z = Movement->GroundHitData.ImpactPoint.Z + HalfHeight + FLOOR_DIST;
@@ -349,7 +349,7 @@ void USMovementState::CorrectCollision(const float DeltaTime, FVector Delta, FHi
 	{		
 		FVector StepPosition;
 
-		if (CanStepOntoSurface(CollisionHit, StepPosition) )
+		if (CanStepOntoSurface(CollisionHit, StepPosition))
 		{
 			//CanStepOntoSurface already performs a sweep test so we don't have to worry about sweeping the movement
 			Collider->SetWorldLocation(StepPosition);
@@ -357,7 +357,7 @@ void USMovementState::CorrectCollision(const float DeltaTime, FVector Delta, FHi
 			const float RemainingMovePercent = 1.f - CollisionHit.Time;
 			const FVector NewDelta = Movement->Velocity * DeltaTime * RemainingMovePercent;
 			FVector NewDeltaMovement = CalculateSurfaceMovement(NewDelta, Movement->GroundHitData);
-			MoveShooter(NewDeltaMovement, CollisionHit);
+			MoveShooter(NewDeltaMovement, CollisionHit, false);
 		}
 
 		//We can't step on this surface so slow velocity down as if it impacted a wall
@@ -409,7 +409,7 @@ bool USMovementState::CanStepOntoSurface(const FHitResult CollisionData, FVector
 {	
 	const FVector CurrentLocation = Collider->GetComponentLocation();
 	const float HalfHeight = Collider->GetScaledCapsuleHalfHeight();
-	const FVector PushAmount = Movement->Velocity.GetSafeNormal2D() * 0.05f; //TODO magic number
+	const FVector PushAmount = Movement->Velocity.GetSafeNormal2D(); //TODO magic number
 
 	FVector TraceEnd = CollisionData.ImpactPoint + PushAmount;
 	TraceEnd.Z = CurrentLocation.Z - HalfHeight;

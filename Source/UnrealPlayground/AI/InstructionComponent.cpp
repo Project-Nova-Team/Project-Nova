@@ -93,7 +93,17 @@ void UInstructionComponent::UpdatePatrolIndex()
 	}
 }
 
-bool UInstructionComponent::HasPatrolPath()
+bool UInstructionComponent::HasPatrolPath() const
 {
 	return PatrolPath != nullptr;
+}
+
+//Intellisense is lying, this works just fine...
+void UInstructionComponent::OnStimulus(AActor* Invoker, FAIStimulus Stimulus)
+{
+	//When in combat the AI doesn't care about stimulus, it just wants to attack
+	if (bIsInCombat)
+	{
+		return;
+	}
 }
