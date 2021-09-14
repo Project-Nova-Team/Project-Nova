@@ -12,6 +12,7 @@ class UShooterStateMachine;
 class UPawnMovementComponent;
 class UCombatComponent;
 class UHealthComponent;
+class UAIPerceptionStimuliSourceComponent;
 class IInteractiveObject;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FScanEvent, FHitResult, ScanData);
@@ -95,6 +96,8 @@ public:
 	/** Returns the input state. Note: contents are mutable*/
 	FShooterInput* GetInput() { return &InputState; }
 
+	UAIPerceptionStimuliSourceComponent* GetPerceptionSource() const { return PerceptionSource; }
+
 	/** Draws debug traces for a variety of position tests if enabled*/
 	UPROPERTY(Category = Pawn, EditAnywhere)
 	uint8 bTraceDebug : 1;
@@ -137,6 +140,9 @@ private:
 
 	UPROPERTY(Category = Shooter, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	UCombatComponent* Combat;
+
+	UPROPERTY(Category = Shooter, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UAIPerceptionStimuliSourceComponent* PerceptionSource;
 
 	UPROPERTY(Category = Shooter, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	UHealthComponent* Health;
