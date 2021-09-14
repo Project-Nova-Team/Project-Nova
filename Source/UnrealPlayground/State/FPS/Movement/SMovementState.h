@@ -74,12 +74,13 @@ protected:
 	virtual void SetNewLocation(const float DeltaTime) const;
 
 	/** 
-	 *Moves the shooter along a delta and returns any collision info
+	 * Moves the shooter along a delta and returns any collision info
 	 * 
 	 * @param	DeltaMovement			The change in position applied to the shooter this Tick
 	 * @param	OutCollisionResult		Collision data from this move attempt
+	 * @param	bAdjustZ				Whether or not adjust collider height off the ground on this move
 	 */
-	virtual void MoveShooter(const FVector DeltaMovement, FHitResult& OutCollisionResult) const;
+	virtual void MoveShooter(const FVector DeltaMovement, FHitResult& OutCollisionResult, const bool bAdjustZ = true) const;
 
 	/**
 	 * Adjusts the position of the shooter when moving into barriers
