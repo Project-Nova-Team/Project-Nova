@@ -140,7 +140,16 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 
 	else if (Input->bIsTryingToFire)
 	{
-		PrimaryWeapon->Fire();
+		//Should we make each weapon a class? Then we don't have to check for fire type each time any weapon shoots
+		// we could override the fire method in weapontype subclass, just a thought
+		if (PrimaryWeapon->WeaponFireType == FT_Semi)
+		{
+			Input->bIsTryingToFire = false; // semi auto
+		}
+
+		//Make code for burst fire if we really care about that
+	
+		PrimaryWeapon->Fire();		
 	}
 
 
@@ -150,7 +159,8 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 		bIsAimed = true;
 	}
 
-	else if (bIsAimed && !Input->bIsTryingToFire)
+	// fixed from !bIsTryingToFire to !bIsTryingToAim
+	else if (bIsAimed && !Input->bIsTryingToAim)
 	{
 		bIsAimed = false;
 	}
