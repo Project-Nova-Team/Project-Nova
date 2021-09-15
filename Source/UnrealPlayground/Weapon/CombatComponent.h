@@ -64,6 +64,9 @@ private:
 	UPROPERTY(Category = Weapons, EditAnywhere)
 	AWeapon* SecondaryWeapon;
 
+	UPROPERTY(Category = Weapons, EditAnywhere)
+	APawn* Shooter;
+
 	/** Once a weapon switch is executed, how long to wait before the weapon is ready to fire?*/
 	UPROPERTY(Category = "Weapons | Lockout", EditAnywhere)
 	float SwapLockoutTime;

@@ -19,6 +19,14 @@ enum EWeaponClass
 	WC_Pistol
 };
 
+UENUM()
+enum EWeaponFireType 
+{
+	FT_Auto,
+	FT_Semi,
+	FT_Burst
+};
+
 USTRUCT(BlueprintType)
 struct FWeaponUIData
 {
@@ -88,6 +96,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Weapon | General")
 	TEnumAsByte<EWeaponClass> WeaponType;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon | General")
+	TEnumAsByte<EWeaponFireType> WeaponFireType;
 
 	/** The max range this weapon can be fired*/
 	UPROPERTY(VisibleAnywhere, Category = "Weapon | General")
