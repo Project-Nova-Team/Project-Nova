@@ -60,6 +60,10 @@ private:
 	/** Sets aim state and invokes any necessary events to help with animation*/
 	void HandleAimState(const bool bNoWeapon);
 
+	/** Brendan Tell me if this is Wrong!!!!*/
+	UPROPERTY()
+	float StartingCameraFOV;
+
 	/** Once a weapon switch is executed, how long to wait before the weapon is ready to fire?*/
 	UPROPERTY(Category = "Weapons | Lockout", EditAnywhere)
 	float SwapLockoutTime;

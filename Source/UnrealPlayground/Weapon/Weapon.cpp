@@ -15,10 +15,10 @@ AWeapon::AWeapon()
 	
 	ThrowForce = 100000.f;
 
-	AimFOV = 50.f;
+	AimFOV = 60.f;
 
-	ClipSize = 14;
-	MaxHeldAmmo = 70;
+	ClipSize = 100;
+	MaxHeldAmmo = 100;
 	MaxFireRange = 50000.f;
 
 	BaseDamage = 25.f;
@@ -26,12 +26,12 @@ AWeapon::AWeapon()
 	HeadMultiplier = 2.f;
 	LimbMultiplier = 0.5f;
 
-	FireRate = 0.5f;
-	Recoil = 720.f;
+	FireRate = 0.05f;
+	Recoil = 20.f;
 	RecoilAimFactor = 0.5f;
-	RecoilFallOff = 90.f;
-	RecoilRecovery = 60.f;
-	RecoilAngularLimit = 30.f;
+	RecoilFallOff = 300.f;
+	RecoilRecovery = 30.f;
+	RecoilAngularLimit = 15.f;
 	
 	BloomMax = 90.f;
 	Bloom = 5.f;
@@ -264,6 +264,8 @@ void AWeapon::FireWithNoise(const bool bIsAimed)
 
 void AWeapon::Reload()
 {
+
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("RELOAD"));
 	const uint16 AmmoDifference = ClipSize - CurrentAmmo;
 	const uint16 AmmoToRestore = FMath::Min(AmmoDifference, ExccessAmmo);
 

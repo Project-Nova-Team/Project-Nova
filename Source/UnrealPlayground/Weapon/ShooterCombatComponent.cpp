@@ -3,6 +3,7 @@
 #include "Camera/CameraComponent.h"
 #include "../ShooterGameMode.h"
 #include "../Utility/DelayedActionManager.h"
+#include "Engine.h"
 
 UShooterCombatComponent::UShooterCombatComponent()
 {
@@ -19,7 +20,7 @@ UShooterCombatComponent::UShooterCombatComponent()
 void UShooterCombatComponent::SetUpConstruction(USceneComponent* TraceComponent, USkeletalMeshComponent* MeshComponent)
 {
 	Super::SetUpConstruction(TraceComponent, MeshComponent);
-	Camera = Cast<UCameraComponent>(TraceOrigin);
+	Camera = Cast<UCameraComponent>(TraceOrigin);	
 }
 
 void UShooterCombatComponent::BeginPlay()
@@ -28,6 +29,9 @@ void UShooterCombatComponent::BeginPlay()
 
 	AShooterGameMode* GameMode = GetWorld()->GetAuthGameMode<AShooterGameMode>();
 	DelayManager = GameMode->GetDelayedActionManager();
+
+	// This is New v
+	StartingCameraFOV = Camera->FieldOfView;
 
 	if (SecondaryWeapon != nullptr)
 	{
@@ -85,8 +89,13 @@ void UShooterCombatComponent::SwapWeapons()
 {
 	if (PrimaryWeapon == nullptr || SecondaryWeapon == nullptr)
 	{
+		//Never getting called
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Screen Message"));
 		return;
 	}
+
+	//Never getting called on mouse scroll. Only when pressing 1
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Weapon Swap"));
 
 	AWeapon* const Temp = PrimaryWeapon;
 	PrimaryWeapon = SecondaryWeapon;
@@ -132,6 +141,7 @@ void UShooterCombatComponent::HandleStandardActions(const bool bNoWeapon)
 
 	if (Input->bIsTryingToReload)
 	{
+		PrimaryWeapon->Reload();
 		Input->bIsTryingToReload = false;
 		//We probably want to use the animation to reset lockout and actually call the reload function on the weapon
 		//Lets figure out how to do that instead of using the DelayedActionManager
@@ -144,10 +154,10 @@ void UShooterCombatComponent::HandleStandardActions(const bool bNoWeapon)
 	}
 
 	else if (Input->bIsTryingToFire)
-	{
+	{		
 		//Make code for burst fire if we really care about that
 		if (PrimaryWeapon->GetWeaponType() == FT_Semi)
-		{
+		{			
 			Input->bIsTryingToFire = false;
 		}
 
@@ -161,7 +171,7 @@ void UShooterCombatComponent::HandleAimState(const bool bNoWeapon)
 	if (bIsAimed && !Input->bIsTryingToAim || (bNoWeapon && bIsAimed))
 	{
 		bIsAimed = false;
-		Camera->FieldOfView = 90.f; // TODO - hard coded value
+		Camera->FieldOfView = StartingCameraFOV; // TODO - hard coded value
 		//Invoke animation event here
 	}
 
