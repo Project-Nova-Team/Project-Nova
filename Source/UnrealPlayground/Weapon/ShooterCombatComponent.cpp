@@ -90,18 +90,15 @@ void UShooterCombatComponent::SwapWeapons()
 	{
 		return;
 	}
-
-	//DEBUG v
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Weapon Swap"));
-
 	
 	AWeapon* const Temp = PrimaryWeapon;
 	PrimaryWeapon = SecondaryWeapon;
 	SecondaryWeapon = Temp;
 
-	bIsLockedOut = true;
-
 	WeaponMesh->SetSkeletalMesh(PrimaryWeapon->GetSkeletalMesh());
+
+	bIsLockedOut = true;
+	ResetLockoutAfterDelay(SwapLockoutTime);
 }
 
 void UShooterCombatComponent::HandleSpecialActions()
@@ -149,10 +146,7 @@ void UShooterCombatComponent::HandleStandardActions(const bool bNoWeapon)
 
 	else if (Input->bIsTryingToSwap)
 	{
-		ResetLockoutAfterDelay(SwapLockoutTime);
-
-		SwapWeapons();
-
+		SwapWeapons();	
 		Input->bIsTryingToSwap = false;
 	}
 
@@ -191,7 +185,6 @@ void UShooterCombatComponent::HandleAimState(const bool bNoWeapon)
 void UShooterCombatComponent::ResetLockout()
 {
 	bIsLockedOut = false;
-
 	Handle = nullptr;
 }
 

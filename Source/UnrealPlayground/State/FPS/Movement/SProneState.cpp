@@ -5,6 +5,7 @@ void USProneState::Initialize(UStateMachine* StateMachine, UObject* ContextObjec
 	Super::Initialize(StateMachine, ContextObject);
 	TargetHalfHeight = Movement->CollisionRadius;
 	TargetCameraHeight = -Movement->CollisionRadius * 0.5f;
+	ExpectedHalfHeight = TargetHalfHeight;
 	MoveAcceleration = Movement->ProneAcceleration;
 	MaxAppliedInputSpeed = Movement->ProneMaxSpeed;
 }
