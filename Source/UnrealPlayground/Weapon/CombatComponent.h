@@ -7,6 +7,7 @@
 #include "CombatComponent.generated.h"
 
 class UDelayedActionManager;
+class UCameraComponent;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class UNREALPLAYGROUND_API UCombatComponent : public UActorComponent
@@ -96,6 +97,9 @@ private:
 
 	/** The scene component belonging to the owning pawn that we use to track where we initially begin a trace when firing*/
 	USceneComponent* TraceOrigin;
+
+	/** Trace origin casted to camera - for player only not AI you silly goose*/
+	UCameraComponent* ShooterCamera;
 
 	/** The skeletal mesh component that holds the actual weapon mesh on the owning pawn*/
 	USkeletalMeshComponent* WeaponMesh;

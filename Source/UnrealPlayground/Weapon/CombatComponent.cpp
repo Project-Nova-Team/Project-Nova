@@ -3,6 +3,7 @@
 #include "../ShooterGameMode.h"
 #include "../Utility/DelayedActionManager.h"
 #include "AIController.h"
+#include "Camera/CameraComponent.h"
 
 UCombatComponent::UCombatComponent()
 {
@@ -157,12 +158,16 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	if (!bIsAimed && Input->bIsTryingToAim)
 	{
 		bIsAimed = true;
+		
+		ShooterCamera->FieldOfView = 60;
 	}
 
 	// fixed from !bIsTryingToFire to !bIsTryingToAim
 	else if (bIsAimed && !Input->bIsTryingToAim)
 	{
 		bIsAimed = false;
+		
+		ShooterCamera->FieldOfView = 90; //this is hack, get starting fov ref
 	}
 }
 
@@ -170,6 +175,9 @@ void UCombatComponent::SetUpConstruction(USceneComponent* TraceComponent, USkele
 {
 	TraceOrigin = TraceComponent;
 	WeaponMesh = MeshComponent;
+
+	// Create camera ref for player - AI DOES NOT NEED THIS v
+	ShooterCamera = Cast<UCameraComponent>(TraceOrigin);
 }
 
 void UCombatComponent::PickUpNewWeapon(AWeapon* const NewWeapon)
