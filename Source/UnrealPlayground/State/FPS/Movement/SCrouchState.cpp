@@ -5,6 +5,7 @@ void USCrouchState::Initialize(UStateMachine* StateMachine, UObject* ContextObje
 	Super::Initialize(StateMachine, ContextObject);
 	TargetHalfHeight = Movement->StandingHeight * 0.5f;
 	TargetCameraHeight = Movement->CameraHeight * 0.5f;
+	ExpectedHalfHeight = TargetHalfHeight;
 	MoveAcceleration = Movement->CrouchAcceleration;
 	MaxAppliedInputSpeed = Movement->CrouchMaxSpeed;
 }
