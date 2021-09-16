@@ -9,17 +9,6 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FWeaponEvent);
 
 UENUM()
-enum EWeaponClass 
-{
-	WC_SubMachineGun,
-	WC_AutomaticRifle,
-	WC_SniperRifle,
-	WC_LightMachineGun,
-	WC_Shotgun,
-	WC_Pistol
-};
-
-UENUM()
 enum EWeaponFireType 
 {
 	FT_Auto,
@@ -44,7 +33,6 @@ public:
 };
 
 class USkeletalMesh;
-class UCombatComponent;
 enum EWeaponFireStance;
 
 UCLASS()
@@ -57,18 +45,31 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	void InteractionEvent(const APawn* EventSender) override;
 
-	friend class UCombatComponent;
+	/** Fires the weapon in a straight line with no recoil or bloom*/
+	void FireStraight();
 
-	/** Fires the weapon*/
-	void Fire();
+	/** 
+	 * Fires the weapon applying recoil and bloom
+	 *
+	 * @param	bIsAimed				Whether or not whoever is holding the weapon is aiming the weapon, which determines bloom and recoil
+	 */
+	void FireWithNoise(const bool bIsAimed);
 
+	/** Reloads the weapon*/
 	void Reload();
 
-	/** Returns the combat component this weapon belongs to*/
-	UCombatComponent* GetOwningComponent() const { return OwningComponent; }
+	/** 
+	 * Sets the minimum bloom based a weapon stance
+	 *
+	 * @param	Stance				WeaponFireStance that determines what the base bloom value should be
+	 * @param	bIsMoving			Whether or not whoever is holding the weapon is moving, which applies the movementmultiplier to the base
+	 */
+	void SetBloomMin(const EWeaponFireStance Stance, const bool bIsMoving);
 
 	/** Returns the mesh this weapon uses*/
 	USkeletalMesh* GetSkeletalMesh() const { return Mesh->SkeletalMesh; }
+
+	EWeaponFireType GetWeaponType() const { return WeaponFireType; }
 
 	/** Packages relevant information to display to the UI in blueprint*/
 	FWeaponUIData GetWeaponUI() const;
@@ -79,13 +80,21 @@ public:
 	/** Returns the max amount of angular difference the camera can rotate from its original rotation*/
 	float GetRecoilLimit() const { return RecoilAngularLimit; }
 
+	/** Reutnrs the current angular velocity of weapon impulse from firing*/
+	float GetRecoilVelocity() const { return RecoilVelocity; }
+
+	float GetBloom() const { return CurrentBloom; }
+
 	/** 
 	 * Sets the owning pawn and sets up values the weapon needs
 	 * 
-	 * @param	NewOwner				The new pawn the weapon belongs to
 	 * @param	TraceOriginComponent	A scene component used to determine where the firing trace begins
-	 **/
-	void SetOwningComponent(UCombatComponent* NewOwner,  const USceneComponent* TraceOriginComponent);
+	 */
+	void SetTraceOrigin(const USceneComponent* TraceOriginComponent);
+
+	/** Field of view when zoomed in using this weapon*/
+	UPROPERTY(EditAnywhere, Category = "Weapon | Aiming")
+	float AimFOV;
 
 protected:
 	
@@ -93,9 +102,6 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, Category = "Mesh")
 	USkeletalMeshComponent* Mesh;
-
-	UPROPERTY(EditAnywhere, Category = "Weapon | General")
-	TEnumAsByte<EWeaponClass> WeaponType;
 
 	UPROPERTY(EditAnywhere, Category = "Weapon | General")
 	TEnumAsByte<EWeaponFireType> WeaponFireType;
@@ -159,7 +165,7 @@ protected:
 	float RecoilFallOff;
 
 	/**
-	 * This value controls how quickly the camera positions resets after firing
+	 * This value controls how quickly the camera position resets after firing
 	 * AI have no recoil so this value does not matter for them
 	 */
 	UPROPERTY(EditAnywhere, Category = "Weapon | Firing")
@@ -223,8 +229,11 @@ protected:
 
 private:
 
-	/** The combat component this weapon belongs to*/
-	UCombatComponent* OwningComponent;
+	/** Alters the angular velocity of camera rotation caused by weapon spread*/
+	void AddRecoilVelocity(const float Velocity);
+
+	/** Alters the amount of weapon spread applied to the weapon*/
+	void AddBloom(const float BloomAmount);
 
 	/** 
 	 * Pointer to a level object that determines where the line trace begins for firing
@@ -240,4 +249,13 @@ private:
 
 	/** Used to track if the weapon is ready to fire*/
 	float FireTimer;
+
+	/** Value used to determine how much to sway the camera by*/
+	float RecoilVelocity;
+
+	/** Current amount of bloom applied to the primary weapon (in degrees)*/
+	float CurrentBloom;
+
+	/** Current minimum amount of bloom*/
+	float BloomMin;
 };
