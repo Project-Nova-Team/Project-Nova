@@ -5,7 +5,7 @@
 #include "ShooterHUD.generated.h"
 
 class AShooter;
-class UCombatComponent;
+class UShooterCombatComponent;
 
 UCLASS()
 class UNREALPLAYGROUND_API AShooterHUD : public AHUD
@@ -40,5 +40,5 @@ protected:
 private:
 
 	/** Combat component attached to player*/
-	UCombatComponent* Combat;
+	UShooterCombatComponent* Combat;
 };
