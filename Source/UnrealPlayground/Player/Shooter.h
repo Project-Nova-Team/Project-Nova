@@ -10,7 +10,7 @@ class UCapsuleComponent;
 class UCameraComponent;
 class UShooterStateMachine;
 class UPawnMovementComponent;
-class UCombatComponent;
+class UShooterCombatComponent;
 class UHealthComponent;
 class UAIPerceptionStimuliSourceComponent;
 class IInteractiveObject;
@@ -88,7 +88,7 @@ public:
 	USceneComponent* GetAnchor() const { return CameraAnchor; }
 	
 	/** Returns the combat component attached to this shooter*/
-	UCombatComponent* GetCombat() const { return Combat; }
+	UShooterCombatComponent* GetCombat() const { return Combat; }
 
 	/** Returns the camera component attached to this shooter*/
 	UCameraComponent* GetCamera() const { return Camera; }
@@ -139,7 +139,7 @@ private:
 	UCameraComponent* Camera;
 
 	UPROPERTY(Category = Shooter, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	UCombatComponent* Combat;
+	UShooterCombatComponent* Combat;
 
 	UPROPERTY(Category = Shooter, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	UAIPerceptionStimuliSourceComponent* PerceptionSource;

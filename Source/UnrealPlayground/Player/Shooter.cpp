@@ -6,7 +6,7 @@
 #include "../Utility/DelayedActionManager.h"
 #include "../ShooterGameMode.h"
 #include "../State/FPS/ShooterStateMachine.h"
-#include "../Weapon/CombatComponent.h"
+#include "../Weapon/ShooterCombatComponent.h"
 #include "../Gameplay/HealthComponent.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 
@@ -69,7 +69,7 @@ AShooter::AShooter()
 	WeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh"));
 	WeaponMesh->SetupAttachment(Arms, TEXT("WeaponSocket"));
 
-	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("Combat"));
+	Combat = CreateDefaultSubobject<UShooterCombatComponent>(TEXT("Combat"));
 	Combat->SetUpConstruction(Camera, WeaponMesh);
 
 	Health = CreateDefaultSubobject<UHealthComponent>(TEXT("Health"));
