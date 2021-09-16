@@ -7,6 +7,8 @@
 class UDelayedActionManager;
 class UCameraComponent;
 
+struct FDelayedActionHandle;
+
 UCLASS()
 class UNREALPLAYGROUND_API UShooterCombatComponent : public UCombatComponent
 {
@@ -49,7 +51,9 @@ private:
 	/** Shorthand pointer to the shooter's trace origin casted as a camera*/
 	UCameraComponent* Camera;
 
-	void ResetLockout() { bIsLockedOut = false; }
+	void ResetLockout();
+
+	void ResetLockoutAfterDelay(const float LockoutDuration);
 
 	/** Helper function that determines whether or not we execute a special actions (throw grenade, use melee, etc)*/
 	void HandleSpecialActions();
@@ -59,6 +63,7 @@ private:
 
 	/** Sets aim state and invokes any necessary events to help with animation*/
 	void HandleAimState(const bool bNoWeapon);
+
 
 	/** Brendan Tell me if this is Wrong!!!!*/
 	UPROPERTY()
@@ -99,4 +104,6 @@ private:
 
 	/** Whether or not the component has recently performed an action that would prevent it from performing other actions*/
 	uint8 bIsLockedOut;
+
+	FDelayedActionHandle* Handle;
 };

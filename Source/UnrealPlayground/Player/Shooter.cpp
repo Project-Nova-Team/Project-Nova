@@ -146,7 +146,7 @@ void AShooter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	InputComponent->BindAction("Interact", IE_Pressed, this, &AShooter::InteractPress);
 	InputComponent->BindAction("Interact", IE_Released, this, &AShooter::InteractRelease);
 	InputComponent->BindAction("Swap", IE_Pressed, this, &AShooter::SwapPress);
-	InputComponent->BindAction("Swap", IE_Released, this, &AShooter::SwapRelease);
+	//InputComponent->BindAction("Swap", IE_Released, this, &AShooter::SwapRelease);
 	InputComponent->BindAction("Melee", IE_Pressed, this, &AShooter::MeleePress);
 	InputComponent->BindAction("Melee", IE_Released, this, &AShooter::MeleeRelease);
 	InputComponent->BindAction("Shoot", IE_Pressed, this, &AShooter::ShootPress);
