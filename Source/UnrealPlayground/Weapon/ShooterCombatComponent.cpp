@@ -165,7 +165,7 @@ void UShooterCombatComponent::HandleAimState(const bool bNoWeapon)
 		//Invoke animation event here
 	}
 
-	else if (!bIsAimed && Input->bIsTryingToAim)
+	else if (!bNoWeapon && !bIsAimed && Input->bIsTryingToAim)
 	{
 		bIsAimed = true;
 		Camera->FieldOfView = PrimaryWeapon->AimFOV;
