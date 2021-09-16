@@ -1,7 +1,7 @@
 #include "ShooterHUD.h"
 #include "ShooterController.h"
 #include "Player/Shooter.h"
-#include "Weapon/CombatComponent.h"
+#include "Weapon/ShooterCombatComponent.h"
 
 AShooterHUD::AShooterHUD()
 {
@@ -29,7 +29,7 @@ void AShooterHUD::Tick(float DeltaTime)
 	}
 
 	bPlayerHasWeapon = Combat->GetPrimaryWeapon() != nullptr;
-	Bloom = Combat->GetCurrentBloom();
+	Bloom = Combat->GetWeaponBloom();
 
 	if (bPlayerHasWeapon)
 	{

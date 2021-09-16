@@ -1,7 +1,7 @@
 //Copyright 2021 Brendan Lienau. All Rights Reserved.
 
 #include "SMovementState.h"
-#include "../../../Weapon/CombatComponent.h"
+#include "../../../Weapon/ShooterCombatComponent.h"
 
 void USMovementState::Initialize(UStateMachine* StateMachine, UObject* ContextObject)
 {
@@ -170,7 +170,7 @@ void USMovementState::ApplyFrictionToVelocity(FVector& InVelocity, const float M
 
 void USMovementState::RotateCameraFromInput(const float DeltaTime)
 {
-	const float RecoilVelocity = Shooter->GetCombat()->GetRecoilVelocity();
+	const float RecoilVelocity = Shooter->GetCombat()->GetWeaponRecoilVelocity();
 	const bool bRecoilActive = RecoilVelocity > 0.f;
 
 	FRotator AnchorRotation = Shooter->GetAnchor()->GetComponentRotation();
@@ -179,7 +179,6 @@ void USMovementState::RotateCameraFromInput(const float DeltaTime)
 		AnchorRotation.Pitch + (Input->LookY * Movement->CameraSensitivity * DeltaTime),
 		Movement->CameraMinAngle,
 		Movement->CameraMaxAngle);
-
 
 	Shooter->GetAnchor()->SetWorldRotation(AnchorRotation);
 	const FRotator RelativeLook = Shooter->GetCamera()->GetRelativeRotation();
