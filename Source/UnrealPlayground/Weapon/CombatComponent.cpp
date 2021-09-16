@@ -3,6 +3,7 @@
 #include "../ShooterGameMode.h"
 #include "../Utility/DelayedActionManager.h"
 #include "AIController.h"
+#include "Camera/CameraComponent.h"
 
 UCombatComponent::UCombatComponent()
 {
@@ -140,7 +141,16 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 
 	else if (Input->bIsTryingToFire)
 	{
-		PrimaryWeapon->Fire();
+		//Should we make each weapon a class? Then we don't have to check for fire type each time any weapon shoots
+		// we could override the fire method in weapontype subclass, just a thought
+		if (PrimaryWeapon->WeaponFireType == FT_Semi)
+		{
+			Input->bIsTryingToFire = false; // semi auto
+		}
+
+		//Make code for burst fire if we really care about that
+	
+		PrimaryWeapon->Fire();		
 	}
 
 
@@ -148,11 +158,16 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	if (!bIsAimed && Input->bIsTryingToAim)
 	{
 		bIsAimed = true;
+		
+		ShooterCamera->FieldOfView = 60;
 	}
 
-	else if (bIsAimed && !Input->bIsTryingToFire)
+	// fixed from !bIsTryingToFire to !bIsTryingToAim
+	else if (bIsAimed && !Input->bIsTryingToAim)
 	{
 		bIsAimed = false;
+		
+		ShooterCamera->FieldOfView = 90; //this is hack, get starting fov ref
 	}
 }
 
@@ -160,6 +175,9 @@ void UCombatComponent::SetUpConstruction(USceneComponent* TraceComponent, USkele
 {
 	TraceOrigin = TraceComponent;
 	WeaponMesh = MeshComponent;
+
+	// Create camera ref for player - AI DOES NOT NEED THIS v
+	ShooterCamera = Cast<UCameraComponent>(TraceOrigin);
 }
 
 void UCombatComponent::PickUpNewWeapon(AWeapon* const NewWeapon)

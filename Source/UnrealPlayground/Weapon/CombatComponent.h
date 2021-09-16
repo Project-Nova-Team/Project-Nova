@@ -7,6 +7,7 @@
 #include "CombatComponent.generated.h"
 
 class UDelayedActionManager;
+class UCameraComponent;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class UNREALPLAYGROUND_API UCombatComponent : public UActorComponent
@@ -64,6 +65,9 @@ private:
 	UPROPERTY(Category = Weapons, EditAnywhere)
 	AWeapon* SecondaryWeapon;
 
+	UPROPERTY(Category = Weapons, EditAnywhere)
+	APawn* Shooter;
+
 	/** Once a weapon switch is executed, how long to wait before the weapon is ready to fire?*/
 	UPROPERTY(Category = "Weapons | Lockout", EditAnywhere)
 	float SwapLockoutTime;
@@ -93,6 +97,9 @@ private:
 
 	/** The scene component belonging to the owning pawn that we use to track where we initially begin a trace when firing*/
 	USceneComponent* TraceOrigin;
+
+	/** Trace origin casted to camera - for player only not AI you silly goose*/
+	UCameraComponent* ShooterCamera;
 
 	/** The skeletal mesh component that holds the actual weapon mesh on the owning pawn*/
 	USkeletalMeshComponent* WeaponMesh;
