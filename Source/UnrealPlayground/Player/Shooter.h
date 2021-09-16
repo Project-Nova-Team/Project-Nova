@@ -175,7 +175,7 @@ private:
 	void InteractPress()				{ InputState.bIsTryingToInteract = true; }
 	void InteractRelease()				{ InputState.bIsTryingToInteract = false; }
 	void SwapPress()					{ InputState.bIsTryingToSwap = true; }
-	void SwapRelease()					{ InputState.bIsTryingToSwap = false; }
+	//void SwapRelease()					{ InputState.bIsTryingToSwap = false; }
 	void MeleePress()					{ InputState.bIsTryingToMelee = true; }
 	void MeleeRelease()					{ InputState.bIsTryingToMelee = false; }
 	void SprintPress()					{ InputState.bIsTryingToSprint = true; }

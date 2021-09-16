@@ -264,7 +264,6 @@ void AWeapon::FireWithNoise(const bool bIsAimed)
 
 void AWeapon::Reload()
 {
-
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("RELOAD"));
 	const uint16 AmmoDifference = ClipSize - CurrentAmmo;
 	const uint16 AmmoToRestore = FMath::Min(AmmoDifference, ExccessAmmo);

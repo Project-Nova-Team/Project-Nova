@@ -3,7 +3,6 @@
 #include "Camera/CameraComponent.h"
 #include "../ShooterGameMode.h"
 #include "../Utility/DelayedActionManager.h"
-#include "Engine.h"
 
 UShooterCombatComponent::UShooterCombatComponent()
 {
@@ -89,17 +88,18 @@ void UShooterCombatComponent::SwapWeapons()
 {
 	if (PrimaryWeapon == nullptr || SecondaryWeapon == nullptr)
 	{
-		//Never getting called
-		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Screen Message"));
 		return;
 	}
 
-	//Never getting called on mouse scroll. Only when pressing 1
+	//DEBUG v
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Weapon Swap"));
 
+	
 	AWeapon* const Temp = PrimaryWeapon;
 	PrimaryWeapon = SecondaryWeapon;
 	SecondaryWeapon = Temp;
+
+	bIsLockedOut = true;
 
 	WeaponMesh->SetSkeletalMesh(PrimaryWeapon->GetSkeletalMesh());
 }
@@ -149,13 +149,18 @@ void UShooterCombatComponent::HandleStandardActions(const bool bNoWeapon)
 
 	else if (Input->bIsTryingToSwap)
 	{
+		ResetLockoutAfterDelay(SwapLockoutTime);
+
 		SwapWeapons();
+
 		Input->bIsTryingToSwap = false;
 	}
 
 	else if (Input->bIsTryingToFire)
 	{		
 		//Make code for burst fire if we really care about that
+
+		//Semi auto functionality
 		if (PrimaryWeapon->GetWeaponType() == FT_Semi)
 		{			
 			Input->bIsTryingToFire = false;
@@ -181,6 +186,24 @@ void UShooterCombatComponent::HandleAimState(const bool bNoWeapon)
 		Camera->FieldOfView = PrimaryWeapon->AimFOV;
 		//animation event
 	}
+}
+
+void UShooterCombatComponent::ResetLockout()
+{
+	bIsLockedOut = false;
+
+	Handle = nullptr;
+}
+
+void UShooterCombatComponent::ResetLockoutAfterDelay(const float LockoutDuration)
+{
+	if (Handle != nullptr)
+	{
+		Handle->GetAction()->StopAction();
+		Handle = nullptr;
+	}
+
+	Handle = DelayManager->StartDelayedAction(this, &UShooterCombatComponent::ResetLockout, LockoutDuration);
 }
 
 float UShooterCombatComponent::GetWeaponRecoilVelocity() const
