@@ -21,6 +21,9 @@ public:
 
 	void PickUpNewWeapon(AWeapon* const NewWeapon) override;
 
+	// Adds ammo to specific weapon.
+	void AddAmmmoToWeapon(AWeapon* Weapon, int AmmoAddAmount);
+
 	/** Returns the angular velocity of recoil caused from weapon fire or 0 if no weapon*/
 	float GetWeaponRecoilVelocity() const;
 

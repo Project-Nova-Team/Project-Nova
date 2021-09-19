@@ -15,6 +15,9 @@ public:
 
 	UHealthComponent();
 
+	UFUNCTION()
+		void Heal(const float HealAmount);
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -44,8 +47,4 @@ protected:
 
 	UFUNCTION()
 	void TakeDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
-
-	UFUNCTION()
-	void Heal(const float HealAmount);
-
 };

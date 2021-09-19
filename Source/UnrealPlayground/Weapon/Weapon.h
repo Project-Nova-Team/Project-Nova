@@ -55,6 +55,9 @@ public:
 	 */
 	void FireWithNoise(const bool bIsAimed);
 
+	/** Adds to ammo pool. Called by picking up ammo*/
+	void AddExcessAmmo(int AmmoAddAmount);
+
 	/** Reloads the weapon*/
 	void Reload();
 
