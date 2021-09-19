@@ -84,6 +84,11 @@ void UShooterCombatComponent::PickUpNewWeapon(AWeapon* const NewWeapon)
 	WeaponMesh->SetSkeletalMesh(NewMesh);
 }
 
+void UShooterCombatComponent::AddAmmmoToWeapon(AWeapon* Weapon, int AmmoAddAmount)
+{
+	Weapon->AddExcessAmmo(AmmoAddAmount);
+}
+
 void UShooterCombatComponent::SwapWeapons()
 {
 	if (PrimaryWeapon == nullptr || SecondaryWeapon == nullptr)

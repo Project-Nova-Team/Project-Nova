@@ -272,6 +272,11 @@ void AWeapon::Reload()
 	ExccessAmmo -= AmmoToRestore;
 }
 
+void AWeapon::AddExcessAmmo(int AmmoAddAmount)
+{
+	ExccessAmmo += AmmoAddAmount;
+}
+
 void AWeapon::AddRecoilVelocity(const float Velocity)
 {
 	RecoilVelocity += Velocity;
