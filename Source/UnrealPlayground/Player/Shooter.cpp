@@ -108,6 +108,8 @@ void AShooter::ScanInteractiveObject()
 	const FVector TraceEnd = TraceStart + Camera->GetForwardVector() * FMath::Min(ShooterMovement->StandingHeight * 2.f, ShooterMovement->InteractionDistance);
 	const bool bHit = GetWorld()->LineTraceSingleByChannel(ScanHit, TraceStart, TraceEnd, ECC_Camera, QueryParams);
 
+	//Do we need to look at something to interact? Do we need to just be near it?
+
 	//We're looking at an object that is interactive
 	if(bHit && ScanHit.Actor != nullptr && ScanHit.Actor->Implements<UInteractiveObject>())
 	{	
