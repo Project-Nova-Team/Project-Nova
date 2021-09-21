@@ -8,7 +8,7 @@ UShooterCombatComponent::UShooterCombatComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 
-	SwapLockoutTime = 1.8f;
+	SwapLockoutTime = 1.4f;
 	ThrowLockoutTime = 0.8f;
 	MeleeLockoutTime = 1.5f;
 
@@ -95,31 +95,15 @@ void UShooterCombatComponent::SwapWeapons()
 	{
 		return;
 	}
-<<<<<<< Updated upstream
 
-	//DEBUG v
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Weapon Swap"));
-
-=======
-<<<<<<< Updated upstream
-=======
-
-<<<<<<< Updated upstream
-	//DEBUG v
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Weapon Swap"));
-
->>>>>>> Stashed changes
->>>>>>> Stashed changes
-	
-=======
->>>>>>> Stashed changes
 	AWeapon* const Temp = PrimaryWeapon;
 	PrimaryWeapon = SecondaryWeapon;
 	SecondaryWeapon = Temp;
 
-	bIsLockedOut = true;
-
 	WeaponMesh->SetSkeletalMesh(PrimaryWeapon->GetSkeletalMesh());
+
+	bIsLockedOut = true;
+	ResetLockoutAfterDelay(SwapLockoutTime);
 }
 
 void UShooterCombatComponent::HandleSpecialActions()
@@ -178,25 +162,8 @@ void UShooterCombatComponent::HandleStandardActions(const bool bNoWeapon)
 
 	else if (Input->bIsTryingToSwap)
 	{
-<<<<<<< Updated upstream
-=======
-<<<<<<< Updated upstream
-		SwapWeapons();	
-=======
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-		ResetLockoutAfterDelay(SwapLockoutTime);
-
-		SwapWeapons();
-
-<<<<<<< Updated upstream
-=======
-=======
 		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, "SwapFunc");
 		SwapWeapons();	
->>>>>>> Stashed changes
->>>>>>> Stashed changes
->>>>>>> Stashed changes
 		Input->bIsTryingToSwap = false;
 	}
 
@@ -235,7 +202,6 @@ void UShooterCombatComponent::HandleAimState(const bool bNoWeapon)
 void UShooterCombatComponent::ResetLockout()
 {
 	bIsLockedOut = false;
-
 	Handle = nullptr;
 }
 
