@@ -11,11 +11,12 @@ AShooterHUD::AShooterHUD()
 
 void AShooterHUD::Initialize()
 {
-	const APawn* Pawn = PlayerOwner->GetPawn();
+	APawn* Pawn = PlayerOwner->GetPawn();
 
 	if (Pawn->IsA(AShooter::StaticClass()))
 	{
-		Combat = Cast<AShooter>(Pawn)->GetCombat();
+		Shooter = Cast<AShooter>(Pawn);
+		Combat = Shooter->GetCombat();
 	}
 }
 

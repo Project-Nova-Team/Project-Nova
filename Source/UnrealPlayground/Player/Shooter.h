@@ -106,6 +106,10 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FScanEvent OnScanHit;
 
+	/**Invoked when the shooter is not looking at an object that can be interacted with (a weapon/button)*/
+	UPROPERTY(BlueprintAssignable)
+	FScanEvent OnScanMiss;
+
 	/** Animation Hooks**/
 
 	/** Returns whether this shooter is walking*/
@@ -120,6 +124,14 @@ protected:
 	virtual void BeginPlay() override;
 
 private:
+	uint8 bIsInsideVaultTrigger : 1;
+
+	UFUNCTION()
+	void OnTriggerEnter(AActor* OverlappedActor, AActor* OtherActor);
+
+	UFUNCTION()
+	void OnTriggerExit(AActor* OverlappedActor, AActor* OtherActor);
+
 	UPROPERTY(Category = Mesh, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	USkeletalMeshComponent* Arms;
 
