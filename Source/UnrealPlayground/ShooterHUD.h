@@ -37,6 +37,9 @@ protected:
 	UPROPERTY(BlueprintReadOnly)
 		uint8 bPlayerHasWeapon : 1;
 
+	UPROPERTY(BlueprintReadOnly)
+		AShooter* Shooter;
+
 private:
 
 	/** Combat component attached to player*/

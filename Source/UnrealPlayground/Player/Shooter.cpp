@@ -9,6 +9,7 @@
 #include "../Weapon/ShooterCombatComponent.h"
 #include "../Gameplay/HealthComponent.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
+#include "../Gameplay/VaultTrigger.h"
 
 void FShooterInput::Tick(const float DeltaTime)
 {
@@ -94,6 +95,9 @@ void AShooter::BeginPlay()
 
 	InputState.Owner = this;
 	Combat->InitializeInput(&InputState);
+
+	OnActorBeginOverlap.AddDynamic(this, &AShooter::OnTriggerEnter);
+	OnActorEndOverlap.AddDynamic(this, &AShooter::OnTriggerExit);
 }
 
 void AShooter::Tick(float DeltaTime)
@@ -128,6 +132,10 @@ void AShooter::ScanInteractiveObject()
 
 			InputState.bIsTryingToInteract = false;
 		}	
+	}
+	else 
+	{
+		OnScanMiss.Broadcast(ScanHit);
 	}
 
 #if WITH_EDITOR
@@ -176,4 +184,22 @@ bool AShooter::IsWalking()
 bool AShooter::IsFalling()
 {
 	return !ShooterMovement->bIsOnGround;
+}
+
+void AShooter::OnTriggerEnter(AActor* OverlappedActor, AActor* OtherActor)
+{
+	if (OtherActor->IsA(AVaultTrigger::StaticClass()))
+	{
+		bIsInsideVaultTrigger = true;
+		UE_LOG(LogTemp, Warning, TEXT("Enter"));
+	}
+}
+
+void AShooter::OnTriggerExit(AActor* OverlappedActor, AActor* OtherActor)
+{
+	if (OtherActor->IsA(AVaultTrigger::StaticClass()))
+	{
+		bIsInsideVaultTrigger = false;
+		UE_LOG(LogTemp, Warning, TEXT("Exit"));
+	}
 }
