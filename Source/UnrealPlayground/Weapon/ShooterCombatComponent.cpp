@@ -95,6 +95,15 @@ void UShooterCombatComponent::SwapWeapons()
 	{
 		return;
 	}
+<<<<<<< Updated upstream
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+
+=======
+=======
+>>>>>>> origin/main
+>>>>>>> Stashed changes
 	
 	AWeapon* const Temp = PrimaryWeapon;
 	PrimaryWeapon = SecondaryWeapon;
@@ -151,6 +160,16 @@ void UShooterCombatComponent::HandleStandardActions(const bool bNoWeapon)
 
 	else if (Input->bIsTryingToSwap)
 	{
+<<<<<<< Updated upstream
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, "SwapFunc");
+=======
+>>>>>>> origin/main
+=======
+>>>>>>> origin/main
+>>>>>>> Stashed changes
 		SwapWeapons();	
 		Input->bIsTryingToSwap = false;
 	}
