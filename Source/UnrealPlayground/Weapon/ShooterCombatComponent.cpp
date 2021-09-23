@@ -8,7 +8,7 @@ UShooterCombatComponent::UShooterCombatComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 
-	SwapLockoutTime = 0.8f;
+	SwapLockoutTime = 1.4f;
 	ThrowLockoutTime = 0.8f;
 	MeleeLockoutTime = 1.5f;
 
@@ -95,16 +95,7 @@ void UShooterCombatComponent::SwapWeapons()
 	{
 		return;
 	}
-<<<<<<< Updated upstream
-=======
-<<<<<<< HEAD
-<<<<<<< HEAD
-
-=======
-=======
->>>>>>> origin/main
->>>>>>> Stashed changes
-	
+  
 	AWeapon* const Temp = PrimaryWeapon;
 	PrimaryWeapon = SecondaryWeapon;
 	SecondaryWeapon = Temp;
@@ -144,8 +135,19 @@ void UShooterCombatComponent::HandleSpecialActions()
 
 void UShooterCombatComponent::HandleStandardActions(const bool bNoWeapon)
 {
+	// Makes sure swap input cannot occur while locked out
+	if (bIsLockedOut)
+	{
+		if (Input->bIsTryingToSwap)
+		{
+			Input->bIsTryingToSwap = false;
+		}
+
+		return;
+	}
+
 	//We don't perform these actions without a weapon or during lockout
-	if (bNoWeapon || bIsLockedOut)
+	if (bNoWeapon)
 	{
 		return;
 	}
@@ -160,16 +162,8 @@ void UShooterCombatComponent::HandleStandardActions(const bool bNoWeapon)
 
 	else if (Input->bIsTryingToSwap)
 	{
-<<<<<<< Updated upstream
-=======
-<<<<<<< HEAD
-<<<<<<< HEAD
 		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, "SwapFunc");
-=======
->>>>>>> origin/main
-=======
->>>>>>> origin/main
->>>>>>> Stashed changes
+
 		SwapWeapons();	
 		Input->bIsTryingToSwap = false;
 	}

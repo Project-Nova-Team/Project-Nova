@@ -15,6 +15,11 @@ void FShooterInput::Tick(const float DeltaTime)
 	bIsTryingToCrouch = false;
 	bIsTryingToProne = false;
 
+	if (bIsTryingToSwap)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "Swapinput");
+	}
+
 	HandleCrouchInputStates(DeltaTime);
 }
 
