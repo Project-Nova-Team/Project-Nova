@@ -95,7 +95,11 @@ void UShooterCombatComponent::SwapWeapons()
 	{
 		return;
 	}
+<<<<<<< HEAD
 
+=======
+	
+>>>>>>> origin/main
 	AWeapon* const Temp = PrimaryWeapon;
 	PrimaryWeapon = SecondaryWeapon;
 	SecondaryWeapon = Temp;
@@ -178,7 +182,10 @@ void UShooterCombatComponent::HandleStandardActions(const bool bNoWeapon)
 
 	else if (Input->bIsTryingToSwap)
 	{
+<<<<<<< HEAD
 		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, "SwapFunc");
+=======
+>>>>>>> origin/main
 		SwapWeapons();	
 		Input->bIsTryingToSwap = false;
 	}
