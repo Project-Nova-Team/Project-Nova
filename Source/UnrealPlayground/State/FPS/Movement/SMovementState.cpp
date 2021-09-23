@@ -49,6 +49,8 @@ void USMovementState::CheckForJump() const
 	{
 		Movement->Velocity.Z += Movement->JumpForce;
 
+		Input->bIsTryingToJump = false;
+
 		//Lift slighly in the air so the next ground check returns false
 		Movement->bIsOnGround = false;
 		const FVector CurrentLoc = Collider->GetComponentLocation();
