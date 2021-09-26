@@ -55,7 +55,7 @@ void UShooterCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType
 	HandleStandardActions(bNoWeapon);	
 }
 
-void UShooterCombatComponent::PickUpNewWeapon(AWeapon* const NewWeapon)
+void UShooterCombatComponent::PickUpNewWeapon(AWeapon* NewWeapon)
 {
 	//We don't have any weapons, so just add it to the shooter
 	if (PrimaryWeapon == nullptr)
@@ -178,7 +178,11 @@ void UShooterCombatComponent::HandleStandardActions(const bool bNoWeapon)
 			Input->bIsTryingToFire = false;
 		}
 
-		PrimaryWeapon->FireWithNoise(bIsAimed);
+		USkeletalMeshComponent* Mesh = Cast<USkeletalMeshComponent>(GetOwner()->FindComponentByClass<USkeletalMeshComponent>()->GetChildComponent(0));
+		FVector ArmsLocation = Mesh->GetComponentToWorld().GetLocation();
+		FRotator Rotation = Camera->GetAttachParent()->GetForwardVector().ToOrientationRotator();
+
+		PrimaryWeapon->FireWithNoise(bIsAimed, ArmsLocation, Rotation);
 	}
 }
 
