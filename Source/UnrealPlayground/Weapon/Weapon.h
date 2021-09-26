@@ -33,6 +33,7 @@ public:
 };
 
 class USkeletalMesh;
+class ABullet;
 enum EWeaponFireStance;
 
 UCLASS()
@@ -53,7 +54,7 @@ public:
 	 *
 	 * @param	bIsAimed				Whether or not whoever is holding the weapon is aiming the weapon, which determines bloom and recoil
 	 */
-	void FireWithNoise(const bool bIsAimed);
+	void FireWithNoise(const bool bIsAimed, FVector BulletSpawnLoc, FRotator BulletRotation);
 
 	/** Adds to ammo pool. Called by picking up ammo*/
 	void AddExcessAmmo(int AmmoAddAmount);

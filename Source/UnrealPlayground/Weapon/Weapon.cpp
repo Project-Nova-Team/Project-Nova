@@ -1,5 +1,6 @@
 #include "Weapon.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Bullet.h"
 #include "CombatComponent.h"
 
 AWeapon::AWeapon()
@@ -191,12 +192,13 @@ void AWeapon::FireStraight()
 #endif
 }
 
-void AWeapon::FireWithNoise(const bool bIsAimed)
+void AWeapon::FireWithNoise(const bool bIsAimed, FVector BulletSpawnLoc, FRotator BulletRotation)
 {
 	if (!bCanFire)
 	{
 		return;
 	}
+
 
 	OnWeaponFire.Broadcast();
 
@@ -228,6 +230,14 @@ void AWeapon::FireWithNoise(const bool bIsAimed)
 
 	FHitResult Hit;
 	GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_Visibility, QueryParams);
+
+	FActorSpawnParameters SpawnParameters;
+
+	//UE_LOG(LogTemp, Warning, TEXT("%s"), *Hit.ImpactPoint.ToString());
+
+	ABullet* Bullet = GetWorld()->SpawnActor<ABullet>(BulletSpawnLoc, BulletRotation, SpawnParameters);
+
+	Bullet->RaycastHit = Hit;
 
 	const float RecoilFactor = bIsAimed ? RecoilAimFactor : 1.f;
 	AddRecoilVelocity(Recoil * RecoilFactor);
