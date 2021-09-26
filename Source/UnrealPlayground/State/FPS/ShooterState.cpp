@@ -5,3 +5,8 @@ void UShooterState::Initialize(UStateMachine* StateMachine, UObject* ContextObje
 	Super::Initialize(StateMachine, ContextObject);
 	this->Shooter = CastContext<AShooter>();
 }
+
+UDelayedActionManager* UShooterState::GetDelayedActionManager() const
+{
+	return Shooter->GetWorld()->GetAuthGameMode<AShooterGameMode>()->GetDelayedActionManager();
+}
