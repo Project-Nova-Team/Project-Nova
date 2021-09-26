@@ -20,17 +20,33 @@ void AAIBaseController::BeginPlay()
 		return;
 	}
 
-	//Set up instruction component
-	UInstructionComponent* const InstructionComp = OwnerAsBase->GetInstruction();
-	InstructionComp->Initialize();
+	Blackboard = NewObject<UBlackboardComponent>(this, TEXT("Blackboard Component"));
+	if (Blackboard != nullptr)
+	{
+		InitializeBlackboard(*Blackboard, *BaseBoard);
+		Blackboard->RegisterComponent();
+	}
+
+	UInstructionComponent* InstructionComp = OwnerAsBase->GetInstruction();
+	InstructionComp->Initialize(GetBlackboardComponent());
+	InstructionComp->OnInstructionStateChange.AddDynamic(this, &AAIBaseController::RunNewTree);
 	Perception->OnTargetPerceptionUpdated.AddDynamic(InstructionComp, &UInstructionComponent::OnStimulus);
 
-	//Set blackboard default values
-	UBlackboardComponent* const Comp = GetBlackboardComponent();
-	const FName Instruction = "Instruction";
-	Comp->SetValueAsObject(Instruction, InstructionComp);
+	RunBehaviorTree(PatrolTree);
+}
 
-	const bool bHasPath = InstructionComp->HasPatrolPath();
-	const FName Path = "HasPatrolPath";
-	Comp->SetValueAsBool(Path, bHasPath);
+void AAIBaseController::RunNewTree(EInstructionState NewState)
+{
+	switch (NewState)
+	{
+	case EInstructionState::Patrol:
+		RunBehaviorTree(PatrolTree);
+		break;
+	case EInstructionState::Search:
+		RunBehaviorTree(SearchTree);
+		break;
+	case EInstructionState::Attack:
+		RunBehaviorTree(AttackTree);
+		break;
+	}
 }
