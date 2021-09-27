@@ -45,11 +45,11 @@ FVector USMovementState::ConvertInputRelativeToCamera() const
 
 void USMovementState::CheckForJump() const
 {
-	if (Input->bIsTryingToJump && Movement->bIsOnGround)
+	if (Input->bIsTryingToVault && Movement->bIsOnGround && Movement->bCanVault)
 	{
 		Movement->Velocity.Z += Movement->JumpForce;
 
-		Input->bIsTryingToJump = false;
+		Input->bIsTryingToVault = false;
 
 		//Lift slighly in the air so the next ground check returns false
 		Movement->bIsOnGround = false;
