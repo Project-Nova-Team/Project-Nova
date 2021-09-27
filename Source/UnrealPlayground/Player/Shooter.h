@@ -49,7 +49,7 @@ public:
 	float LookY;
 
 	/** Whether or not the player is pressing the jump button*/
-	uint8 bIsTryingToJump : 1;
+	uint8 bIsTryingToVault : 1;
 
 	/** Whether or not the player is pressing the crouch button*/
 	uint8 bIsHoldingCrouch : 1;
@@ -110,6 +110,10 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FScanEvent OnScanMiss;
 
+	/** Set when player overlaps or unoverlaps vault trigger*/
+	UPROPERTY(BlueprintReadOnly)
+	uint8 bIsInsideVaultTrigger : 1;
+
 	/** Animation Hooks**/
 
 	/** Returns whether this shooter is walking*/
@@ -124,7 +128,6 @@ protected:
 	virtual void BeginPlay() override;
 
 private:
-	uint8 bIsInsideVaultTrigger : 1;
 
 	UFUNCTION()
 	void OnTriggerEnter(AActor* OverlappedActor, AActor* OtherActor);
@@ -176,8 +179,8 @@ private:
 	void MoveInputY(const float Value)	{ InputState.MoveY = Value; }
 	void LookInputX(const float Value)	{ InputState.LookX = Value; }
 	void LookInputY(const float Value)	{ InputState.LookY = Value; }
-	void JumpPress()					{ InputState.bIsTryingToJump = true; }
-	void JumpRelease()					{ InputState.bIsTryingToJump = false; }
+	void VaultPress()					{ InputState.bIsTryingToVault = true; }
+	void VaultRelease()					{ InputState.bIsTryingToVault = false; }
 	void CrouchPress()					{ InputState.bIsHoldingCrouch = true; }
 	void CrouchRelease()				{ InputState.bIsHoldingCrouch = false; }
 	void ShootPress()					{ InputState.bIsTryingToFire = true; }
