@@ -1,5 +1,6 @@
 #include "Weapon.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Engine/SkeletalMeshSocket.h"
 #include "Bullet.h"
 #include "CombatComponent.h"
 
@@ -13,14 +14,16 @@ AWeapon::AWeapon()
 	Mesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	Mesh->SetCollisionProfileName("Ragdoll");	
 	Mesh->SetSimulatePhysics(true);
-	
+
+	StartingPoolSize = 3;
+	ProjectileSpeed = 5000.f;
 	ThrowForce = 100000.f;
 
 	AimFOV = 60.f;
 
 	ClipSize = 100;
 	MaxHeldAmmo = 100;
-	MaxFireRange = 50000.f;
+	MaxFireRange = 10000.f;
 
 	BaseDamage = 25.f;
 	BodyMultiplier = 1.f;
@@ -47,15 +50,22 @@ void AWeapon::BeginPlay()
 {
 	Super::BeginPlay();
 	BloomMin = BloomWalkBase;
+
+	/** Generate initial object pool*/
+	for (int i = 0; i < StartingPoolSize; i++)
+	{	
+		AActor* NewActor = GetWorld()->SpawnActor(BulletTemplate->GetDefaultObject()->GetClass());
+		ABullet* NewBullet = Cast<ABullet>(NewActor);
+		NewBullet->InitializeOwner(BaseDamage, BodyMultiplier, LimbMultiplier, HeadMultiplier, MaxFireRange, ProjectileSpeed);
+		BulletPool.Add(NewBullet);
+	}
+
+	PrimaryActorTick.SetTickFunctionEnable(false);
 }
 
 void AWeapon::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	//TODO the base function still draws a fair bit of overhead.
-	//Consider disabling the tick function if its not being held 
-	//to save some performance. Maybe check if its simulated?? Hacky
 
 	//TODO exceptionally long delta times or small fire rates can fail
 	//Since this all runs client side it may not matter
@@ -103,7 +113,7 @@ FWeaponUIData AWeapon::GetWeaponUI() const
 	return Data;
 }
 
-void AWeapon::SetTraceOrigin(const USceneComponent* TraceOriginComponent)
+void AWeapon::SetSceneValues(const USceneComponent* TraceOriginComponent, const USkeletalMeshComponent* HeldWeapon, const USkeletalMeshSocket* BulletSocket)
 {
 	//A pawn has picked the weapon up
 	if (TraceOriginComponent != nullptr)
@@ -118,6 +128,13 @@ void AWeapon::SetTraceOrigin(const USceneComponent* TraceOriginComponent)
 		//not perfect, fire location may not be directly attached to the actor we want to avoid hurting
 		QueryParams.AddIgnoredActor(TraceOriginComponent->GetOwner()); 
 		QueryParams.AddIgnoredActor(this);
+
+		for (ABullet* Bullet : BulletPool)
+		{
+			Bullet->SetBulletQueryParams(QueryParams);
+		}
+
+		PrimaryActorTick.SetTickFunctionEnable(true);
 	}
 
 	//A pawn has dropped the weapon
@@ -134,9 +151,13 @@ void AWeapon::SetTraceOrigin(const USceneComponent* TraceOriginComponent)
 		
 		//Apply a force to make it look like the gun was thrown
 		Mesh->AddForce(TraceOrigin->GetForwardVector().GetSafeNormal2D() * ThrowForce);
+
+		PrimaryActorTick.SetTickFunctionEnable(false);
 	}
 
 	TraceOrigin = TraceOriginComponent;
+	HeldWeaponMesh = HeldWeapon;
+	BulletOrigin = BulletSocket;
 }
 
 void AWeapon::FireStraight()
@@ -192,13 +213,12 @@ void AWeapon::FireStraight()
 #endif
 }
 
-void AWeapon::FireWithNoise(const bool bIsAimed, FVector BulletSpawnLoc, FRotator BulletRotation)
+void AWeapon::FireWithNoise(const bool bIsAimed, FRotator BulletRotation)
 {
 	if (!bCanFire)
 	{
 		return;
 	}
-
 
 	OnWeaponFire.Broadcast();
 
@@ -211,6 +231,7 @@ void AWeapon::FireWithNoise(const bool bIsAimed, FVector BulletSpawnLoc, FRotato
 	bCanFire = false;
 
 	const FVector TraceStart = TraceOrigin->GetComponentLocation();
+	const FVector ProjectileStart = BulletOrigin->GetSocketLocation(HeldWeaponMesh);
 	FVector TraceDirection = TraceOrigin->GetForwardVector();
 
 	//If weapon is not aimed, apply bloom
@@ -226,55 +247,53 @@ void AWeapon::FireWithNoise(const bool bIsAimed, FVector BulletSpawnLoc, FRotato
 		AddBloom(Bloom);
 	}
 
-	const FVector TraceEnd = TraceStart + TraceDirection * MaxFireRange;
-
+	//Compute the projectile travel vector
+	//Here we assume the projectile will end up exactly where a hitscan says it will
+	//its possible it misses (the target moved out of the way) in which case the projectile will be far off!
+	//potential solution, check if the bullet distance traveled is greater than ProjectileStart and ProjectileEndGuess
+	//and correct the path if it is and hasn't collided yet
+	//Lets playtest and find out
 	FHitResult Hit;
-	GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_Visibility, QueryParams);
+	const FVector TraceEnd = TraceStart + (TraceDirection * MaxFireRange);
+	const bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_Pawn, QueryParams);
+	const FVector ProjectileEndGuess = bHit ? Hit.ImpactPoint : TraceEnd;
 
-	FActorSpawnParameters SpawnParameters;
+	const FVector ProjectileDirection = (ProjectileEndGuess - ProjectileStart).GetSafeNormal();
+	const FQuat ProjectileRotation = ProjectileDirection.ToOrientationQuat();
 
-	//UE_LOG(LogTemp, Warning, TEXT("%s"), *Hit.ImpactPoint.ToString());
-
-	ABullet* Bullet = GetWorld()->SpawnActor<ABullet>(BulletSpawnLoc, BulletRotation, SpawnParameters);
-
-	Bullet->RaycastHit = Hit;
-
+	//Get a bullet from the pool and send it off
+	ABullet* Bullet = GetAvailableBullet();
+	Bullet->SetActorLocationAndRotation(ProjectileStart, ProjectileRotation);
+	Bullet->SetTrajectory(TraceStart, TraceDirection, ProjectileDirection);
+	
+	//Apply recoil
 	const float RecoilFactor = bIsAimed ? RecoilAimFactor : 1.f;
 	AddRecoilVelocity(Recoil * RecoilFactor);
+}
 
-	if (Hit.IsValidBlockingHit() && Hit.Actor != nullptr)
+ABullet* AWeapon::GetAvailableBullet()
+{
+	//Search through the pool for the first active bullet
+	for (int i = 0; i < BulletPool.Num(); i++)
 	{
-		float DamageFactor = BodyMultiplier;
-
-		if (Hit.BoneName == "Head")
+		if (!BulletPool[i]->GetIsActive())
 		{
-			DamageFactor = HeadMultiplier;
+			return BulletPool[i];
 		}
-
-		else if (Hit.BoneName == "Limb")
-		{
-			DamageFactor = LimbMultiplier;
-		}
-
-		const float Damage = DamageFactor * BaseDamage;
-		//We don't use this but its required by Unreal's damage events
-		//not sure if its safe to pass a nullptr
-		const FDamageEvent DamageEvent;
-
-		Hit.Actor->TakeDamage(Damage, DamageEvent, nullptr, this);
 	}
 
-#if WITH_EDITOR
-	if (bTraceDebug)
-	{
-		DrawDebugLine(GetWorld(), TraceStart, Hit.ImpactPoint, FColor::Red, true);
-	}
-#endif
+	//We don't have any available bullets in the pool, create a new one then return it
+	AActor* NewActor = GetWorld()->SpawnActor(BulletTemplate->GetDefaultObject()->GetClass());
+	ABullet* NewBullet = Cast<ABullet>(NewActor);
+	NewBullet->InitializeOwner(BaseDamage, BodyMultiplier, LimbMultiplier, HeadMultiplier, MaxFireRange, ProjectileSpeed);
+	NewBullet->SetBulletQueryParams(QueryParams);
+	BulletPool.Add(NewBullet);
+
+	return NewBullet;
 }
 
 void AWeapon::Reload()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("RELOAD"));
 	const uint16 AmmoDifference = ClipSize - CurrentAmmo;
 	const uint16 AmmoToRestore = FMath::Min(AmmoDifference, ExccessAmmo);
 
