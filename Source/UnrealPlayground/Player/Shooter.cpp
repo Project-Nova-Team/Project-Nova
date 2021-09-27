@@ -16,11 +16,6 @@ void FShooterInput::Tick(const float DeltaTime)
 	bIsTryingToCrouch = false;
 	bIsTryingToProne = false;
 
-	if (bIsTryingToSwap)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "Swapinput");
-	}
-
 	HandleCrouchInputStates(DeltaTime);
 }
 
@@ -191,7 +186,6 @@ void AShooter::OnTriggerEnter(AActor* OverlappedActor, AActor* OtherActor)
 	if (OtherActor->IsA(AVaultTrigger::StaticClass()))
 	{
 		bIsInsideVaultTrigger = true;
-		UE_LOG(LogTemp, Warning, TEXT("Enter"));
 	}
 }
 
@@ -200,6 +194,5 @@ void AShooter::OnTriggerExit(AActor* OverlappedActor, AActor* OtherActor)
 	if (OtherActor->IsA(AVaultTrigger::StaticClass()))
 	{
 		bIsInsideVaultTrigger = false;
-		UE_LOG(LogTemp, Warning, TEXT("Exit"));
 	}
 }

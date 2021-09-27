@@ -29,12 +29,11 @@ void UShooterCombatComponent::BeginPlay()
 	AShooterGameMode* GameMode = GetWorld()->GetAuthGameMode<AShooterGameMode>();
 	DelayManager = GameMode->GetDelayedActionManager();
 
-	// This is New v
 	StartingCameraFOV = Camera->FieldOfView;
 
 	if (SecondaryWeapon != nullptr)
 	{
-		SecondaryWeapon->SetTraceOrigin(TraceOrigin);
+		SecondaryWeapon->SetSceneValues(TraceOrigin, WeaponMesh, WeaponMesh->GetSocketByName("barrel"));
 	}
 }
 
@@ -57,11 +56,14 @@ void UShooterCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType
 
 void UShooterCombatComponent::PickUpNewWeapon(AWeapon* NewWeapon)
 {
+	USkeletalMesh* const NewMesh = NewWeapon->GetSkeletalMesh();
+	WeaponMesh->SetSkeletalMesh(NewMesh);
+
 	//We don't have any weapons, so just add it to the shooter
 	if (PrimaryWeapon == nullptr)
 	{
 		PrimaryWeapon = NewWeapon;
-		PrimaryWeapon->SetTraceOrigin(TraceOrigin);
+		PrimaryWeapon->SetSceneValues(TraceOrigin, WeaponMesh, WeaponMesh->GetSocketByName("barrel"));
 	}
 
 	//We have a primary but no secondary, just switch the weapons
@@ -69,19 +71,16 @@ void UShooterCombatComponent::PickUpNewWeapon(AWeapon* NewWeapon)
 	{
 		SecondaryWeapon = PrimaryWeapon;
 		PrimaryWeapon = NewWeapon;
-		PrimaryWeapon->SetTraceOrigin(TraceOrigin);
+		PrimaryWeapon->SetSceneValues(TraceOrigin, WeaponMesh, WeaponMesh->GetSocketByName("barrel"));
 	}
 
 	//We have 2 weapons, drop our current one for the new one
 	else
 	{
-		PrimaryWeapon->SetTraceOrigin(nullptr);
-		PrimaryWeapon = NewWeapon;
-		PrimaryWeapon->SetTraceOrigin(TraceOrigin);
+		PrimaryWeapon->SetSceneValues(nullptr, nullptr, nullptr);
+		PrimaryWeapon = NewWeapon;	
+		PrimaryWeapon->SetSceneValues(TraceOrigin, WeaponMesh, WeaponMesh->GetSocketByName("barrel"));
 	}
-
-	USkeletalMesh* const NewMesh = PrimaryWeapon == nullptr ? nullptr : PrimaryWeapon->GetSkeletalMesh();
-	WeaponMesh->SetSkeletalMesh(NewMesh);
 }
 
 void UShooterCombatComponent::AddAmmmoToWeapon(AWeapon* Weapon, int AmmoAddAmount)
@@ -101,6 +100,7 @@ void UShooterCombatComponent::SwapWeapons()
 	SecondaryWeapon = Temp;
 
 	WeaponMesh->SetSkeletalMesh(PrimaryWeapon->GetSkeletalMesh());
+	PrimaryWeapon->SetSceneValues(TraceOrigin, WeaponMesh, WeaponMesh->GetSocketByName("barrel"));
 
 	bIsLockedOut = true;
 	ResetLockoutAfterDelay(SwapLockoutTime);
@@ -178,11 +178,11 @@ void UShooterCombatComponent::HandleStandardActions(const bool bNoWeapon)
 			Input->bIsTryingToFire = false;
 		}
 
-		USkeletalMeshComponent* Mesh = Cast<USkeletalMeshComponent>(GetOwner()->FindComponentByClass<USkeletalMeshComponent>()->GetChildComponent(0));
-		FVector ArmsLocation = Mesh->GetComponentToWorld().GetLocation();
+		//USkeletalMeshComponent* Mesh = Cast<USkeletalMeshComponent>(GetOwner()->FindComponentByClass<USkeletalMeshComponent>()->GetChildComponent(0));
+		//FVector ArmsLocation = Mesh->GetComponentToWorld().GetLocation();
 		FRotator Rotation = Camera->GetAttachParent()->GetForwardVector().ToOrientationRotator();
 
-		PrimaryWeapon->FireWithNoise(bIsAimed, ArmsLocation, Rotation);
+		PrimaryWeapon->FireWithNoise(bIsAimed, Rotation);
 	}
 }
 

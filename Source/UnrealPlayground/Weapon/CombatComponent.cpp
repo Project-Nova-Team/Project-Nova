@@ -14,9 +14,9 @@ void UCombatComponent::BeginPlay()
 
 	if (PrimaryWeapon != nullptr)
 	{
-		PrimaryWeapon->SetTraceOrigin(TraceOrigin);
 		USkeletalMesh* const NewMesh = PrimaryWeapon->GetSkeletalMesh();
 		WeaponMesh->SetSkeletalMesh(NewMesh);
+		PrimaryWeapon->SetSceneValues(TraceOrigin, WeaponMesh, WeaponMesh->GetSocketByName("barrel"));		
 	}	
 }
 
@@ -82,15 +82,15 @@ void UCombatComponent::PickUpNewWeapon(AWeapon* const NewWeapon)
 	if (PrimaryWeapon == nullptr)
 	{
 		PrimaryWeapon = NewWeapon;
-		PrimaryWeapon->SetTraceOrigin(TraceOrigin);
+		PrimaryWeapon->SetSceneValues(TraceOrigin, WeaponMesh, WeaponMesh->GetSocketByName("barrel"));
 	}
 
 	//We have a weapon, just swap them out
 	else
 	{
-		PrimaryWeapon->SetTraceOrigin(nullptr);
+		PrimaryWeapon->SetSceneValues(nullptr, nullptr, nullptr);
 		PrimaryWeapon = NewWeapon;
-		PrimaryWeapon->SetTraceOrigin(TraceOrigin);
+		PrimaryWeapon->SetSceneValues(TraceOrigin, WeaponMesh, WeaponMesh->GetSocketByName("barrel"));
 	}
 
 	USkeletalMesh* const NewMesh = PrimaryWeapon == nullptr ? nullptr : PrimaryWeapon->GetSkeletalMesh();
