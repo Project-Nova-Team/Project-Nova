@@ -33,6 +33,8 @@ public:
 };
 
 class USkeletalMesh;
+class USkeletalMeshSocket;
+class ABullet;
 enum EWeaponFireStance;
 
 UCLASS()
@@ -52,8 +54,9 @@ public:
 	 * Fires the weapon applying recoil and bloom
 	 *
 	 * @param	bIsAimed				Whether or not whoever is holding the weapon is aiming the weapon, which determines bloom and recoil
+	 * @param	BulletRotation			Orientation the spawned actor begins in
 	 */
-	void FireWithNoise(const bool bIsAimed);
+	void FireWithNoise(const bool bIsAimed, FRotator BulletRotation);
 
 	/** Adds to ammo pool. Called by picking up ammo*/
 	void AddExcessAmmo(int AmmoAddAmount);
@@ -92,8 +95,10 @@ public:
 	 * Sets the owning pawn and sets up values the weapon needs
 	 * 
 	 * @param	TraceOriginComponent	A scene component used to determine where the firing trace begins
+	 * @param	HeldWeapon				The skeletal mesh component of the owning actor
+	 * @param	BulletSocket			Socket at the barrel of the gun where bullets spawn
 	 */
-	void SetTraceOrigin(const USceneComponent* TraceOriginComponent);
+	void SetSceneValues(const USceneComponent* TraceOriginComponent, const USkeletalMeshComponent* HeldWeapon, const USkeletalMeshSocket* BulletSocket);
 
 	/** Field of view when zoomed in using this weapon*/
 	UPROPERTY(EditAnywhere, Category = "Weapon | Aiming")
@@ -109,9 +114,24 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Weapon | General")
 	TEnumAsByte<EWeaponFireType> WeaponFireType;
 
+	/** Template class of bullet actor we use for this weapon*/
+	UPROPERTY(EditAnywhere, Category = "Mesh")
+	TSubclassOf<ABullet> BulletTemplate;
+
+	/** Object pool of bullet actors we access when firing this weapon*/
+	TArray<ABullet*> BulletPool;
+
+	/** How many bullets are pooled on begin play*/
+	UPROPERTY(VisibleAnywhere, Category = "Weapon | General")
+	int16 StartingPoolSize;
+
 	/** The max range this weapon can be fired*/
 	UPROPERTY(VisibleAnywhere, Category = "Weapon | General")
 	float MaxFireRange;
+
+	/** How many units each second does the projectile cover*/
+	UPROPERTY(EditAnywhere, Category = "Weapon | General")
+	float ProjectileSpeed;
 
 	/** Force applied to weapon when dropped by a pawn*/
 	UPROPERTY(EditAnywhere, Category = "Weapon | General")
@@ -232,6 +252,8 @@ protected:
 
 private:
 
+	ABullet* GetAvailableBullet();
+
 	/** Alters the angular velocity of camera rotation caused by weapon spread*/
 	void AddRecoilVelocity(const float Velocity);
 
@@ -243,6 +265,12 @@ private:
 	 * For the shooter, this is the camera component
 	 */
 	const USceneComponent* TraceOrigin;
+
+	/** Short hand pointer to the mesh component we are holding*/
+	const USkeletalMeshComponent* HeldWeaponMesh;
+
+	/** Short hand pointer to the socket attached to the HeldWeaponMesh at the barrel*/
+	const USkeletalMeshSocket* BulletOrigin;
 
 	/** Parameters used during line tracing*/
 	FCollisionQueryParams QueryParams;

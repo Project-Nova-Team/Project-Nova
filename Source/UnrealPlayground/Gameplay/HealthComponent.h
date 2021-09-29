@@ -16,7 +16,7 @@ public:
 	UHealthComponent();
 
 	UFUNCTION()
-		void Heal(const float HealAmount);
+	void Heal(const float HealAmount);
 
 protected:
 	virtual void BeginPlay() override;
@@ -34,7 +34,7 @@ protected:
 	float StartingHealth;
 
 	/** The actual current health*/
-	UPROPERTY(BlueprintReadOnly, Category = "Health")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Health")
 	float Health;
 
 	/** Whether or not the current health is equal to the max health*/
