@@ -186,6 +186,7 @@ void AShooter::OnTriggerEnter(AActor* OverlappedActor, AActor* OtherActor)
 	if (OtherActor->IsA(AVaultTrigger::StaticClass()))
 	{
 		bIsInsideVaultTrigger = true;
+		UE_LOG(LogTemp, Warning, TEXT("Enter Trigger"));
 	}
 }
 
@@ -194,5 +195,11 @@ void AShooter::OnTriggerExit(AActor* OverlappedActor, AActor* OtherActor)
 	if (OtherActor->IsA(AVaultTrigger::StaticClass()))
 	{
 		bIsInsideVaultTrigger = false;
+		UE_LOG(LogTemp, Warning, TEXT("Exit Trigger"));
 	}
+}
+
+bool AShooter::GetCanVault()
+{
+	return bIsInsideVaultTrigger && bIsLookingAtVaultObject;
 }

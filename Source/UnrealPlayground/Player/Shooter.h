@@ -6,6 +6,10 @@
 #include "WeaponInput.h"
 #include "Shooter.generated.h"
 
+//we create a function in Shooter called StartVaultAnimation and that broadcasts an event
+//in the vault on enter we call StartVaultAnimation
+//then in the shooter blueprint we bind that event to a function that plays the anim montage
+
 class UCapsuleComponent;
 class UCameraComponent;
 class UShooterStateMachine;
@@ -96,6 +100,9 @@ public:
 	/** Returns the input state. Note: contents are mutable*/
 	FShooterInput* GetInput() { return &InputState; }
 
+	/** Returns whether player is in vault trigger and is looking at vault object*/
+	bool GetCanVault();
+
 	UAIPerceptionStimuliSourceComponent* GetPerceptionSource() const { return PerceptionSource; }
 
 	/** Draws debug traces for a variety of position tests if enabled*/
@@ -110,9 +117,13 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FScanEvent OnScanMiss;
 
-	/** Set when player overlaps or unoverlaps vault trigger*/
 	UPROPERTY(BlueprintReadOnly)
+	/** Set when player overlaps or unoverlaps vault trigger*/
 	uint8 bIsInsideVaultTrigger : 1;
+
+	/** Is player looking at a vault object?*/
+	UPROPERTY(BlueprintReadWrite)
+		uint8 bIsLookingAtVaultObject : 1;
 
 	/** Animation Hooks**/
 
