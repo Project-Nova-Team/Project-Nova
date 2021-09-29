@@ -1,35 +1,64 @@
 #include "AIBase.h"
-#include "InstructionComponent.h"
-#include "../Weapon/CombatComponent.h"
 #include "../Gameplay/HealthComponent.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Components/SphereComponent.h"
 
 AAIBase::AAIBase()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
 	WeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh"));
-	WeaponMesh->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform);
+	WeaponMesh->SetupAttachment(GetMesh(), TEXT("WeaponSocket"));
 
-	TraceOrigin = CreateDefaultSubobject<USceneComponent>(TEXT("TraceOrigin"));
-	TraceOrigin->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform);
-
+	DamageTrigger = CreateDefaultSubobject<USphereComponent>(TEXT("DamageTrigger"));
+	DamageTrigger->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform);
+	DamageTrigger->SetCollisionProfileName("OverlapOnlyPawn");
+	DamageTrigger->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	
 	Instruction = CreateDefaultSubobject<UInstructionComponent>(TEXT("Instruction"));
-
-	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("Combat"));
-	Combat->SetUpConstruction(TraceOrigin, WeaponMesh);
-
 	Health = CreateDefaultSubobject<UHealthComponent>(TEXT("Health"));
 }
 
 void AAIBase::BeginPlay()
 {
 	Super::BeginPlay();
-	Combat->InitializeInput(&Input);
+	DamageTrigger->OnComponentBeginOverlap.AddDynamic(this, &AAIBase::OnAttackHit);
 }
 
 void AAIBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	// These ticks imply some level of bad separation of concern but is more performent 
+	// since we dont have manage tick on the instruction component itself
+
+	//Probably safe to remove second condition if we manage state search mode properly
+	if (Instruction->GetSearchMode() == ESearchMode::Follow && Instruction->GetState() == EInstructionState::Search)
+	{
+		Instruction->TickFollow(GetWorld()->GetTimeSeconds());
+	}
+
+	if (Instruction->GetState() == EInstructionState::Attack)
+	{
+		Instruction->TickAttack(GetWorld()->GetTimeSeconds());
+	}
+}
+
+void AAIBase::OnAttackBegin()
+{
+	DamageTrigger->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+}
+
+void AAIBase::OnAttackEnd()
+{
+	DamageTrigger->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	bHasHitPlayer = false;
+}
+
+void AAIBase::OnAttackHit(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (!bHasHitPlayer && OtherActor)
+	{
+		bHasHitPlayer = true;
+	}
 }

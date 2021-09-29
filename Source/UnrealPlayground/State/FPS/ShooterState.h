@@ -26,8 +26,5 @@ protected:
 	AShooter* Shooter;
 
 	/** Shorthand for getting the DelayedActionManager*/
-	UDelayedActionManager* GetDelayedActionManager() const 
-	{
-		return Shooter->GetWorld()->GetAuthGameMode<AShooterGameMode>()->GetDelayedActionManager();
-	}
+	UDelayedActionManager* GetDelayedActionManager() const;
 };
