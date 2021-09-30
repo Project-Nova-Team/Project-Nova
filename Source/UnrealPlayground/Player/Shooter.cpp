@@ -195,6 +195,8 @@ void AShooter::OnTriggerExit(AActor* OverlappedActor, AActor* OtherActor)
 	if (OtherActor->IsA(AVaultTrigger::StaticClass()))
 	{
 		bIsInsideVaultTrigger = false;
+		// force player to stop being able to scan vault object by broadcasting a miss scan. Is there a better way we could do this?
+		OnScanMiss.Broadcast(ScanHit);
 		UE_LOG(LogTemp, Warning, TEXT("Exit Trigger"));
 	}
 }
@@ -202,4 +204,9 @@ void AShooter::OnTriggerExit(AActor* OverlappedActor, AActor* OtherActor)
 bool AShooter::GetCanVault()
 {
 	return bIsInsideVaultTrigger && bIsLookingAtVaultObject;
+}
+
+void AShooter::StartVaultAnimation()
+{
+	// broadcast an event here that will play an anim montage in shooter blueprint!
 }

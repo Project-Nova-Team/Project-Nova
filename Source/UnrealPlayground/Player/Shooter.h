@@ -100,10 +100,15 @@ public:
 	/** Returns the input state. Note: contents are mutable*/
 	FShooterInput* GetInput() { return &InputState; }
 
+	UAIPerceptionStimuliSourceComponent* GetPerceptionSource() const { return PerceptionSource; }
+
 	/** Returns whether player is in vault trigger and is looking at vault object*/
+	UFUNCTION(BlueprintCallable)
 	bool GetCanVault();
 
-	UAIPerceptionStimuliSourceComponent* GetPerceptionSource() const { return PerceptionSource; }
+	/** Broadcasts event for vaulting animation*/
+	UFUNCTION(BlueprintCallable)
+	void StartVaultAnimation();
 
 	/** Draws debug traces for a variety of position tests if enabled*/
 	UPROPERTY(Category = Pawn, EditAnywhere)
@@ -123,7 +128,7 @@ public:
 
 	/** Is player looking at a vault object?*/
 	UPROPERTY(BlueprintReadWrite)
-		uint8 bIsLookingAtVaultObject : 1;
+	uint8 bIsLookingAtVaultObject : 1;
 
 	/** Animation Hooks**/
 
