@@ -11,19 +11,19 @@ UCLASS()
 class UNREALPLAYGROUND_API ABullet : public AActor
 {
 	GENERATED_BODY()
-	
-public:	
+
+public:
 	ABullet();
 
 	void Tick(float DeltaTime) override;
 
 	void InitializeOwner(const float Base, const float Body, const float Limb, const float Head, const float Range, const float FireSpeed);
-	
+
 	void SetBulletQueryParams(const FCollisionQueryParams Params) { QueryParams = Params; }
 
-	/** 
+	/**
 	 * Sets the trajectory for the damage trace and bullet then sets the bullet as active
-	 * 
+	 *
 	 * @param	TraceOrigin				World space location where the fire trace began
 	 * @param	TraceVector				The forward vector from a weapon's trace origin to the fire destination
 	 * @param	BulletVector			The forward vector from a weapon's barrel to the fire destination
@@ -42,7 +42,7 @@ private:
 
 	/** Mesh this bullet actor uses*/
 	UPROPERTY(Category = Mesh, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	UStaticMeshComponent* Mesh;
+		UStaticMeshComponent* Mesh;
 
 	/** Starting location of the trace*/
 	FVector TraceStart;
