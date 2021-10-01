@@ -4,6 +4,8 @@
 #include "Bullet.h"
 #include "CombatComponent.h"
 
+const float MIN_PREDICTION_DISTANCE = 90000.f;
+
 AWeapon::AWeapon()
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -255,8 +257,11 @@ void AWeapon::FireWithNoise(const bool bIsAimed, FRotator BulletRotation)
 	//Lets playtest and find out
 	FHitResult Hit;
 	const FVector TraceEnd = TraceStart + (TraceDirection * MaxFireRange);
-	const bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_Pawn, QueryParams);
-	const FVector ProjectileEndGuess = bHit ? Hit.ImpactPoint : TraceEnd;
+	const bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_Visibility, QueryParams);
+	const FVector ProjectileEndGuess = 
+		bHit && FVector::DistSquared(Hit.ImpactPoint, TraceStart) >= MIN_PREDICTION_DISTANCE 
+		? 
+		Hit.ImpactPoint : TraceEnd;
 
 	const FVector ProjectileDirection = (ProjectileEndGuess - ProjectileStart).GetSafeNormal();
 	const FQuat ProjectileRotation = ProjectileDirection.ToOrientationQuat();
@@ -303,7 +308,10 @@ void AWeapon::Reload()
 
 void AWeapon::AddExcessAmmo(int AmmoAddAmount)
 {
-	ExccessAmmo += AmmoAddAmount;
+	const uint16 RawAdd = ExccessAmmo + AmmoAddAmount;
+	const uint16 AmmoToAdd = FMath::Min(RawAdd, MaxHeldAmmo);
+
+	ExccessAmmo += AmmoToAdd;
 }
 
 void AWeapon::AddRecoilVelocity(const float Velocity)

@@ -101,6 +101,12 @@ void AShooter::Tick(float DeltaTime)
 	InputState.Tick(DeltaTime);
 	StateMachine->Tick(DeltaTime);
 	ScanInteractiveObject();
+
+	if (InputState.bIsTryingToThrowPrimary)
+	{
+		MakeSound(NoiseAmount);
+		InputState.bIsTryingToThrowPrimary = false;
+	}
 }
 
 void AShooter::ScanInteractiveObject()
@@ -194,5 +200,22 @@ void AShooter::OnTriggerExit(AActor* OverlappedActor, AActor* OtherActor)
 	if (OtherActor->IsA(AVaultTrigger::StaticClass()))
 	{
 		bIsInsideVaultTrigger = false;
+	}
+}
+
+void AShooter::MakeSound(const float Volume)
+{
+	FHitResult SoundHit;
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(this);
+
+	const FVector TraceStart = Camera->GetComponentLocation();
+	const FVector TraceEnd = TraceStart + Camera->GetForwardVector() * 10000.f;
+	const bool bHit = GetWorld()->LineTraceSingleByChannel(SoundHit, TraceStart, TraceEnd, ECC_Camera, QueryParams);
+
+	if (bHit)
+	{
+		DrawDebugSphere(GetWorld(), SoundHit.ImpactPoint, 30.f, 20, FColor::Blue, true, 0.1f);
+		PawnMakeNoise(NoiseAmount, SoundHit.ImpactPoint, false);
 	}
 }

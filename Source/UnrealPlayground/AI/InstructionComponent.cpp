@@ -1,6 +1,7 @@
 #include "InstructionComponent.h"
 #include "Components/SplineComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "BrainComponent.h"
 
 UInstructionComponent::UInstructionComponent()
 {
