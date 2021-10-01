@@ -4,11 +4,8 @@
 #include "GameFramework/Pawn.h"
 #include "ShooterMovementComponent.h"
 #include "WeaponInput.h"
+#include "Animation/AnimInstance.h"
 #include "Shooter.generated.h"
-
-//we create a function in Shooter called StartVaultAnimation and that broadcasts an event
-//in the vault on enter we call StartVaultAnimation
-//then in the shooter blueprint we bind that event to a function that plays the anim montage
 
 class UCapsuleComponent;
 class UCameraComponent;
@@ -20,6 +17,8 @@ class UAIPerceptionStimuliSourceComponent;
 class IInteractiveObject;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FScanEvent, FHitResult, ScanData);
+// TAKING IN SCAN HIT HERE IS BAD!!!!!!! PLS FIX
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FVaultEvent, FHitResult, ScanData2);
 
 struct FShooterInput : public FWeaponInput
 {
@@ -102,14 +101,6 @@ public:
 
 	UAIPerceptionStimuliSourceComponent* GetPerceptionSource() const { return PerceptionSource; }
 
-	/** Returns whether player is in vault trigger and is looking at vault object*/
-	UFUNCTION(BlueprintCallable)
-	bool GetCanVault();
-
-	/** Broadcasts event for vaulting animation*/
-	UFUNCTION(BlueprintCallable)
-	void StartVaultAnimation();
-
 	/** Draws debug traces for a variety of position tests if enabled*/
 	UPROPERTY(Category = Pawn, EditAnywhere)
 	uint8 bTraceDebug : 1;
@@ -122,6 +113,13 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FScanEvent OnScanMiss;
 
+	/**Invoked when the shooter can vault and presses space*/
+	UPROPERTY(BlueprintAssignable)
+	FVaultEvent OnVaultPress;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimMontage *VaultAnimMontage;
+
 	UPROPERTY(BlueprintReadOnly)
 	/** Set when player overlaps or unoverlaps vault trigger*/
 	uint8 bIsInsideVaultTrigger : 1;
@@ -129,6 +127,10 @@ public:
 	/** Is player looking at a vault object?*/
 	UPROPERTY(BlueprintReadWrite)
 	uint8 bIsLookingAtVaultObject : 1;
+
+	/** Returns whether player is in vault trigger and is looking at vault object*/
+	UFUNCTION(BlueprintCallable)
+	bool GetCanVault();
 
 	/** Animation Hooks**/
 
@@ -139,6 +141,13 @@ public:
 	/** Returns whether this shooter is falling*/
 	UFUNCTION(BlueprintCallable, Category = "Animation")
 	bool IsFalling();
+
+	/** Broadcasts event for vaulting animation*/
+	UFUNCTION(BlueprintCallable, Category = "Animation")
+	void StartVaultAnimation();
+
+	UFUNCTION(BlueprintCallable, Category = "Animation")
+	void PlayVaultMontage();
 	
 protected:
 	virtual void BeginPlay() override;

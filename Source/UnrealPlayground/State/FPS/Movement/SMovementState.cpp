@@ -43,13 +43,12 @@ FVector USMovementState::ConvertInputRelativeToCamera() const
 	return RelativeInput;
 }
 
-void USMovementState::CheckForJump() const
+void USMovementState::CheckForVault()
 {
 	if (Input->bIsTryingToVault && Movement->bIsOnGround && Shooter->GetCanVault())
 	{
-		Shooter->StartVaultAnimation();
 
-		UE_LOG(LogTemp, Warning, TEXT("Good Job David!"));
+		FlagTransition("Vaulting", 10);
 
 		//Movement->Velocity.Z += Movement->JumpForce;
 
