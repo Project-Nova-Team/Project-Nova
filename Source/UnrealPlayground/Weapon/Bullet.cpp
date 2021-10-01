@@ -35,13 +35,14 @@ void ABullet::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	const float MaxRangeSq = MaxRange * MaxRange;
-	const FVector Delta = TraceDirection * Speed * DeltaTime;
-	const FVector TraceEnd = CurrentTraceLocation + Delta;
+	const FVector DeltaTrace = TraceDirection * Speed * DeltaTime;
+	const FVector DeltaProjectile = BulletDirection * Speed * DeltaTime;
+	const FVector TraceEnd = CurrentTraceLocation + DeltaTrace;
 
-	SetActorLocation(GetActorLocation() + Delta);
+	SetActorLocation(GetActorLocation() + DeltaProjectile);
 
 	FHitResult Hit;
-	GetWorld()->LineTraceSingleByChannel(Hit, CurrentTraceLocation, TraceEnd, ECC_Pawn, QueryParams);
+	GetWorld()->LineTraceSingleByChannel(Hit, CurrentTraceLocation, TraceEnd, ECC_Visibility, QueryParams);
 	
 	if (Hit.bBlockingHit)
 	{

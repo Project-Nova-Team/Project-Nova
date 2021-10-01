@@ -20,6 +20,8 @@ public:
 
 	UInstructionComponent* GetInstruction() const { return Instruction; }
 
+	UHealthComponent* GetHealth() const { return Health; }
+
 	/** Called in animation blueprint to enable damage collider*/
 	UFUNCTION(BlueprintCallable)
 	void OnAttackBegin();
@@ -49,6 +51,10 @@ private:
 	/** Called when the damage trigger hits a pawn*/
 	UFUNCTION()
 	void OnAttackHit(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	/** Called when the AI takes fatal damage*/
+	UFUNCTION()
+	void OnDeath();
 
 	/**
 	 * Whether or not this attack instance has struck the player. 

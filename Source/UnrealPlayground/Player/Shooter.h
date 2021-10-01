@@ -198,4 +198,16 @@ private:
 	void ThrowPrimaryRelease()			{ InputState.bIsTryingToThrowPrimary = false; }
 	void ThrowSecondaryPress()			{ InputState.bIsTryingToThrowSecondary = true; }
 	void ThrowSecondaryRelease()		{ InputState.bIsTryingToThrowSecondary = false; }
+
+
+	//TODO delete all of this
+#if WITH_EDITOR
+	UPROPERTY(EditAnywhere, Category = "SOUND TEST")
+	float NoiseAmount;
+
+	float NoiseIntensity;
+
+	void MakeSound(const float Volume);
+	
+#endif
 };

@@ -2,6 +2,7 @@
 #include "../Gameplay/HealthComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/SphereComponent.h"
+#include "Components/CapsuleComponent.h"
 
 AAIBase::AAIBase()
 {
@@ -23,6 +24,7 @@ void AAIBase::BeginPlay()
 {
 	Super::BeginPlay();
 	DamageTrigger->OnComponentBeginOverlap.AddDynamic(this, &AAIBase::OnAttackHit);
+	Health->OnDeath.AddDynamic(this, &AAIBase::OnDeath);
 }
 
 void AAIBase::Tick(float DeltaTime)
@@ -61,4 +63,12 @@ void AAIBase::OnAttackHit(UPrimitiveComponent* OverlappedComponent, AActor* Othe
 	{
 		bHasHitPlayer = true;
 	}
+}
+
+void AAIBase::OnDeath()
+{
+	GetCapsuleComponent()->SetCollisionProfileName("Ragdoll");
+	GetMesh()->SetCollisionProfileName("Ragdoll");
+	GetMesh()->SetAnimInstanceClass(nullptr);
+	GetMesh()->SetSimulatePhysics(true);
 }

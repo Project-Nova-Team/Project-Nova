@@ -35,4 +35,7 @@ private:
 
 	UFUNCTION()
 	void RunNewTree(EInstructionState NewState);
+
+	UFUNCTION()
+	void OnOwnerDeath();
 };
