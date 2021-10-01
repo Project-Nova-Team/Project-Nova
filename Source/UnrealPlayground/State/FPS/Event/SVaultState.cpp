@@ -8,6 +8,9 @@ void USVaultState::OnEnter()
 
 	// Vault animation here
 
+	Shooter->StartVaultAnimation();
+
+
 	UE_LOG(LogTemp, Warning, TEXT("Good work. Go to bed now."));
 
 	//Shooter->GetArms()->GetAnimInstance()->Montage_Play();

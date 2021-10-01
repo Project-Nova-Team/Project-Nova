@@ -209,4 +209,12 @@ bool AShooter::GetCanVault()
 void AShooter::StartVaultAnimation()
 {
 	// broadcast an event here that will play an anim montage in shooter blueprint!
+	// TAKING IN SCAN HIT HERE IS BAD!!!!!!! PLS FIX
+	OnVaultPress.Broadcast(ScanHit);
+}
+
+void AShooter::PlayVaultMontage()
+{
+	float Test = Arms->GetAnimInstance()->Montage_Play(VaultAnimMontage, 1.0f);
+		UE_LOG(LogTemp, Warning, TEXT("%s"), &Test);
 }

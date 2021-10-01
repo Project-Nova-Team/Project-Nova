@@ -11,7 +11,7 @@ void USRunState::Initialize(UStateMachine* StateMachine, UObject* ContextObject)
 void USRunState::Tick(const float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	CheckForJump();
+	CheckForVault();
 	CheckForWalkState();
 	CheckForDiveState();
 }
