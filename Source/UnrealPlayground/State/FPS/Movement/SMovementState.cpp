@@ -43,19 +43,22 @@ FVector USMovementState::ConvertInputRelativeToCamera() const
 	return RelativeInput;
 }
 
-void USMovementState::CheckForJump() const
+void USMovementState::CheckForVault()
 {
-	if (Input->bIsTryingToJump && Movement->bIsOnGround)
+	if (Input->bIsTryingToVault && Movement->bIsOnGround && Shooter->GetCanVault())
 	{
-		Movement->Velocity.Z += Movement->JumpForce;
 
-		Input->bIsTryingToJump = false;
+		FlagTransition("Vaulting", 10);
 
-		//Lift slighly in the air so the next ground check returns false
-		Movement->bIsOnGround = false;
-		const FVector CurrentLoc = Collider->GetComponentLocation();
-		const FVector Adjustment = FVector(0, 0, FLOOR_DIST);
-		Collider->SetWorldLocation(CurrentLoc + Adjustment, true);
+		//Movement->Velocity.Z += Movement->JumpForce;
+
+		//Input->bIsTryingToVault = false;
+
+		////Lift slighly in the air so the next ground check returns false
+		//Movement->bIsOnGround = false;
+		//const FVector CurrentLoc = Collider->GetComponentLocation();
+		//const FVector Adjustment = FVector(0, 0, FLOOR_DIST);
+		//Collider->SetWorldLocation(CurrentLoc + Adjustment, true);
 	}
 }
 

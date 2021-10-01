@@ -166,6 +166,10 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Control | Dive")
 		float DiveHorizontalImpulse;
 
+	/** Set to true if shooter overlaps vault trigger and is looking at vault object*/
+	UPROPERTY(BlueprintReadWrite)
+	uint8 bCanVault : 1;
+
 	/** Information regarding the surface the shooter is currently standing on*/
 	FHitResult GroundHitData;
 

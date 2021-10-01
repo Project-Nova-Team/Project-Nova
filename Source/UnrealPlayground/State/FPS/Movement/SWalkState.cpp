@@ -11,7 +11,7 @@ void USWalkState::Initialize(UStateMachine* StateMachine, UObject* ContextObject
 void USWalkState::Tick(const float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	CheckForJump();
+	CheckForVault();
 	CheckForRunState();
 	CheckForCrouchState();
 	CheckForProneState();
