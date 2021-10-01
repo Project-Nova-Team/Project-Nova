@@ -20,7 +20,7 @@ UShooterMovementComponent::UShooterMovementComponent()
 	GravityMultiplier = 2.2f;
 
 	AirControlMultiplier = 0.f;
-	JumpForce = 600.f;
+	JumpForce = 900.f;
 	MaxHorizontalSpeed = 5000.f;
 	MaxVerticalSpeed = 20000.f;
 

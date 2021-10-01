@@ -147,8 +147,8 @@ void AShooter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	InputComponent->BindAxis("MoveY", this, &AShooter::MoveInputY);
 	InputComponent->BindAxis("LookX", this, &AShooter::LookInputX);
 	InputComponent->BindAxis("LookY", this, &AShooter::LookInputY);
-	InputComponent->BindAction("Jump", IE_Pressed, this, &AShooter::JumpPress);
-	InputComponent->BindAction("Jump", IE_Released, this, &AShooter::JumpRelease);
+	InputComponent->BindAction("Vault", IE_Pressed, this, &AShooter::VaultPress);
+	InputComponent->BindAction("Vault", IE_Released, this, &AShooter::VaultRelease);
 	InputComponent->BindAction("Crouch", IE_Pressed, this, &AShooter::CrouchPress);
 	InputComponent->BindAction("Crouch", IE_Released, this, &AShooter::CrouchRelease);
 	InputComponent->BindAction("Aim", IE_Pressed, this, &AShooter::AimPress);
@@ -186,6 +186,7 @@ void AShooter::OnTriggerEnter(AActor* OverlappedActor, AActor* OtherActor)
 	if (OtherActor->IsA(AVaultTrigger::StaticClass()))
 	{
 		bIsInsideVaultTrigger = true;
+		UE_LOG(LogTemp, Warning, TEXT("Enter Trigger"));
 	}
 }
 
@@ -194,5 +195,26 @@ void AShooter::OnTriggerExit(AActor* OverlappedActor, AActor* OtherActor)
 	if (OtherActor->IsA(AVaultTrigger::StaticClass()))
 	{
 		bIsInsideVaultTrigger = false;
+		// force player to stop being able to scan vault object by broadcasting a miss scan. Is there a better way we could do this?
+		OnScanMiss.Broadcast(ScanHit);
+		UE_LOG(LogTemp, Warning, TEXT("Exit Trigger"));
 	}
+}
+
+bool AShooter::GetCanVault()
+{
+	return bIsInsideVaultTrigger && bIsLookingAtVaultObject;
+}
+
+void AShooter::StartVaultAnimation()
+{
+	// broadcast an event here that will play an anim montage in shooter blueprint!
+	// TAKING IN SCAN HIT HERE IS BAD!!!!!!! PLS FIX
+	OnVaultPress.Broadcast(ScanHit);
+}
+
+void AShooter::PlayVaultMontage()
+{
+	float Test = Arms->GetAnimInstance()->Montage_Play(VaultAnimMontage, 1.0f);
+		UE_LOG(LogTemp, Warning, TEXT("%s"), &Test);
 }

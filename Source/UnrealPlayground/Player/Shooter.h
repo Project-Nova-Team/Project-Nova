@@ -4,6 +4,7 @@
 #include "GameFramework/Pawn.h"
 #include "ShooterMovementComponent.h"
 #include "WeaponInput.h"
+#include "Animation/AnimInstance.h"
 #include "Shooter.generated.h"
 
 class UCapsuleComponent;
@@ -16,6 +17,8 @@ class UAIPerceptionStimuliSourceComponent;
 class IInteractiveObject;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FScanEvent, FHitResult, ScanData);
+// TAKING IN SCAN HIT HERE IS BAD!!!!!!! PLS FIX
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FVaultEvent, FHitResult, ScanData2);
 
 struct FShooterInput : public FWeaponInput
 {
@@ -49,7 +52,7 @@ public:
 	float LookY;
 
 	/** Whether or not the player is pressing the jump button*/
-	uint8 bIsTryingToJump : 1;
+	uint8 bIsTryingToVault : 1;
 
 	/** Whether or not the player is pressing the crouch button*/
 	uint8 bIsHoldingCrouch : 1;
@@ -110,6 +113,25 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FScanEvent OnScanMiss;
 
+	/**Invoked when the shooter can vault and presses space*/
+	UPROPERTY(BlueprintAssignable)
+	FVaultEvent OnVaultPress;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimMontage *VaultAnimMontage;
+
+	UPROPERTY(BlueprintReadOnly)
+	/** Set when player overlaps or unoverlaps vault trigger*/
+	uint8 bIsInsideVaultTrigger : 1;
+
+	/** Is player looking at a vault object?*/
+	UPROPERTY(BlueprintReadWrite)
+	uint8 bIsLookingAtVaultObject : 1;
+
+	/** Returns whether player is in vault trigger and is looking at vault object*/
+	UFUNCTION(BlueprintCallable)
+	bool GetCanVault();
+
 	/** Animation Hooks**/
 
 	/** Returns whether this shooter is walking*/
@@ -119,12 +141,18 @@ public:
 	/** Returns whether this shooter is falling*/
 	UFUNCTION(BlueprintCallable, Category = "Animation")
 	bool IsFalling();
+
+	/** Broadcasts event for vaulting animation*/
+	UFUNCTION(BlueprintCallable, Category = "Animation")
+	void StartVaultAnimation();
+
+	UFUNCTION(BlueprintCallable, Category = "Animation")
+	void PlayVaultMontage();
 	
 protected:
 	virtual void BeginPlay() override;
 
 private:
-	uint8 bIsInsideVaultTrigger : 1;
 
 	UFUNCTION()
 	void OnTriggerEnter(AActor* OverlappedActor, AActor* OtherActor);
@@ -176,8 +204,8 @@ private:
 	void MoveInputY(const float Value)	{ InputState.MoveY = Value; }
 	void LookInputX(const float Value)	{ InputState.LookX = Value; }
 	void LookInputY(const float Value)	{ InputState.LookY = Value; }
-	void JumpPress()					{ InputState.bIsTryingToJump = true; }
-	void JumpRelease()					{ InputState.bIsTryingToJump = false; }
+	void VaultPress()					{ InputState.bIsTryingToVault = true; }
+	void VaultRelease()					{ InputState.bIsTryingToVault = false; }
 	void CrouchPress()					{ InputState.bIsHoldingCrouch = true; }
 	void CrouchRelease()				{ InputState.bIsHoldingCrouch = false; }
 	void ShootPress()					{ InputState.bIsTryingToFire = true; }
