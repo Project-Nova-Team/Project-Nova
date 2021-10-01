@@ -47,7 +47,7 @@ protected:
 	virtual void RotateCameraFromInput(const float DeltaTime);
 
 	/** Applies upward velocity to the shooter if its grounded and jump input is recieved*/
-	virtual void CheckForJump() const;
+	virtual void CheckForVault();
 
 	/** Calculates the vector applied to the shooter based on gravity, friction, and input*/
 	void CalculateVelocity(const float DeltaTime) const;
