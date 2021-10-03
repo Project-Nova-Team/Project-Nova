@@ -51,18 +51,8 @@ void UShooterAnimInstance::PlayVaultMontage()
 	Montage_Play(VaultAnimMontage, 1.0f);
 }
 
-void UShooterAnimInstance::PlaySwapMontage()
-{
-	Montage_Play(VaultAnimMontage, 1.0f);
-}
-
 void UShooterAnimInstance::OnMontageEndMethod(UAnimMontage* Montage, bool bInterupted)
 {
-	if (Montage == VaultAnimMontage)
-	{
-		UShooterStateMachine* ShooterStateMachine = Shooter->GetStateMachine();
-
-		if (ShooterStateMachine != nullptr)
-			ShooterStateMachine->GetActiveState()->FlagTransition("Walking");
-	}
+	if(Shooter->GetStateMachine() != nullptr)
+		Shooter->GetStateMachine()->GetActiveState()->FlagTransition("Walking");
 }

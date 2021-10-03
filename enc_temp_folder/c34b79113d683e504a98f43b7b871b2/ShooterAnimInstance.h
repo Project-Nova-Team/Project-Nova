@@ -52,9 +52,6 @@ private:
 	UFUNCTION(BlueprintCallable, Category = "Animation")
 		void PlayVaultMontage();
 
-	UFUNCTION(BlueprintCallable, Category = "Animation")
-		void PlaySwapMontage();
-
 	/** Called when a montage ends*/
 	UFUNCTION()
 		void OnMontageEndMethod(UAnimMontage* Montage, bool bInterupted);

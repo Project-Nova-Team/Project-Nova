@@ -6,14 +6,8 @@ void USVaultState::OnEnter()
 {
 	Super::OnEnter();
 
-	// Vault animation here
-
-	Shooter->StartVaultAnimation();
-
-
-	UE_LOG(LogTemp, Warning, TEXT("Good work. Go to bed now."));
-
-	//Shooter->GetArms()->GetAnimInstance()->Montage_Play();
+	// Broadcasts event for shooter anim blueprint that triggers Montage_Play
+	ShooterAnimInstance->StartVaultAnimation();
 }
 
 void USVaultState::OnExit()
@@ -21,13 +15,9 @@ void USVaultState::OnExit()
 	Super::OnExit();
 }
 
-void USVaultState::Tick(const float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
-
 void USVaultState::Initialize(UStateMachine* StateMachine, UObject* ContextObject)
 {
 	Super::Initialize(StateMachine, ContextObject);
+
+	ShooterAnimInstance = Cast<UShooterAnimInstance>(Shooter->GetSkeletalMeshComponent()->GetAnimInstance());
 }

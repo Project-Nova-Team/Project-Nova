@@ -47,7 +47,7 @@ void USMovementState::CheckForVault()
 {
 	if (Input->bIsTryingToVault && Movement->bIsOnGround && Shooter->GetCanVault())
 	{
-
+		// calls USVaultState.OnEnter
 		FlagTransition("Vaulting", 10);
 
 		//Movement->Velocity.Z += Movement->JumpForce;
