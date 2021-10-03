@@ -39,12 +39,12 @@ public:
 
 	void SetUpConstruction(USceneComponent* TraceComponent, USkeletalMeshComponent* MeshComponent) override;
 
+	void ResetLockout();
+
 protected:
 	void BeginPlay() override;
 
 private:
-	/** Switches out the primary and secondary weapons*/
-	void SwapWeapons();
 
 	/** The stored weapon owned by this component that can be switched to from input*/
 	UPROPERTY(Category = Weapons, EditAnywhere)
@@ -55,8 +55,6 @@ private:
 
 	/** Shorthand pointer to the shooter's trace origin casted as a camera*/
 	UCameraComponent* Camera;
-
-	void ResetLockout();
 
 	void ResetLockoutAfterDelay(const float LockoutDuration);
 
@@ -72,6 +70,10 @@ private:
 	/** Broadcasts event for swap animation*/
 	UFUNCTION(BlueprintCallable, Category = "Animation")
 	void BroadcastSwapEvent();
+
+	/** Switches out the primary and secondary weapons*/
+	UFUNCTION(BlueprintCallable)
+	void SwapWeapons();
 
 	/**Invoked when the shooter swaps weapons*/
 	UPROPERTY(BlueprintAssignable)
