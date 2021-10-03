@@ -32,6 +32,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
 		UAnimMontage* VaultAnimMontage;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
+		UAnimMontage* SwapAnimMontage;
+
 private:
 
 	/**Invoked when the shooter can vault and presses space*/

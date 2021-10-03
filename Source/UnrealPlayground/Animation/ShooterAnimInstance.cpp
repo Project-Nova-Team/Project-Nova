@@ -56,17 +56,19 @@ void UShooterAnimInstance::PlayVaultMontage()
 
 void UShooterAnimInstance::PlaySwapMontage()
 {
-	Montage_Play(VaultAnimMontage, 1.0f);
+	Montage_Play(SwapAnimMontage, 1.0f);
 }
 
 void UShooterAnimInstance::OnMontageEndMethod(UAnimMontage* Montage, bool bInterupted)
 {
-	// If the montage is vault, go to walk anim on end. 
-	if (Montage == VaultAnimMontage)
+	// If the montage is vault or swap, go to walk anim on end. 
+	if (Montage == VaultAnimMontage || SwapAnimMontage)
 	{
 		UShooterStateMachine* ShooterStateMachine = Shooter->GetStateMachine();
 
 		if (ShooterStateMachine != nullptr)
 			ShooterStateMachine->GetActiveState()->FlagTransition("Walking");
+
+		ShooterCombat->ResetLockout();
 	}
 }

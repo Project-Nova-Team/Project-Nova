@@ -110,8 +110,6 @@ void UShooterCombatComponent::SwapWeapons()
 
 	// Lockout reset immediately - this allows the user to shoot as soon as weapon is swapped.
 	// If we would not like the player to be able to shoot right away, change resetlockout to resetlockoutafterdelay
-	bIsLockedOut = true;
-	ResetLockout();
 }
 
 void UShooterCombatComponent::HandleSpecialActions()
@@ -170,32 +168,32 @@ void UShooterCombatComponent::HandleStandardActions(const bool bNoWeapon)
 
 	else if (Input->bIsTryingToSwap)
 	{
-		BroadcastSwapEvent();
-
 		bIsLockedOut = true;
-		ResetLockoutAfterDelay(SwapLockoutTime);
-		// Swaps Weapons on delay
-		Handle = DelayManager->StartDelayedAction(this, &UShooterCombatComponent::SwapWeapons, SwapLockoutTime);
+		BroadcastSwapEvent();
+		//bIsLockedOut = true;
+		//ResetLockoutAfterDelay(SwapLockoutTime);
+		//// Swaps Weapons on delay
 
-		//SwapWeapons();
+		////SwapWeapons();
 		Input->bIsTryingToSwap = false;
 	}
 
 	else if (Input->bIsTryingToFire)
 	{		
-		//Make code for burst fire if we really care about that
+		if (!bIsLockedOut)
+		{
+			//Semi auto functionality
+			if (PrimaryWeapon->GetWeaponType() == FT_Semi)
+			{
+				Input->bIsTryingToFire = false;
+			}
 
-		//Semi auto functionality
-		if (PrimaryWeapon->GetWeaponType() == FT_Semi)
-		{			
-			Input->bIsTryingToFire = false;
-		}
+			//USkeletalMeshComponent* Mesh = Cast<USkeletalMeshComponent>(GetOwner()->FindComponentByClass<USkeletalMeshComponent>()->GetChildComponent(0));
+			//FVector ArmsLocation = Mesh->GetComponentToWorld().GetLocation();
+			FRotator Rotation = Camera->GetAttachParent()->GetForwardVector().ToOrientationRotator();
 
-		//USkeletalMeshComponent* Mesh = Cast<USkeletalMeshComponent>(GetOwner()->FindComponentByClass<USkeletalMeshComponent>()->GetChildComponent(0));
-		//FVector ArmsLocation = Mesh->GetComponentToWorld().GetLocation();
-		FRotator Rotation = Camera->GetAttachParent()->GetForwardVector().ToOrientationRotator();
-
-		PrimaryWeapon->FireWithNoise(bIsAimed, Rotation);
+			PrimaryWeapon->FireWithNoise(bIsAimed, Rotation);
+		}	
 	}
 }
 
