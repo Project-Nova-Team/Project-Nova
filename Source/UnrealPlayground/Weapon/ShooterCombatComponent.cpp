@@ -8,7 +8,11 @@ UShooterCombatComponent::UShooterCombatComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 
-	SwapLockoutTime = 1.4f;
+	/**
+		we know that the swap animation takes this long. Hardcoded because we can't directly get length of anim.
+		When we replace the placeholder anim, we need to change this float.
+	*/
+	SwapLockoutTime = .75f;
 	ThrowLockoutTime = 0.8f;
 	MeleeLockoutTime = 1.5f;
 
@@ -94,6 +98,8 @@ void UShooterCombatComponent::SwapWeapons()
 	{
 		return;
 	}
+
+	UE_LOG(LogTemp, Warning, TEXT("Swapped"));
   
 	AWeapon* const Temp = PrimaryWeapon;
 	PrimaryWeapon = SecondaryWeapon;
@@ -102,8 +108,10 @@ void UShooterCombatComponent::SwapWeapons()
 	WeaponMesh->SetSkeletalMesh(PrimaryWeapon->GetSkeletalMesh());
 	PrimaryWeapon->SetSceneValues(TraceOrigin, WeaponMesh, WeaponMesh->GetSocketByName("barrel"));
 
+	// Lockout reset immediately - this allows the user to shoot as soon as weapon is swapped.
+	// If we would not like the player to be able to shoot right away, change resetlockout to resetlockoutafterdelay
 	bIsLockedOut = true;
-	ResetLockoutAfterDelay(SwapLockoutTime);
+	ResetLockout();
 }
 
 void UShooterCombatComponent::HandleSpecialActions()
@@ -162,9 +170,14 @@ void UShooterCombatComponent::HandleStandardActions(const bool bNoWeapon)
 
 	else if (Input->bIsTryingToSwap)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, "SwapFunc");
+		BroadcastSwapEvent();
 
-		SwapWeapons();	
+		bIsLockedOut = true;
+		ResetLockoutAfterDelay(SwapLockoutTime);
+		// Swaps Weapons on delay
+		Handle = DelayManager->StartDelayedAction(this, &UShooterCombatComponent::SwapWeapons, SwapLockoutTime);
+
+		//SwapWeapons();
 		Input->bIsTryingToSwap = false;
 	}
 
@@ -234,4 +247,10 @@ float UShooterCombatComponent::GetWeaponBloom() const
 float UShooterCombatComponent::GetWeaponRecoilRecovery() const
 {
 	return PrimaryWeapon == nullptr ? NoWeaponRecoilRecovery : PrimaryWeapon->GetRecoilRecovery();
+}
+
+void UShooterCombatComponent::BroadcastSwapEvent()
+{
+	// broadcast an event here that will play an anim montage in shooter blueprint!
+	OnWeaponSwapRequest.Broadcast();
 }

@@ -9,6 +9,8 @@ class UCameraComponent;
 
 struct FDelayedActionHandle;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FSwapEvent);
+
 UCLASS()
 class UNREALPLAYGROUND_API UShooterCombatComponent : public UCombatComponent
 {
@@ -67,6 +69,13 @@ private:
 	/** Sets aim state and invokes any necessary events to help with animation*/
 	void HandleAimState(const bool bNoWeapon);
 
+	/** Broadcasts event for swap animation*/
+	UFUNCTION(BlueprintCallable, Category = "Animation")
+	void BroadcastSwapEvent();
+
+	/**Invoked when the shooter swaps weapons*/
+	UPROPERTY(BlueprintAssignable)
+	FSwapEvent OnWeaponSwapRequest;
 
 	/** Brendan Tell me if this is Wrong!!!!*/
 	UPROPERTY()

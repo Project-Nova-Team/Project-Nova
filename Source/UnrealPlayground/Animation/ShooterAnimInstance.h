@@ -7,7 +7,8 @@
 #include <UnrealPlayground/Player/Shooter.h>
 #include "../State/State.h"
 #include "../State/FPS/ShooterStateMachine.h"
-#include <UnrealPlayground/Player/ShooterMovementComponent.h>
+#include "../Player/ShooterMovementComponent.h"
+#include "../Weapon/ShooterCombatComponent.h"
 #include "ShooterAnimInstance.generated.h"
 
 
@@ -26,7 +27,7 @@ public:
 
 	/** Broadcasts event for vaulting animation*/
 	UFUNCTION(BlueprintCallable, Category = "Animation")
-		void StartVaultAnimation();
+		void BroadcastVaultEvent();
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
 		UAnimMontage* VaultAnimMontage;
@@ -67,5 +68,9 @@ protected:
 	AShooter* Shooter;
 
 	UShooterMovementComponent* ShooterMovement;
+
+	// Combat Component for Swap
+	UPROPERTY(BlueprintReadOnly)
+	UShooterCombatComponent* ShooterCombat;
 	
 };
