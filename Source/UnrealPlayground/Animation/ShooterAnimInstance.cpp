@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
-#include "Animation/AnimMontage.h"
 #include "ShooterAnimInstance.h"
+#include "Animation/AnimMontage.h"
+
 
 UShooterAnimInstance::UShooterAnimInstance()
 {
@@ -25,8 +26,10 @@ void UShooterAnimInstance::NativeBeginPlay()
 	{
 		ShooterMovement = Shooter->GetShooterMovement();
 		ShooterMesh = Shooter->GetSkeletalMeshComponent();
+		ShooterCombat = Shooter->GetCombat();
 	}
 
+	// Binds Montage end method to an in-engine dynamic multicast delegate named OnMontageEnded
 	OnMontageEnded.AddDynamic(this, &UShooterAnimInstance::OnMontageEndMethod);
 }
 
@@ -40,7 +43,7 @@ bool UShooterAnimInstance::IsFalling()
 	return !ShooterMovement->bIsOnGround;
 }
 
-void UShooterAnimInstance::StartVaultAnimation()
+void UShooterAnimInstance::BroadcastVaultEvent()
 {
 	// broadcast an event here that will play an anim montage in shooter blueprint!
 	OnVaultPress.Broadcast();
@@ -58,6 +61,7 @@ void UShooterAnimInstance::PlaySwapMontage()
 
 void UShooterAnimInstance::OnMontageEndMethod(UAnimMontage* Montage, bool bInterupted)
 {
+	// If the montage is vault, go to walk anim on end. 
 	if (Montage == VaultAnimMontage)
 	{
 		UShooterStateMachine* ShooterStateMachine = Shooter->GetStateMachine();

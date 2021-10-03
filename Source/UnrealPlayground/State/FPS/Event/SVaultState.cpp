@@ -7,7 +7,7 @@ void USVaultState::OnEnter()
 	Super::OnEnter();
 
 	// Broadcasts event for shooter anim blueprint that triggers Montage_Play
-	ShooterAnimInstance->StartVaultAnimation();
+	ShooterAnimInstance->BroadcastVaultEvent();
 }
 
 void USVaultState::OnExit()
