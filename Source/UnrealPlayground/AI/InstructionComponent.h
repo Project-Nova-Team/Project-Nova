@@ -7,25 +7,7 @@
 
 class USplineComponent;
 class UBlackboardComponent;
-
-UENUM()
-enum EInstructionState
-{
-	Patrol,
-	Search,
-	Attack
-};
-
-UENUM()
-enum ESearchMode
-{
-	NotSearching,
-	Investigate,
-	Track,
-	Follow
-};
-
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FInstructionStateEvent, EInstructionState, NewState);
+class AAIBase;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class UNREALPLAYGROUND_API UInstructionComponent : public UActorComponent
@@ -36,10 +18,10 @@ public:
 	UInstructionComponent();
 
 	/** Performs component set up*/
-	void Initialize(UBlackboardComponent* InitBlackBoard);
+	//void Initialize(UBlackboardComponent* InitBlackBoard);
 
 	/** Returns the spline component attached to the PatrolActor if one exists*/
-	USplineComponent* GetPatrolPath() const;
+	//USplineComponent* GetPatrolPath() const;
 
 	/**
 	 * Event invoked when the perception component senses a disturbance in the environment
@@ -47,53 +29,70 @@ public:
 	 * @param	Invoker				The actor who caused the stimulus
 	 * @param	Stimulus			The actual stimulus that the controller picked up
 	 */
-	UFUNCTION()
-	void OnStimulus(AActor* Invoker, FAIStimulus Stimulus);
+	//UFUNCTION()
+	//void OnStimulus(AActor* Invoker, FAIStimulus Stimulus);
 	
 	/** Returns the current state of the AI*/
-	EInstructionState GetState() const { return State; }
+	//EInstructionState GetState() const { return State; }
 	
 	/** Returns the search mode of the AI*/
-	ESearchMode GetSearchMode() const { return SearchMode; }
+	//ESearchMode GetSearchMode() const { return SearchMode; }
+
+	//UBlackboardComponent* GetBlackboard() const { return Blackboard; }
+
+	//FVector GetInvestigationLocation() const { return AudioInvestigationLocation; }
+
+	//void SetInvestigationLocation(const FVector Location) { AudioInvestigationLocation = Location; }
 
 	/** Sets active state of the AI*/
-	UFUNCTION(BlueprintCallable)
-	void SetState(const EInstructionState NewState);
+	//UFUNCTION(BlueprintCallable)
+	//void SetState(const EInstructionState NewState);
 
 	/** Sets the search mode of the AI*/
-	UFUNCTION(BlueprintCallable)
-	void SetSearchMode(const ESearchMode NewMode);
-
-	/** Event invoked when a stimulus requests a change in state*/
-	UPROPERTY(BlueprintAssignable)
-	FInstructionStateEvent OnInstructionStateChange;
+	//UFUNCTION(BlueprintCallable)
+	//void SetSearchMode(const ESearchMode NewMode);
 
 	/** While in search mode follow, we check if its been long enough to stop following*/
-	void TickFollow(const float CurrentTime);
+	//void TickFollow(const float CurrentTime);
 
 	/** While in attack mode we need to check if we lost sight of the player too long ago*/
-	void TickAttack(const float CurrentTime);
+	//void TickAttack(const float CurrentTime);
+
+	/** Determines search type based on state. Returns true if investigation is initiated*/
+	//bool DetermineSearch(const FVector SourceLocation, const float SourceVolume);
+
+protected:
+	/** Owning actor cached as an AIBase*/
+	UPROPERTY(BlueprintReadOnly)
+	AAIBase* AIOwner;
 
 private:
 	/** Shorthand pointer to the blackboard*/
 	UBlackboardComponent* Blackboard;
 
 	/** Current state of the the AI*/
-	UPROPERTY(VisibleAnywhere, Category = "AI | State")
-	TEnumAsByte<EInstructionState> State;
+	//UPROPERTY(VisibleAnywhere, Category = "AI | State")
+	//TEnumAsByte<EInstructionState> State;
 
 	/** Current search state of the the AI*/
-	UPROPERTY(VisibleAnywhere, Category = "AI | State")
-	TEnumAsByte<ESearchMode> SearchMode;
-
-	//TODO delete me, we need to get the player a better way
-	UPROPERTY(EditAnywhere, Category = "AI | State")
-	AActor* Player;
-
+	//UPROPERTY(VisibleAnywhere, Category = "AI | State")
+	//TEnumAsByte<ESearchMode> SearchMode;
+	
 #if WITH_EDITOR
 	UPROPERTY(EditAnywhere, Category = "AI | Debug")
 	uint8 bDebug : 1;
 #endif
+
+	/** Shorthand pointer to the player object the AIBase references*/
+	AActor* Player;
+
+	/** Determines what state the AI enters when hearing*/
+	//void ReactToAudioStimulus(FAIStimulus Stimulus);
+
+	/** Determines what state the AI enters when seeing, touching, or taking damage*/
+	//void ReactToAttackStimulus(const FString SenseType, FAIStimulus Stimulus);
+
+
 
 	//Begin Patrol
 
@@ -119,16 +118,16 @@ private:
 	uint8 bIsReversedOnPath : 1;
 
 	/** Returns the position of the next patrol path waypoint the AI will try to navigate towards*/
-	UFUNCTION(BlueprintCallable)
-	FVector GetNavigablePatrolPoint() const;
+	//UFUNCTION(BlueprintCallable)
+	//FVector GetNavigablePatrolPoint() const;
 
 	/** Returns the spline point index that comes after StartingPoint*/
-	UFUNCTION(BlueprintCallable)
-	int32 GetNextPatrolPoint(const int32 StartingPoint) const;
+	//UFUNCTION(BlueprintCallable)
+	//int32 GetNextPatrolPoint(const int32 StartingPoint) const;
 
 	/** Sets the patrol index to the next point on the patrol path*/
-	UFUNCTION(BlueprintCallable)
-	void UpdatePatrolIndex();
+	//UFUNCTION(BlueprintCallable)
+	//void UpdatePatrolIndex();
 
 
 
@@ -138,16 +137,16 @@ private:
 	 *	Sound sources will always be heard at their implicit volume if heard from less than the this distance.
 	 *	We square this value so we wont have to sqrt the distance
 	 */
-	UPROPERTY(VisibleAnywhere, Category = "AI | Search")
-	float MinimumPropagationDistance;
+	//UPROPERTY(VisibleAnywhere, Category = "AI | Search")
+	//float MinimumPropagationDistance;
 
 	/** Minimum threshhold of human hearing in P/1 m^2*/
-	UPROPERTY(VisibleAnywhere, Category = "AI | Search")
-	float MinimumIntensityThreshold;
+	//UPROPERTY(VisibleAnywhere, Category = "AI | Search")
+	//float MinimumIntensityThreshold;
 
 	/** Any sounds heard with a volume less than this will be discarded and ignored*/
-	UPROPERTY(VisibleAnywhere, Category = "AI | Search")
-	float MinimumHearingThreshold;
+	//UPROPERTY(VisibleAnywhere, Category = "AI | Search")
+	//float MinimumHearingThreshold;
 
 	/**
 	 * Everytime the AI hears a sound, its annoyance level will increase. As the AI becomes more annoyed
@@ -205,17 +204,19 @@ private:
 
 	/**
 	 * Scores the relevance of an audio stimulus based on distance and volume
-	 * 
+	 *
 	 * @param	SourceLocation				World space location of where the sound occured
 	 * @param	Volume						Strength of the sound
 	 */
-	float CalculateAudioScore(const FVector SourceLocation, const float Volume) const;
+	//float CalculateAudioScore(const FVector SourceLocation, const float Volume) const;
 
 	/** Sets state when hearing a sound from the patrol state*/
-	void DetermineSearchFromPatrol(const FVector SourceLocation, const float IncomingScore);
+	//void DetermineSearchFromPatrol(const FVector SourceLocation, const float IncomingScore);
 
 	/** Sets state when hearing a sound from the search state*/
-	void DetermineSearchFromSearch(const FVector SourceLocation, const float IncomingScore);
+	//void DetermineSearchFromSearch(const FVector SourceLocation, const float IncomingScore);
+
+
 
 	//Begin Attack
 
@@ -228,4 +229,6 @@ private:
 
 	/** Set based on stimulus response*/
 	uint8 bHasVisionOfPlayer : 1;
+
+	uint8 bIsAggressive : 1;
 };

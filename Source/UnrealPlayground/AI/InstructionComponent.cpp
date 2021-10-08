@@ -2,14 +2,16 @@
 #include "Components/SplineComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "BrainComponent.h"
+#include "AICell.h"
+#include "AIBase.h"
 
 UInstructionComponent::UInstructionComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
 
-	MinimumPropagationDistance = 10000.f;
-	MinimumIntensityThreshold = 10.e-12f;
-	MinimumHearingThreshold = 10.f;
+	//MinimumPropagationDistance = 10000.f;
+	//MinimumIntensityThreshold = 10.e-12f;
+	//MinimumHearingThreshold = 30.f;
 	AnnoyanceThreshold = 5;
 
 	TrackScore = 100.f;
@@ -20,7 +22,7 @@ UInstructionComponent::UInstructionComponent()
 	NoSightAttackDuration = 20.f;
 }
 
-void UInstructionComponent::Initialize(UBlackboardComponent* InitBlackboard)
+/*void UInstructionComponent::Initialize(UBlackboardComponent* InitBlackboard)
 {
 	Blackboard = InitBlackboard;
 	Blackboard->SetValueAsObject("Instruction", this);
@@ -35,93 +37,55 @@ void UInstructionComponent::Initialize(UBlackboardComponent* InitBlackboard)
 
 	Blackboard->SetValueAsBool("bHasPatrolPath", bHasPatrolPath);
 	Blackboard->SetValueAsVector("HomeLocation", Home);
+
+	AIOwner = Cast<AAIBase>(GetOwner());
+	Player = AIOwner->GetPlayer();
 }
 
-void UInstructionComponent::SetState(const EInstructionState NewState)
+void UInstructionComponent::ReactToAudioStimulus(FAIStimulus Stimulus)
 {
-	if (NewState == State)
+	//AI randomly hears audio of strength 1? discard these.
+	//We don't care about audio stimulus if we're in attack mode
+	if (Stimulus.Strength <= 1 || State == EInstructionState::Attack)
 	{
 		return;
 	}
 
-	State = NewState;
-	CurrentAnnoyance = 0;
-
-	if (State != EInstructionState::Search)
+	//We heard a valid sound, inform the owning cell so it can select who should investigate it
+	AAICell* Cell = AIOwner->GetOwningCell();
+	if (Cell != nullptr)
 	{
-		//TODO we may want to set every search mode key to false here
-		SearchMode = ESearchMode::NotSearching;
-		CurrentInvestigationScore = 0;
-	}
-
-	OnInstructionStateChange.Broadcast(State);
-}
-
-void UInstructionComponent::SetSearchMode(const ESearchMode NewMode)
-{
-	if (NewMode == SearchMode)
-	{
-		return;
-	}
-
-	SearchMode = NewMode;
-	CurrentAnnoyance = 0;
-
-	switch (NewMode)
-	{
-	case ESearchMode::NotSearching:
-		CurrentInvestigationScore = 0;
-		Blackboard->SetValueAsBool("bIsInvestigating", false);
-		Blackboard->SetValueAsBool("bIsTracking", false);
-		Blackboard->SetValueAsBool("bIsFollowing", false);
-		break;
-	case ESearchMode::Follow:
-		FollowBeginTime = GetWorld()->GetTimeSeconds();
-		Blackboard->SetValueAsBool("bIsInvestigating", false);
-		Blackboard->SetValueAsBool("bIsTracking", false);
-		Blackboard->SetValueAsBool("bIsFollowing", true);
-		Blackboard->SetValueAsVector("MoveLocation", Player->GetActorLocation());
-		break;
-	case ESearchMode::Track:
-		Blackboard->SetValueAsBool("bIsInvestigating", false);
-		Blackboard->SetValueAsBool("bIsTracking", true);
-		Blackboard->SetValueAsBool("bIsFollowing", false);
-		Blackboard->SetValueAsVector("MoveLocation", Player->GetActorLocation());
-		break;
-	case ESearchMode::Investigate:
-		Blackboard->SetValueAsBool("bIsInvestigating", true);
-		Blackboard->SetValueAsBool("bIsTracking", false);
-		Blackboard->SetValueAsBool("bIsFollowing", false);
-		Blackboard->SetValueAsVector("MoveLocation", AudioInvestigationLocation);
-		break;		
+		Cell->SignalCellStimulus(Stimulus.StimulusLocation, Stimulus.Strength);
 	}
 }
 
-void UInstructionComponent::OnStimulus(AActor* Invoker, FAIStimulus Stimulus)
+void UInstructionComponent::ReactToAttackStimulus(const FString SenseType, FAIStimulus Stimulus)
 {
-	//Trim some excess so its more clear what sense is being affected
-	FString Type = Stimulus.Type.Name.GetPlainNameString();	
-	Type.RemoveFromStart("Default__AISense_");
-
-	if (Type == "Touch" || Type == "Damage")
+	if (SenseType == "Touch" || SenseType == "Damage")
 	{
 		SetState(EInstructionState::Attack);
 
-		if (!bHasVisionOfPlayer)
+		if (!bIsAggressive)
 		{
-			LastAggressionTime = GetWorld()->GetTimeSeconds();
+			AIOwner->GetOwningCell()->RegisterAggressor(true);
+			bIsAggressive = true;
 		}
 
-		return;
+		LastAggressionTime = GetWorld()->GetTimeSeconds();
 	}
 
-	if (Type == "Sight")
-	{	
+	else if (SenseType == "Sight")
+	{
 		bHasVisionOfPlayer = Stimulus.WasSuccessfullySensed();
 
 		if (bHasVisionOfPlayer)
-		{		
+		{
 			SetState(EInstructionState::Attack);
+			if (!bIsAggressive)
+			{
+				AIOwner->GetOwningCell()->RegisterAggressor(true);
+				bIsAggressive = true;
+			}
 #if WITH_EDITOR
 			if (bDebug)
 			{
@@ -132,35 +96,14 @@ void UInstructionComponent::OnStimulus(AActor* Invoker, FAIStimulus Stimulus)
 
 		else
 		{
+			LastAggressionTime = GetWorld()->GetTimeSeconds();
 #if WITH_EDITOR
 			if (bDebug)
 			{
 				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, "AI lost vision of player");
 			}
-#endif	
-			LastAggressionTime = GetWorld()->GetTimeSeconds();
+#endif				
 		}
-
-		return;
-	}
-
-	//AI randomly hears audio of strength 1? discard these.
-	//We don't care about audio stimulus if we're in attack mode
-	if (Stimulus.Strength <= 1 || State == EInstructionState::Attack)
-	{
-		return;
-	}
-
-	if (State == EInstructionState::Patrol)
-	{
-		const float StimulusScore = CalculateAudioScore(Stimulus.StimulusLocation, Stimulus.Strength);
-		DetermineSearchFromPatrol(Stimulus.StimulusLocation, StimulusScore);
-	}
-
-	else if (State == EInstructionState::Search)
-	{
-		const float StimulusScore = CalculateAudioScore(Stimulus.StimulusLocation, Stimulus.Strength);
-		DetermineSearchFromSearch(Stimulus.StimulusLocation, StimulusScore);
 	}
 }
 
@@ -279,6 +222,28 @@ float UInstructionComponent::CalculateAudioScore(const FVector SourceLocation, f
 	return Decibel;
 }
 
+bool UInstructionComponent::DetermineSearch(const FVector SourceLocation, const float SourceVolume)
+{
+	const float Score = CalculateAudioScore(SourceLocation, SourceVolume);
+
+	if (Score >= MinimumHearingThreshold)
+	{
+		if (GetState() == EInstructionState::Patrol)
+		{
+			DetermineSearchFromPatrol(SourceLocation, Score);
+			return true;
+		}
+
+		else if (GetState() == EInstructionState::Search)
+		{
+			DetermineSearchFromSearch(SourceLocation, Score);
+			return true;
+		}
+	}
+
+	return false;
+}
+
 void UInstructionComponent::DetermineSearchFromPatrol(const FVector SourceLocation, const float IncomingScore)
 {
 	CurrentInvestigationScore = IncomingScore;
@@ -362,13 +327,20 @@ void UInstructionComponent::TickAttack(const float CurrentTime)
 	const FVector PlayerLoc = Player->GetActorLocation();
 	Blackboard->SetValueAsVector("MoveLocation", PlayerLoc);
 
-	//The player escaped sight of the AI long enough, enter investigation mode
-	if (!bHasVisionOfPlayer && CurrentTime >= LastAggressionTime + NoSightAttackDuration)
+	FColor Color = bHasVisionOfPlayer ? FColor::Green : FColor::Red;
+	DrawDebugSphere(GetWorld(), GetOwner()->GetActorLocation() + FVector(0,0,50), 40, 20, Color);
+
+	if (bHasVisionOfPlayer || !bIsAggressive)
+	{
+		return;
+	}
+	
+	//The player escaped sight of the AI long enough, stop aggression
+	if (CurrentTime >= LastAggressionTime + NoSightAttackDuration)
 	{
 		CurrentInvestigationScore = 0;
 		AudioInvestigationLocation = PlayerLoc;
-
-		SetState(EInstructionState::Search);		
-		SetSearchMode(ESearchMode::Investigate);
+		bIsAggressive = false;
+		AIOwner->GetOwningCell()->RegisterAggressor(false);
 	}
-}
+}*/

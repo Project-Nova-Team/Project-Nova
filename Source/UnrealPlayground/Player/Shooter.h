@@ -16,6 +16,7 @@ class UHealthComponent;
 class UAIPerceptionStimuliSourceComponent;
 class IInteractiveObject;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FShooterEvent);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FScanEvent, FHitResult, ScanData);
 // TAKING IN SCAN HIT HERE IS BAD!!!!!!! PLS FIX
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FVaultEvent, FHitResult, ScanData2);
@@ -105,17 +106,21 @@ public:
 	UPROPERTY(Category = Pawn, EditAnywhere)
 	uint8 bTraceDebug : 1;
 
-	/**Invoked when the shooter is looking at an object that can be interacted with (a weapon/button)*/
+	/** Invoked when the shooter is looking at an object that can be interacted with (a weapon/button)*/
 	UPROPERTY(BlueprintAssignable)
 	FScanEvent OnScanHit;
 
-	/**Invoked when the shooter is not looking at an object that can be interacted with (a weapon/button)*/
+	/** Invoked when the shooter is not looking at an object that can be interacted with (a weapon/button)*/
 	UPROPERTY(BlueprintAssignable)
 	FScanEvent OnScanMiss;
 
-	/**Invoked when the shooter can vault and presses space*/
+	/** Invoked when the shooter can vault and presses space*/
 	UPROPERTY(BlueprintAssignable)
 	FVaultEvent OnVaultPress;
+
+	/** Invoked when the shooter shooter makes a sound*/
+	UPROPERTY(BlueprintAssignable)
+	FShooterEvent OnMakeNoise;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	UAnimMontage *VaultAnimMontage;

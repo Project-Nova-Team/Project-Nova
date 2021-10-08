@@ -7,6 +7,7 @@
 
 class USphereComponent;
 class UHealthComponent;
+class AAICell;
 
 UCLASS()
 class UNREALPLAYGROUND_API AAIBase : public ACharacter
@@ -15,12 +16,17 @@ class UNREALPLAYGROUND_API AAIBase : public ACharacter
 
 public:
 	AAIBase();
+	friend class AICell;
 
 	virtual void Tick(float DeltaTime) override;
 
-	UInstructionComponent* GetInstruction() const { return Instruction; }
-
 	UHealthComponent* GetHealth() const { return Health; }
+
+	AActor* GetPlayer() const { return Player; }
+
+	AActor* GetPatrolActor() const{ return PatrolActor; }
+
+	void SetPlayer(AActor* Value) { Player = Value; }
 
 	/** Called in animation blueprint to enable damage collider*/
 	UFUNCTION(BlueprintCallable)
@@ -29,6 +35,9 @@ public:
 	/** Called in animation blueprint to clear disable damage collider and clear hits*/
 	UFUNCTION(BlueprintCallable)
 	void OnAttackEnd();
+
+	UFUNCTION()
+	void OnTookDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 
 protected:
 	virtual void BeginPlay() override;
@@ -40,11 +49,12 @@ protected:
 	UPROPERTY(Category = Combat, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	USphereComponent* DamageTrigger;
 
-	UPROPERTY(Category = Instruction, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	UInstructionComponent* Instruction;
-
 	UPROPERTY(Category = Health, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	UHealthComponent* Health;
+
+	/** Actor in the level that contains a spline component the AI will patrol*/
+	UPROPERTY(EditAnywhere, Category = "Patrol")
+	AActor* PatrolActor;
 
 private:
 	
@@ -55,6 +65,9 @@ private:
 	/** Called when the AI takes fatal damage*/
 	UFUNCTION()
 	void OnDeath();
+
+	/** Player object, past down by the owning cell*/
+	AActor* Player;
 
 	/**
 	 * Whether or not this attack instance has struck the player. 
