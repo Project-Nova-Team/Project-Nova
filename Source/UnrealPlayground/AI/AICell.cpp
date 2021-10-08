@@ -3,6 +3,7 @@
 #include "Components/BrushComponent.h"
 #include "../Player/Shooter.h"
 #include "../State/AI/AIStateMachine.h"
+#include "Sense.h"
 
 AAICell::AAICell()
 {
@@ -14,7 +15,7 @@ AAICell::AAICell()
 void AAICell::BeginPlay()
 {
 	Super::BeginPlay();
-	Player->OnMakeNoise.AddDynamic(this, &AAICell::ClearAudioStimulus);
+	Player->OnMakeNoise.AddDynamic(this, &AAICell::RegisterAudioStimulus);
 	SetAIUnits();
 }
 
@@ -146,8 +147,18 @@ void AAICell::RegisterAggressor(bool StaringAggression)
 	//All aggressors in this cell have stopped, stop attack and start agitation
 	if (AgressorCount <= 0)
 	{
-		ClearAudioStimulus();
+		RegisterAudioStimulus(FVector::ZeroVector, 0);
 		SignalCellStimulus(Player->GetActorLocation(), -1);
+	}
+}
+
+void AAICell::RegisterAudioStimulus(FVector Location, float Volume)
+{
+	CurrentStimulusLocation = FVector::ZeroVector;
+
+	if (Volume > 0)
+	{
+		UAISense_Hearing::ReportNoiseEvent(GetWorld(), Location, Volume, Player);
 	}
 }
 
