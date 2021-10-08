@@ -220,7 +220,8 @@ void AShooter::MakeSound(const float Volume)
 	if (bHit)
 	{
 		DrawDebugSphere(GetWorld(), SoundHit.ImpactPoint, 30.f, 20, FColor::Blue, true, 0.1f);
-		PawnMakeNoise(NoiseAmount, SoundHit.ImpactPoint, false);
+		OnMakeNoise.Broadcast();
+		PawnMakeNoise(NoiseAmount, SoundHit.ImpactPoint, false);	
 	}
 }
 

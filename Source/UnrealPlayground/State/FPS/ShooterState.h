@@ -17,9 +17,6 @@ public:
 	~UShooterState() { }
 
 	virtual void Initialize(UStateMachine* StateMachine, UObject* ContextObject) override;
-	virtual void OnEnter() override { }
-	virtual void OnExit() override { }
-	virtual void Tick(const float DeltaTime) override { Super::Tick(DeltaTime); }
 
 protected:
 	/** The context object as a shooter this state is going to perform game logic on*/

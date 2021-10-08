@@ -4,6 +4,7 @@
 #include "Components/SphereComponent.h"
 #include "Components/CapsuleComponent.h"
 
+
 AAIBase::AAIBase()
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -16,34 +17,20 @@ AAIBase::AAIBase()
 	DamageTrigger->SetCollisionProfileName("OverlapOnlyPawn");
 	DamageTrigger->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	
-	Instruction = CreateDefaultSubobject<UInstructionComponent>(TEXT("Instruction"));
 	Health = CreateDefaultSubobject<UHealthComponent>(TEXT("Health"));
 }
 
 void AAIBase::BeginPlay()
 {
 	Super::BeginPlay();
+	OnTakeAnyDamage.AddDynamic(this, &AAIBase::OnTookDamage);
 	DamageTrigger->OnComponentBeginOverlap.AddDynamic(this, &AAIBase::OnAttackHit);
-	Health->OnDeath.AddDynamic(this, &AAIBase::OnDeath);
 }
 
 void AAIBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	// These ticks imply some level of bad separation of concern but is more performent 
-	// since we dont have manage tick on the instruction component itself
-
-	//Probably safe to remove second condition if we manage state search mode properly
-	if (Instruction->GetSearchMode() == ESearchMode::Follow && Instruction->GetState() == EInstructionState::Search)
-	{
-		Instruction->TickFollow(GetWorld()->GetTimeSeconds());
-	}
-
-	if (Instruction->GetState() == EInstructionState::Attack)
-	{
-		Instruction->TickAttack(GetWorld()->GetTimeSeconds());
-	}
 }
 
 void AAIBase::OnAttackBegin()
@@ -67,8 +54,14 @@ void AAIBase::OnAttackHit(UPrimitiveComponent* OverlappedComponent, AActor* Othe
 
 void AAIBase::OnDeath()
 {
-	GetCapsuleComponent()->SetCollisionProfileName("Ragdoll");
+	GetCapsuleComponent()->SetCollisionProfileName("NoCollision");
 	GetMesh()->SetCollisionProfileName("Ragdoll");
 	GetMesh()->SetAnimInstanceClass(nullptr);
 	GetMesh()->SetSimulatePhysics(true);
+}
+
+void AAIBase::OnTookDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
+{
+	const FVector ActorLoc = GetActorLocation();
+	//UAISense_Damage::ReportDamageEvent(GetWorld(), this, Player, Damage, ActorLoc, ActorLoc);
 }
