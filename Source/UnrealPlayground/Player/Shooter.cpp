@@ -207,6 +207,11 @@ void AShooter::OnTriggerExit(AActor* OverlappedActor, AActor* OtherActor)
 	}
 }
 
+void AShooter::ShooterMakeNoise(FVector Location, float Volume)
+{
+	OnMakeNoise.Broadcast(Location, Volume);
+}
+
 void AShooter::MakeSound(const float Volume)
 {
 	FHitResult SoundHit;
@@ -218,10 +223,9 @@ void AShooter::MakeSound(const float Volume)
 	const bool bHit = GetWorld()->LineTraceSingleByChannel(SoundHit, TraceStart, TraceEnd, ECC_Camera, QueryParams);
 
 	if (bHit)
-	{
-		DrawDebugSphere(GetWorld(), SoundHit.ImpactPoint, 30.f, 20, FColor::Blue, true, 0.1f);
-		OnMakeNoise.Broadcast();
-		PawnMakeNoise(NoiseAmount, SoundHit.ImpactPoint, false);	
+	{	
+		ShooterMakeNoise(SoundHit.ImpactPoint, Volume);
+		DrawDebugSphere(GetWorld(), SoundHit.ImpactPoint, 20, 20, FColor::Blue, true);
 	}
 }
 

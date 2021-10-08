@@ -26,7 +26,10 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetState(const FString Key);
 
+	UFUNCTION(BlueprintCallable)
 	void SetAggression(const bool Value);
+
+	UFUNCTION(BlueprintCallable)
 	void SetInvestigation(const bool Value);
 
 	/** Resets any search related values*/

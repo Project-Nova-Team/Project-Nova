@@ -19,7 +19,7 @@ public:
 	
 	
 	UFUNCTION()
-	void ClearAudioStimulus() { CurrentStimulusLocation = FVector::ZeroVector; }
+	void RegisterAudioStimulus(FVector Location, float Volume);
 
 	UFUNCTION(BlueprintCallable)
 	int GetInvestigationCount() const { return InvestigationCount; }

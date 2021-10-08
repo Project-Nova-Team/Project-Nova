@@ -16,10 +16,10 @@ class UHealthComponent;
 class UAIPerceptionStimuliSourceComponent;
 class IInteractiveObject;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FShooterEvent);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FScanEvent, FHitResult, ScanData);
 // TAKING IN SCAN HIT HERE IS BAD!!!!!!! PLS FIX
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FVaultEvent, FHitResult, ScanData2);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FShooterMakeNoise, FVector, Location, float, Volume);
 
 struct FShooterInput : public FWeaponInput
 {
@@ -124,7 +124,7 @@ public:
 
 	/** Invoked when the shooter shooter makes a sound*/
 	UPROPERTY(BlueprintAssignable)
-	FShooterEvent OnMakeNoise;
+	FShooterMakeNoise OnMakeNoise;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	UAnimMontage *VaultAnimMontage;
@@ -140,6 +140,9 @@ public:
 	/** Returns whether player is in vault trigger and is looking at vault object*/
 	UFUNCTION(BlueprintCallable)
 	bool GetCanVault();
+
+	UFUNCTION(BlueprintCallable)
+	void ShooterMakeNoise(FVector Location, float Volume);
 
 	/** Animation Hooks**/
 

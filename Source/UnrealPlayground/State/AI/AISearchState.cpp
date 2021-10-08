@@ -8,5 +8,5 @@ void UAISearchState::OnEnter()
 
 void UAISearchState::OnExit()
 {
-	AI->SetInvestigation(false);
+	//AI->SetInvestigation(false);
 }
