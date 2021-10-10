@@ -26,7 +26,7 @@ void UShooterCombatComponent::SetUpConstruction(USceneComponent* TraceComponent,
 {
 	TraceOrigin = TraceComponent;
 	WeaponMesh = MeshComponent;
-	Camera = Cast<UCameraComponent>(TraceOrigin);	
+	Camera = Cast<UCameraComponent>(TraceOrigin);
 }
 
 void UShooterCombatComponent::BeginPlay()
@@ -54,7 +54,7 @@ void UShooterCombatComponent::BeginPlay()
 void UShooterCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	UActorComponent::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	
+
 	const bool bNoWeapon = PrimaryGun == nullptr;
 
 	if (!bNoWeapon)
@@ -65,10 +65,18 @@ void UShooterCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType
 
 	HandleAimState(bNoWeapon);
 	HandleSpecialActions();
-	HandleStandardActions(bNoWeapon);	
+	HandleStandardActions(bNoWeapon);
+
+	if (WeaponArray[0] != nullptr && WeaponArray[1] != nullptr && WeaponArray[2] != nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT(" 0: %s"), *WeaponArray[0]->GetName());
+		UE_LOG(LogTemp, Warning, TEXT(" 1: %s"), *WeaponArray[1]->GetName());
+		UE_LOG(LogTemp, Warning, TEXT(" 2: %s"), *WeaponArray[2]->GetName());
+		UE_LOG(LogTemp, Warning, TEXT(" Current: %d"), CurrentWeaponIndex);
+	}
 }
 
-void UShooterCombatComponent::PickUpNewWeapon(AGun* NewWeapon)
+void UShooterCombatComponent::PickUpNewGun(AGun* NewWeapon)
 {
 	USkeletalMesh* const NewMesh = NewWeapon->GetSkeletalMesh();
 	WeaponMesh->SetSkeletalMesh(NewMesh);
@@ -101,7 +109,7 @@ void UShooterCombatComponent::PickUpNewWeapon(AGun* NewWeapon)
 		WeaponArray.RemoveAt(0);
 		WeaponArray.EmplaceAt(0, PrimaryGun);
 	}
-	else if(WeaponArray[1] == nullptr)
+	else if (WeaponArray[1] == nullptr)
 	{
 		WeaponArray.RemoveAt(1);
 		WeaponArray.EmplaceAt(1, OffhandGun);
@@ -113,6 +121,7 @@ void UShooterCombatComponent::PickUpNewWeapon(AGun* NewWeapon)
 		WeaponArray.EmplaceAt(0, PrimaryGun);
 	}
 
+	CurrentWeaponIndex = 0;
 	CurrentWeapon = PrimaryGun;
 }
 
@@ -128,6 +137,7 @@ void UShooterCombatComponent::PickUpMeleeWeapon(AMeleeWeapon* const NewWeapon)
 		MeleeWeapon->SetWeaponSceneValues(TraceOrigin, WeaponMesh);
 	}
 
+	CurrentWeaponIndex = 2;
 	CurrentWeapon = MeleeWeapon;
 
 	// Melee Weapon added to array when picked up. Tweak this if we add more melee weapons
@@ -147,94 +157,132 @@ void UShooterCombatComponent::SwapWeapons(TEnumAsByte<ESwapState> SwapDirection)
 		return;
 	}
 
-	if (CurrentWeapon->IsA(AMeleeWeapon::StaticClass()))
-	{
-		CurrentWeaponIndex = 2;
-	}
 
-	//check next weapon in array
 	if (SwapDirection == SS_Up)
 	{
-		// If we are already at third weapon and you scroll up, return index to 0
+		AWeapon* LastWeapon = WeaponArray[CurrentWeaponIndex];
+		// If we are already at third weapon and you scroll up, return index to 0. 
 		if (CurrentWeaponIndex == 2)
 			CurrentWeaponIndex = 0;
 		else
 			CurrentWeaponIndex++;
 
-		if (WeaponArray[CurrentWeaponIndex]->IsA(AGun::StaticClass()))
+		if (WeaponArray[CurrentWeaponIndex] != nullptr)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Current Weapon Index: %d"), CurrentWeaponIndex);
+			// If next weapon is a gun, set up gun things. Otherwise set up melee things.
+			if (WeaponArray[CurrentWeaponIndex]->IsA(AGun::StaticClass()))
+			{
 
-			AGun* const Temp = PrimaryGun;
-			PrimaryGun = OffhandGun;
-			OffhandGun = Temp;
+				// Reset Weapons in array
+				if (WeaponArray[0] != nullptr)
+				{
+					WeaponArray.RemoveAt(0);
+					WeaponArray.EmplaceAt(0, PrimaryGun);
+				}
 
-			WeaponMesh->SetSkeletalMesh(PrimaryGun->GetSkeletalMesh());
-			PrimaryGun->SetGunSceneValues(TraceOrigin, WeaponMesh, WeaponMesh->GetSocketByName("barrel"));
+				if (WeaponArray[1] != nullptr)
+				{
+					WeaponArray.RemoveAt(1);
+					WeaponArray.EmplaceAt(1, OffhandGun);
+				}
+				// Changing offhand into primary
+				if (LastWeapon->IsA(AGun::StaticClass()))
+				{
+					AGun* const Temp = PrimaryGun;
+					PrimaryGun = OffhandGun;
+					OffhandGun = Temp;
+					// Switch mesh
+					WeaponMesh->SetSkeletalMesh(PrimaryGun->GetSkeletalMesh());
+				}
+				else
+				{
+					// Switch mesh
+					WeaponMesh->SetSkeletalMesh(WeaponArray[CurrentWeaponIndex]->GetSkeletalMesh());
+				}
 
-			CurrentWeapon = PrimaryGun;
-		}
-		else
-		{
-			WeaponMesh->SetSkeletalMesh(MeleeWeapon->GetSkeletalMesh());
-			MeleeWeapon->SetWeaponSceneValues(TraceOrigin, WeaponMesh);
+				// Weapon setup
+				PrimaryGun->SetGunSceneValues(TraceOrigin, WeaponMesh, WeaponMesh->GetSocketByName("barrel"));
 
-			UE_LOG(LogTemp, Warning, TEXT("Current Weapon Index: %d"), CurrentWeaponIndex);
+				// Set the weapon that we are holding to current
+				CurrentWeapon = PrimaryGun;
+			}
+			else
+			{
+				// Set mesh and scene values
+				WeaponMesh->SetSkeletalMesh(MeleeWeapon->GetSkeletalMesh());
+				// Weapon setup
+				MeleeWeapon->SetWeaponSceneValues(TraceOrigin, WeaponMesh);
 
-			CurrentWeapon = MeleeWeapon;
+				CurrentWeapon = MeleeWeapon;
+			}
 		}
 	}
+
 	else if (SwapDirection == SS_Down)
 	{
+		AWeapon* LastWeapon = WeaponArray[CurrentWeaponIndex];
+
 		// If we are already at 1st weapon and you scroll down, return index to last
 		if (CurrentWeaponIndex == 0)
 			CurrentWeaponIndex = 2;
 		else
 			CurrentWeaponIndex--;
 
-		if (WeaponArray[CurrentWeaponIndex]->IsA(AGun::StaticClass()))
+		if (WeaponArray[CurrentWeaponIndex] != nullptr)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Current Weapon Index: %d"), CurrentWeaponIndex);
+			// If next weapon is a gun, set up gun things. Otherwise set up melee things.
+			if (WeaponArray[CurrentWeaponIndex]->IsA(AGun::StaticClass()))
+			{
+				// Reset Weapons in array
+				if (WeaponArray[0] != nullptr)
+				{
+					WeaponArray.RemoveAt(0);
+					WeaponArray.EmplaceAt(0, PrimaryGun);
+				}
 
-			AGun* const Temp = PrimaryGun;
-			PrimaryGun = OffhandGun;
-			OffhandGun = Temp;
+				if (WeaponArray[1] != nullptr)
+				{
+					WeaponArray.RemoveAt(1);
+					WeaponArray.EmplaceAt(1, OffhandGun);
+				}
 
-			WeaponMesh->SetSkeletalMesh(PrimaryGun->GetSkeletalMesh());
-			PrimaryGun->SetGunSceneValues(TraceOrigin, WeaponMesh, WeaponMesh->GetSocketByName("barrel"));
+				// Changing offhand into primary
+				if (LastWeapon->IsA(AGun::StaticClass()))
+				{
+					AGun* const Temp = PrimaryGun;
+					PrimaryGun = OffhandGun;
+					OffhandGun = Temp;
+					// Switch mesh
+					WeaponMesh->SetSkeletalMesh(PrimaryGun->GetSkeletalMesh());
+				}
+				else
+				{
+					// Switch mesh
+					WeaponMesh->SetSkeletalMesh(WeaponArray[CurrentWeaponIndex]->GetSkeletalMesh());
+				}
 
-			CurrentWeapon = PrimaryGun;
+				// Weapon setup
+				PrimaryGun->SetGunSceneValues(TraceOrigin, WeaponMesh, WeaponMesh->GetSocketByName("barrel"));
+
+				CurrentWeapon = PrimaryGun;
+			}
+			else
+			{
+				// Set mesh
+				WeaponMesh->SetSkeletalMesh(MeleeWeapon->GetSkeletalMesh());
+				// Weapon setup
+				MeleeWeapon->SetWeaponSceneValues(TraceOrigin, WeaponMesh);
+
+				CurrentWeapon = MeleeWeapon;
+			}
 		}
-		else 
-		{
-			WeaponMesh->SetSkeletalMesh(MeleeWeapon->GetSkeletalMesh());
-			MeleeWeapon->SetWeaponSceneValues(TraceOrigin, WeaponMesh);
-
-			UE_LOG(LogTemp, Warning, TEXT("Current Weapon Index: %d"), CurrentWeaponIndex);
-
-			CurrentWeapon = MeleeWeapon;
-		}
 	}
 
-	// Reset Weapons in array
-	if (WeaponArray[0] != nullptr)
-	{
-		WeaponArray.RemoveAt(0);
-		WeaponArray.EmplaceAt(0, PrimaryGun);
-	}
-		
-	if (WeaponArray[1] != nullptr)
-	{
-		WeaponArray.RemoveAt(1);
-		WeaponArray.EmplaceAt(1, OffhandGun);
-	}
-		
 	if (WeaponArray[2] != nullptr)
 	{
 		WeaponArray.RemoveAt(2);
 		WeaponArray.EmplaceAt(2, MeleeWeapon);
 	}
-		
 }
 
 void UShooterCombatComponent::HandleSpecialActions()
@@ -295,30 +343,9 @@ void UShooterCombatComponent::HandleStandardActions(const bool bNoWeapon)
 		//Lets figure out how to do that instead of using the DelayedActionManager
 	}
 
-	else if (Input->bIsTryingToSwapUp)
-	{
-		SwapState = SS_Up;
-		bIsLockedOut = true;
-		BroadcastSwapEvent();
-		//bIsLockedOut = true;
-		//ResetLockoutAfterDelay(SwapLockoutTime);
-		//// Swaps Weapons on delay
-
-		////SwapWeapons();
-		Input->bIsTryingToSwapUp = false;
-	}
-
-	else if (Input->bIsTryingToSwapDown)
-	{
-		SwapState = SS_Down;
-		bIsLockedOut = true;
-		BroadcastSwapEvent();
-
-		Input->bIsTryingToSwapDown = false;
-	}
 
 	else if (Input->bIsTryingToFire)
-	{		
+	{
 		if (!bIsLockedOut)
 		{
 			if (CurrentWeapon->IsA(AGun::StaticClass()))
@@ -335,7 +362,29 @@ void UShooterCombatComponent::HandleStandardActions(const bool bNoWeapon)
 
 				PrimaryGun->FireWithNoise(bIsAimed, Rotation);
 			}
-		}	
+		}
+	}
+
+	if (GetWeaponCount() > 1)
+	{
+		if (Input->bIsTryingToSwapUp)
+		{
+			// set swap state
+			SwapState = SS_Up;
+			// lock user out of actions before swap is called
+			bIsLockedOut = true;
+			// broadcast the event to anim blueprint
+			BroadcastSwapEvent();
+			// stop input because we are in tick
+			Input->bIsTryingToSwapUp = false;
+		}
+		else if (Input->bIsTryingToSwapDown)
+		{
+			SwapState = SS_Down;
+			bIsLockedOut = true;
+			BroadcastSwapEvent();
+			Input->bIsTryingToSwapDown = false;
+		}
 	}
 }
 
@@ -395,37 +444,16 @@ void UShooterCombatComponent::BroadcastSwapEvent()
 	OnWeaponSwapRequest.Broadcast();
 }
 
-//void UShooterCombatComponent::SetWeaponSceneValues(AWeapon* Weapon, const USceneComponent* TraceOriginComponent, const USkeletalMeshComponent* HeldWeapon, const USkeletalMeshSocket* BulletSocket)
-//{
-//	//A pawn has picked the weapon up
-//	if (TraceOriginComponent != nullptr)
-//	{
-//		//Hide actor
-//		Weapon->GetMeshComponent()->SetVisibility(false);
-//		Weapon->GetMeshComponent()->SetSimulatePhysics(false);
-//		Weapon->GetMeshComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-//
-//		Weapon->SetActorTick(true);
-//	}
-//
-//	//A pawn has dropped the weapon
-//	else
-//	{
-//		//Move the gun a little below the camera 
-//		const FVector DropLocation = Weapon->TraceOrigin->GetComponentLocation() - FVector(0, 0, 30.f);
-//		Weapon->SetActorLocation(DropLocation);
-//
-//		//Display actor
-//		Weapon->GetMeshComponent()->SetVisibility(true);
-//		Weapon->GetMeshComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-//		Weapon->GetMeshComponent()->SetSimulatePhysics(true);
-//
-//		//Apply a force to make it look like the gun was thrown
-//		Weapon->GetMeshComponent()->AddForce(Weapon->TraceOrigin->GetForwardVector().GetSafeNormal2D() * Weapon->ThrowForce);
-//
-//		Weapon->SetActorTickEnabled(false);
-//	}
-//
-//	Weapon->TraceOrigin = TraceOriginComponent;
-//	Weapon->SetHeldWeaponMesh(HeldWeapon);
-//}
+int UShooterCombatComponent::GetWeaponCount()
+{
+	int count = 0;
+
+	for (int i = 0; i < WeaponArray.Num(); i++)
+	{
+		if (WeaponArray[i] != nullptr)
+		{
+			count++;
+		}
+	}
+	return count;
+}
