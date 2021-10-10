@@ -95,6 +95,9 @@ public:
 	/** Returns the camera component attached to this shooter*/
 	UCameraComponent* GetCamera() const { return Camera; }
 
+	/** Returns the state machine attached to the shooter which drives player movement*/
+	UShooterStateMachine* GetStateMachine() const { return StateMachine; }
+
 	/** Returns the input state. Note: contents are mutable*/
 	FShooterInput* GetInput() { return &InputState; }
 
@@ -104,6 +107,7 @@ public:
 	/** Returns the Shooter_Movement component attached to this shooter*/
 	UShooterMovementComponent* GetShooterMovement() { return ShooterMovement; }
 
+	/** Returns the Perception Source component which enables AI to sense stimulus produced by this actor*/
 	UAIPerceptionStimuliSourceComponent* GetPerceptionSource() const { return PerceptionSource; }
 
 	/** Returns State Machine. Maybe consider moving this to shooter movement component?*/
@@ -171,7 +175,7 @@ private:
 	UPROPERTY(Category = Shooter, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	UHealthComponent* Health;
 
-	UPROPERTY()
+	UPROPERTY(Transient)
 	UShooterStateMachine* StateMachine;
 	
 	/**Contains all relevant information of the input state*/
