@@ -8,6 +8,7 @@
 #include "../State/FPS/ShooterStateMachine.h"
 #include "../Weapon/ShooterCombatComponent.h"
 #include "../Gameplay/HealthComponent.h"
+#include "../Weapon/Gun.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "../Gameplay/VaultTrigger.h"
 
@@ -155,7 +156,8 @@ void AShooter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	InputComponent->BindAction("Aim", IE_Released, this, &AShooter::AimRelease);
 	InputComponent->BindAction("Interact", IE_Pressed, this, &AShooter::InteractPress);
 	InputComponent->BindAction("Interact", IE_Released, this, &AShooter::InteractRelease);
-	InputComponent->BindAction("Swap", IE_Pressed, this, &AShooter::SwapPress);
+	InputComponent->BindAction("Swap Up", IE_Pressed, this, &AShooter::SwapPressUp);
+	InputComponent->BindAction("Swap Down", IE_Pressed, this, &AShooter::SwapPressDown);
 	//InputComponent->BindAction("Swap", IE_Released, this, &AShooter::SwapRelease);
 	InputComponent->BindAction("Melee", IE_Pressed, this, &AShooter::MeleePress);
 	InputComponent->BindAction("Melee", IE_Released, this, &AShooter::MeleeRelease);

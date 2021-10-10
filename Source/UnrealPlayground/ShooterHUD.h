@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/HUD.h"
+#include "../UnrealPlayground/Weapon/Weapon.h"
 #include "ShooterHUD.generated.h"
 
 class AShooter;

@@ -15,6 +15,7 @@ class UShooterCombatComponent;
 class UHealthComponent;
 class UAIPerceptionStimuliSourceComponent;
 class IInteractiveObject;
+class AGun;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FScanEvent, FHitResult, ScanData);
 
@@ -197,8 +198,8 @@ private:
 	void AimRelease()					{ InputState.bIsTryingToAim = false; }
 	void InteractPress()				{ InputState.bIsTryingToInteract = true; }
 	void InteractRelease()				{ InputState.bIsTryingToInteract = false; }
-	void SwapPress()					{ InputState.bIsTryingToSwap = true; }
-	//void SwapRelease()					{ InputState.bIsTryingToSwap = false; }
+	void SwapPressUp()					{ InputState.bIsTryingToSwapUp = true; }
+	void SwapPressDown()				{ InputState.bIsTryingToSwapDown = true; }
 	void MeleePress()					{ InputState.bIsTryingToMelee = true; }
 	void MeleeRelease()					{ InputState.bIsTryingToMelee = false; }
 	void SprintPress()					{ InputState.bIsTryingToSprint = true; }
