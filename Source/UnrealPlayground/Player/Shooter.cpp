@@ -8,6 +8,7 @@
 #include "../State/FPS/ShooterStateMachine.h"
 #include "../Weapon/ShooterCombatComponent.h"
 #include "../Gameplay/HealthComponent.h"
+#include "../Weapon/Gun.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "../Gameplay/VaultTrigger.h"
 
@@ -64,11 +65,11 @@ AShooter::AShooter()
 	Collider->SetCapsuleRadius(ShooterMovement->CollisionRadius);
 	CameraAnchor->SetRelativeLocation(FVector(0, 0, ShooterMovement->CameraHeight));
 
-	Arms = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Arms"));
-	Arms->AttachToComponent(Camera, FAttachmentTransformRules::KeepRelativeTransform);
+	ShooterSkeletalMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Arms"));
+	ShooterSkeletalMesh->AttachToComponent(Camera, FAttachmentTransformRules::KeepRelativeTransform);
 
 	WeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh"));
-	WeaponMesh->SetupAttachment(Arms, TEXT("WeaponSocket"));
+	WeaponMesh->SetupAttachment(ShooterSkeletalMesh, TEXT("WeaponSocket"));
 
 	Combat = CreateDefaultSubobject<UShooterCombatComponent>(TEXT("Combat"));
 	Combat->SetUpConstruction(Camera, WeaponMesh);
@@ -162,7 +163,8 @@ void AShooter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	InputComponent->BindAction("Aim", IE_Released, this, &AShooter::AimRelease);
 	InputComponent->BindAction("Interact", IE_Pressed, this, &AShooter::InteractPress);
 	InputComponent->BindAction("Interact", IE_Released, this, &AShooter::InteractRelease);
-	InputComponent->BindAction("Swap", IE_Pressed, this, &AShooter::SwapPress);
+	InputComponent->BindAction("Swap Up", IE_Pressed, this, &AShooter::SwapPressUp);
+	InputComponent->BindAction("Swap Down", IE_Pressed, this, &AShooter::SwapPressDown);
 	//InputComponent->BindAction("Swap", IE_Released, this, &AShooter::SwapRelease);
 	InputComponent->BindAction("Melee", IE_Pressed, this, &AShooter::MeleePress);
 	InputComponent->BindAction("Melee", IE_Released, this, &AShooter::MeleeRelease);
@@ -176,16 +178,6 @@ void AShooter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	InputComponent->BindAction("Throw Primary", IE_Released, this, &AShooter::ThrowPrimaryRelease);
 	InputComponent->BindAction("Throw Secondary", IE_Pressed, this, &AShooter::ThrowSecondaryPress);
 	InputComponent->BindAction("Throw Secondary", IE_Released, this, &AShooter::ThrowSecondaryRelease);
-}
-
-bool AShooter::IsWalking()
-{
-	return ShooterMovement->bIsOnGround && !ShooterMovement->InputVelocity.IsNearlyZero();
-}
-
-bool AShooter::IsFalling()
-{
-	return !ShooterMovement->bIsOnGround;
 }
 
 void AShooter::OnTriggerEnter(AActor* OverlappedActor, AActor* OtherActor)
@@ -238,17 +230,4 @@ void AShooter::HandleDeath()
 bool AShooter::GetCanVault()
 {
 	return bIsInsideVaultTrigger && bIsLookingAtVaultObject;
-}
-
-void AShooter::StartVaultAnimation()
-{
-	// broadcast an event here that will play an anim montage in shooter blueprint!
-	// TAKING IN SCAN HIT HERE IS BAD!!!!!!! PLS FIX
-	OnVaultPress.Broadcast(ScanHit);
-}
-
-void AShooter::PlayVaultMontage()
-{
-	float Test = Arms->GetAnimInstance()->Montage_Play(VaultAnimMontage, 1.0f);
-		UE_LOG(LogTemp, Warning, TEXT("%s"), &Test);
 }

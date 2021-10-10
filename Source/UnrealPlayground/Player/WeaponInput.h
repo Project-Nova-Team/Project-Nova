@@ -20,8 +20,11 @@ struct FWeaponInput
 	/** Whether or not the user is trying to reload*/
 	uint8 bIsTryingToReload : 1;
 
-	/** Whether or not the user is trying to swap*/
-	uint8 bIsTryingToSwap : 1;
+	/** Whether or not the user is trying to swap Up*/
+	uint8 bIsTryingToSwapUp : 1;
+
+	/** Whether or not the user is trying to swap Up*/
+	uint8 bIsTryingToSwapDown : 1;
 
 	/** Whether or not the user is moving, which affects bloom*/
 	uint8 bIsMoving : 1;

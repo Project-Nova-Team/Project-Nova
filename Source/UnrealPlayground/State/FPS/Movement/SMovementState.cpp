@@ -1,6 +1,7 @@
 //Copyright 2021 Brendan Lienau. All Rights Reserved.
 
 #include "SMovementState.h"
+#include "../../../Weapon/Gun.h"
 #include "../../../Weapon/ShooterCombatComponent.h"
 
 void USMovementState::Initialize(UStateMachine* StateMachine, UObject* ContextObject)
@@ -47,7 +48,7 @@ void USMovementState::CheckForVault()
 {
 	if (Input->bIsTryingToVault && Movement->bIsOnGround && Shooter->GetCanVault())
 	{
-
+		// calls USVaultState.OnEnter
 		FlagTransition("Vaulting", 10);
 
 		//Movement->Velocity.Z += Movement->JumpForce;
