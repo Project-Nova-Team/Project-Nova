@@ -1,16 +1,30 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "CombatComponent.h"
+#include "../Player/WeaponInput.h"
+#include "Components/ActorComponent.h"
+#include "DrawDebugHelpers.h"
 #include "ShooterCombatComponent.generated.h"
 
 class UDelayedActionManager;
 class UCameraComponent;
+class AGun;
+class AMeleeWeapon;
+class AWeapon;
 
 struct FDelayedActionHandle;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FSwapEvent);
+
+UENUM(BlueprintType)
+enum ESwapState
+{
+	SS_Up  UMETA(DisplayName = "Up"),
+	SS_Down UMETA(DisplayName = "Down")
+};
+
 UCLASS()
-class UNREALPLAYGROUND_API UShooterCombatComponent : public UCombatComponent
+class UNREALPLAYGROUND_API UShooterCombatComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
@@ -19,10 +33,12 @@ public:
 
 	void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	void PickUpNewWeapon(AWeapon* const NewWeapon) override;
+	void PickUpNewGun(AGun* const NewWeapon);
+
+	void PickUpMeleeWeapon(AMeleeWeapon* const NewWeapon);
 
 	// Adds ammo to specific weapon.
-	void AddAmmmoToWeapon(AWeapon* Weapon, int AmmoAddAmount);
+	void AddAmmmoToWeapon(AGun* Weapon, int AmmoAddAmount);
 
 	/** Returns the angular velocity of recoil caused from weapon fire or 0 if no weapon*/
 	float GetWeaponRecoilVelocity() const;
@@ -35,26 +51,61 @@ public:
 
 	bool GetIsAimed() const { return bIsAimed; }
 
-	void SetUpConstruction(USceneComponent* TraceComponent, USkeletalMeshComponent* MeshComponent) override;
+	void SetUpConstruction(USceneComponent* TraceComponent, USkeletalMeshComponent* MeshComponent);
+
+	void ResetLockout();
+
+	void InitializeInput(FWeaponInput* WeaponInput) { Input = WeaponInput; }
+
+	/** Returns a pointer to the weapon currently in hand*/
+	AGun* GetPrimaryWeapon() const { return PrimaryGun; }
+
+	/** Enum that holds swap up or swap down, based on scroll direction*/
+	UPROPERTY(BlueprintReadOnly)
+	TEnumAsByte<ESwapState> SwapState;
+
+	/** Switches out the primary and secondary weapons*/
+	UFUNCTION(BlueprintCallable)
+		void SwapWeapons(TEnumAsByte<ESwapState> SwapDirection);
 
 protected:
 	void BeginPlay() override;
 
 private:
-	/** Switches out the primary and secondary weapons*/
-	void SwapWeapons();
+
+	int GetWeaponCount();
+
+	/** The currently active weapon. This is the weapon that will be fired, reloaded, etc.*/
+	UPROPERTY(Category = Weapons, EditAnywhere)
+	AWeapon* CurrentWeapon;
+
+	/** The currently active weapon. This is the weapon that will be fired, reloaded, etc.*/
+	UPROPERTY(Category = Weapons, EditAnywhere)
+	AGun* PrimaryGun;
 
 	/** The stored weapon owned by this component that can be switched to from input*/
 	UPROPERTY(Category = Weapons, EditAnywhere)
-	AWeapon* SecondaryWeapon;
+	AGun* OffhandGun;
+
+	UPROPERTY(Category = Weapons, EditAnywhere)
+	AMeleeWeapon* MeleeWeapon;
+
+	TArray<AWeapon*> WeaponArray;
+
+	/** The skeletal mesh component that holds the actual weapon mesh on the owning pawn*/
+	USkeletalMeshComponent* WeaponMesh;
+
+	/** Input values belonging to the owning pawn used to perform actions on this component (firing, reloading, etc) */
+	FWeaponInput* Input;
+
+	/** The scene component belonging to the owning pawn that we use to track where we initially begin a trace when firing*/
+	USceneComponent* TraceOrigin;
 
 	/** Delayed Action Manager shorthand pointer*/
 	UDelayedActionManager* DelayManager;
 
 	/** Shorthand pointer to the shooter's trace origin casted as a camera*/
 	UCameraComponent* Camera;
-
-	void ResetLockout();
 
 	void ResetLockoutAfterDelay(const float LockoutDuration);
 
@@ -67,6 +118,13 @@ private:
 	/** Sets aim state and invokes any necessary events to help with animation*/
 	void HandleAimState(const bool bNoWeapon);
 
+	/** Broadcasts event for swap animation*/
+	UFUNCTION(BlueprintCallable, Category = "Animation")
+	void BroadcastSwapEvent();
+
+	/**Invoked when the shooter swaps weapons*/
+	UPROPERTY(BlueprintAssignable)
+	FSwapEvent OnWeaponSwapRequest;
 
 	/** Brendan Tell me if this is Wrong!!!!*/
 	UPROPERTY()
@@ -107,6 +165,9 @@ private:
 
 	/** Whether or not the component has recently performed an action that would prevent it from performing other actions*/
 	uint8 bIsLockedOut;
+
+	// Used to track where we are in the weapons array
+	int CurrentWeaponIndex;
 
 	FDelayedActionHandle* Handle;
 };
