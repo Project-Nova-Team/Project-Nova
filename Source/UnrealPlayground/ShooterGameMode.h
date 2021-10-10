@@ -34,6 +34,8 @@ private:
 	UPROPERTY(Transient)
 	AShooter* Player;
 
+	/** Invoked when the player dies*/
+	void PlayerDeath();
 
 	//TODO parsing the actor hierarchy is and always will be a crime
 	//We will be serializing AICells and the player in builds

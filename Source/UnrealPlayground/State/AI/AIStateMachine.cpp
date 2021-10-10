@@ -5,6 +5,7 @@
 #include "AIInvestigateState.h"
 #include "AITrackState.h"
 #include "AIFollowState.h"
+#include "AIDeathState.h"
 
 void UAIStateMachine::Initialize(UObject* Context)
 {
@@ -16,6 +17,7 @@ void UAIStateMachine::Initialize(UObject* Context)
 	this->AddState<UAIInvestigateState>(Context, "Investigate");
 	this->AddState<UAITrackState>(Context, "Track");
 	this->AddState<UAIFollowState>(Context, "Follow");
+	this->AddState<UAIDeathState>(Context, "Dead");
 
 	this->SetInitialState("Patrol");	
 }

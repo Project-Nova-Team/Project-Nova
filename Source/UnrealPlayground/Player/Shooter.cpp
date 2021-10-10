@@ -93,6 +93,7 @@ void AShooter::BeginPlay()
 
 	OnActorBeginOverlap.AddDynamic(this, &AShooter::OnTriggerEnter);
 	OnActorEndOverlap.AddDynamic(this, &AShooter::OnTriggerExit);
+	Health->OnDeath.AddDynamic(this, &AShooter::HandleDeath);
 }
 
 void AShooter::Tick(float DeltaTime)
@@ -227,6 +228,11 @@ void AShooter::MakeSound(const float Volume)
 		ShooterMakeNoise(SoundHit.ImpactPoint, Volume);
 		DrawDebugSphere(GetWorld(), SoundHit.ImpactPoint, 20, 20, FColor::Blue, true);
 	}
+}
+
+void AShooter::HandleDeath()
+{
+	StateMachine->SetState("Death");
 }
 
 bool AShooter::GetCanVault()

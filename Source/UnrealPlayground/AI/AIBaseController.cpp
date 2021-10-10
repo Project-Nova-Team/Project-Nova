@@ -2,6 +2,7 @@
 #include "AIBase.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "BrainComponent.h"
 #include "Sense.h"
 #include "../State/AI/AIStateMachine.h"
 #include "../Gameplay/HealthComponent.h"
@@ -12,19 +13,6 @@ AAIBaseController::AAIBaseController()
 	PrimaryActorTick.bCanEverTick = true;
 
 	PerceptionComponent = CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("Perception"));
-
-	//Maybe each controller should choose their own default configs?
-	//Register the corresponding perception sense on the component
-	UAISenseConfig_Sight* SightConfig = CreateDefaultSubobject<UAISenseConfig_Sight>(TEXT("Sight Config"));
-	UAISenseConfig_Hearing* HearingConfig = CreateDefaultSubobject<UAISenseConfig_Hearing>(TEXT("Hearing Config"));
-	UAISenseConfig_Damage* DamageConfig = CreateDefaultSubobject<UAISenseConfig_Damage>(TEXT("Damage Config"));
-	UAISenseConfig_Touch* TouchConfig = CreateDefaultSubobject<UAISenseConfig_Touch>(TEXT("Touch Config"));
-
-	PerceptionComponent->ConfigureSense(*SightConfig);
-	PerceptionComponent->ConfigureSense(*HearingConfig);
-	PerceptionComponent->ConfigureSense(*DamageConfig);
-	PerceptionComponent->ConfigureSense(*TouchConfig);
-	PerceptionComponent->SetDominantSense(UAISense_Sight::StaticClass());
 
 	TrackVolume = 80.f;
 	InvestigateVolume = 50.f;
@@ -43,13 +31,17 @@ void AAIBaseController::BeginPlay()
 	Super::BeginPlay();
 	AIOwner = Cast<AAIBase>(GetPawn());
 
+	//Initialize State machine
 	StateMachine = NewObject<UAIStateMachine>();
 	StateMachine->Initialize(this);
 	LoadStateTrees();
 
-	AIOwner->GetHealth()->OnDeath.AddDynamic(this, &AAIBaseController::OnOwnerDeath);
+	//Bind to any delegates
+	AIOwner->GetHealth()->OnDeath.AddDynamic(this, &AAIBaseController::OwnerDeath);
+	AIOwner->OnTakeAnyDamage.AddDynamic(this, &AAIBaseController::Damaged);
 	PerceptionComponent->OnTargetPerceptionUpdated.AddDynamic(this, &AAIBaseController::DispatchStimulus);
 
+	//Set up patrol
 	AActor* const PatrolActor = AIOwner->GetPatrolActor();
 	bool bHasPatrolPath = false;
 
@@ -64,6 +56,7 @@ void AAIBaseController::BeginPlay()
 		Home = AIOwner->GetActorLocation();
 	}
 
+	//Init blackboard values
 	Blackboard->SetValueAsBool("bHasPatrolPath", bHasPatrolPath);
 	Blackboard->SetValueAsVector("HomeLocation", Home);
 }
@@ -88,13 +81,35 @@ void AAIBaseController::Tick(float DeltaTime)
 	StateMachine->Tick(DeltaTime);
 }
 
-void AAIBaseController::OnOwnerDeath()
+void AAIBaseController::SetLifeStatus(const bool bIsAlive)
 {
-	//TODO unregister senses, blackboards, etc
+	bIsDead = !bIsAlive;
+	AIOwner->SetLifeStatus(bIsAlive);
 
-	//FAISenseID HearingSenseID = UAISense::GetSenseID<
-	//GetBrainComponent()->Cleanup();
-	//Perception->UpdatePerceptionWhitelist(FAISenseID::FAINamedID("Sight"), false);
+	PerceptionComponent->SetSenseEnabled(UAISense_Sight::StaticClass(), bIsAlive);
+	PerceptionComponent->SetSenseEnabled(UAISense_Hearing::StaticClass(), bIsAlive);
+	PerceptionComponent->SetSenseEnabled(UAISense_Damage::StaticClass(), bIsAlive);
+	PerceptionComponent->SetSenseEnabled(UAISense_Touch::StaticClass(), bIsAlive);
+
+	if (!bIsAlive)
+	{	
+		BrainComponent->PauseLogic("Death");
+		StateMachine->SetState("Dead");
+		SetAggression(false);
+		SetInvestigation(false);
+	}
+
+	else
+	{
+		BrainComponent->ResumeLogic("Respawn");
+		StateMachine->SetState("Patrol");		
+	}
+}
+
+void AAIBaseController::Damaged(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
+{
+	const FVector AILoc = AIOwner->GetActorLocation();
+	UAISense_Damage::ReportDamageEvent(GetWorld(), AIOwner, DamageCauser, Damage, AILoc, AILoc);
 }
 
 void AAIBaseController::SetState(const FString Key)
@@ -121,6 +136,7 @@ void AAIBaseController::SetSearchParameters(const bool bUseTarget)
 
 void AAIBaseController::SetAggression(const bool Value)
 {
+	//Only set aggression state when its different
 	if (bAggressive != Value)
 	{
 		OnAggression.Broadcast(Value);
@@ -130,6 +146,7 @@ void AAIBaseController::SetAggression(const bool Value)
 
 void AAIBaseController::SetInvestigation(const bool Value)
 {
+	//only set investigation state when its different
 	if (bInvestigating != Value)
 	{
 		OnInvestigation.Broadcast(Value);
@@ -191,13 +208,8 @@ void AAIBaseController::ReactToSight(AActor* const Invoker, const FAIStimulus& S
 
 void AAIBaseController::ReactToPhysical(AActor* const Invoker, const FAIStimulus& Stimulus)
 {
-	//not very extensible
-	if (Invoker == Target)
-	{
-		SetState("Attack");
-		SetAggression(true);
-		LastAgressiveTime = GetWorld()->GetTimeSeconds();
-	}
+	SetState("Attack");
+	LastAgressiveTime = GetWorld()->GetTimeSeconds();
 }
 
 void AAIBaseController::ReactToSound(AActor* const Invoker, const FAIStimulus& Stimulus)
@@ -209,7 +221,7 @@ void AAIBaseController::ReactToSound(AActor* const Invoker, const FAIStimulus& S
 	}
 }
 
-bool AAIBaseController::DetermineSearch(const FVector SourceLocation, const float SourceVolume)
+void AAIBaseController::DetermineSearch(const FVector SourceLocation, const float SourceVolume)
 {
 	const float Score = CalculateAudioScore(SourceLocation, SourceVolume);
 
@@ -217,8 +229,6 @@ bool AAIBaseController::DetermineSearch(const FVector SourceLocation, const floa
 	{
 		DetermineSearchInternal(SourceLocation, Score);
 	}
-
-	return false;
 }
 
 void AAIBaseController::DetermineSearchInternal(const FVector& SourceLocation, const float IncomingScore)
@@ -262,7 +272,7 @@ float AAIBaseController::CalculateAudioScore(const FVector& SourceLocation, floa
 	// 400 units - 1/4 volume
 	// We use decibels here so design has an easier time understanding how loud a sound really was to the listener
 
-	const float SquareDistance = FVector::DistSquared(SourceLocation, GetOwner()->GetActorLocation());
+	const float SquareDistance = FVector::DistSquared(SourceLocation, AIOwner->GetActorLocation());
 	float RawIntensity = MinimumIntensityThreshold * FMath::Pow(10.f, Volume / 10.f);
 
 	if (SquareDistance > MinimumPropagationDistance)
