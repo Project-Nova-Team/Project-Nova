@@ -38,6 +38,7 @@ void UHealthComponent::TakeDamage(AActor* DamagedActor, float Damage, const clas
 	{
 		Health = 0;
 		OnDeath.Broadcast();
+		bIsInvincible = true;
 	}
 }
 

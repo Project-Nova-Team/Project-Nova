@@ -18,6 +18,7 @@ class IInteractiveObject;
 class AGun;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FScanEvent, FHitResult, ScanData);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FShooterMakeNoise, FVector, Location, float, Volume);
 
 struct FShooterInput : public FWeaponInput
 {
@@ -98,6 +99,8 @@ public:
 	/** Returns the state machine attached to the shooter which drives player movement*/
 	UShooterStateMachine* GetStateMachine() const { return StateMachine; }
 
+	UHealthComponent* GetHealth() const { return Health; }
+
 	/** Returns the input state. Note: contents are mutable*/
 	FShooterInput* GetInput() { return &InputState; }
 
@@ -117,16 +120,20 @@ public:
 	UPROPERTY(Category = Pawn, EditAnywhere)
 	uint8 bTraceDebug : 1;
 
-	/**Invoked when the shooter is looking at an object that can be interacted with (a weapon/button)*/
+	/** Invoked when the shooter is looking at an object that can be interacted with (a weapon/button)*/
 	UPROPERTY(BlueprintAssignable)
 	FScanEvent OnScanHit;
 
-	/**Invoked when the shooter is not looking at an object that can be interacted with (a weapon/button)*/
+	/** Invoked when the shooter is not looking at an object that can be interacted with (a weapon/button)*/
 	UPROPERTY(BlueprintAssignable)
 	FScanEvent OnScanMiss;
 
-	UPROPERTY(BlueprintReadOnly)
+	/** Invoked when the shooter shooter makes a sound*/
+	UPROPERTY(BlueprintAssignable)
+	FShooterMakeNoise OnMakeNoise;
+
 	/** Set when player overlaps or unoverlaps vault trigger*/
+	UPROPERTY(BlueprintReadOnly)
 	uint8 bIsInsideVaultTrigger : 1;
 
 	/** Is player looking at a vault object?*/
@@ -136,7 +143,14 @@ public:
 	/** Returns whether player is in vault trigger and is looking at vault object*/
 	UFUNCTION(BlueprintCallable)
 	bool GetCanVault();
-	
+
+	UFUNCTION(BlueprintCallable)
+	void ShooterMakeNoise(FVector Location, float Volume);
+
+	/** Sets the death state in the state machine when the shooter dies*/
+	UFUNCTION()
+	void HandleDeath();
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -214,4 +228,16 @@ private:
 	void ThrowPrimaryRelease()			{ InputState.bIsTryingToThrowPrimary = false; }
 	void ThrowSecondaryPress()			{ InputState.bIsTryingToThrowSecondary = true; }
 	void ThrowSecondaryRelease()		{ InputState.bIsTryingToThrowSecondary = false; }
+
+
+	//TODO delete all of this
+#if WITH_EDITOR
+	UPROPERTY(EditAnywhere, Category = "SOUND TEST")
+	float NoiseAmount;
+
+	float NoiseIntensity;
+
+	void MakeSound(const float Volume);
+	
+#endif
 };

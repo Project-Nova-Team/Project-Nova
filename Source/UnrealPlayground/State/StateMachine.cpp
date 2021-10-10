@@ -16,7 +16,6 @@ void UStateMachine::Tick(const float DeltaTime)
 			SetState(ActiveState->GetFlaggedKey());
 		else if (ActiveState->GetFlaggedState() != nullptr)
 			SetState(ActiveState->GetFlaggedState());
-
 	}
 }
 
