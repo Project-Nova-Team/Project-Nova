@@ -1,11 +1,13 @@
 #include "SDeathState.h"
 #include "Camera/PlayerCameraManager.h"
+#include "../../../Animation/ShooterAnimInstance.h"
 
 void USDeathState::OnEnter()
 {
-	APlayerCameraManager* CameraManager = Cast<APlayerController>(Shooter->GetController())->PlayerCameraManager;
+	//Just play a death animation
+	APlayerCameraManager* const CameraManager = Cast<APlayerController>(Shooter->GetController())->PlayerCameraManager;
+	const UShooterAnimInstance* const AnimationInstance = Cast<UShooterAnimInstance>(Shooter->GetSkeletalMeshComponent()->GetAnimInstance());
+	UCameraAnim* const Animation = AnimationInstance->CameraDeathAnimation;
 
-	//TODO lets hook up an animation in the UShooterAnimInstance.
-	//Even though the anim instance is never going to play it, its a better place to live than on the shooter
-	//CameraManager->PlayCameraAnim()
+	CameraManager->PlayCameraAnim(Animation);
 }

@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -27,13 +25,16 @@ public:
 
 	/** Broadcasts event for vaulting animation*/
 	UFUNCTION(BlueprintCallable, Category = "Animation")
-		void BroadcastVaultEvent();
+	void BroadcastVaultEvent();
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
-		UAnimMontage* VaultAnimMontage;
+	UAnimMontage* VaultAnimMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
-		UAnimMontage* SwapAnimMontage;
+	UAnimMontage* SwapAnimMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
+	class UCameraAnim* CameraDeathAnimation;
 
 private:
 
@@ -47,21 +48,23 @@ private:
 
 	/** Returns whether this shooter is walking*/
 	UFUNCTION(BlueprintCallable, Category = "Animation")
-		bool IsWalking();
+	bool IsWalking();
 
 	/** Returns whether this shooter is falling*/
 	UFUNCTION(BlueprintCallable, Category = "Animation")
-		bool IsFalling();
+	bool IsFalling();
 
 	UFUNCTION(BlueprintCallable, Category = "Animation")
-		void PlayVaultMontage();
+	void PlayVaultMontage();
 
 	UFUNCTION(BlueprintCallable, Category = "Animation")
-		void PlaySwapMontage();
+	void PlaySwapMontage();
+
+	
 
 	/** Called when a montage ends*/
 	UFUNCTION()
-		void OnMontageEndMethod(UAnimMontage* Montage, bool bInterupted);
+	void OnMontageEndMethod(UAnimMontage* Montage, bool bInterupted);
 
 	void NativeBeginPlay() override;
 
