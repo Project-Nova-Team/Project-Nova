@@ -35,6 +35,7 @@ private:
 	AShooter* Player;
 
 	/** Invoked when the player dies*/
+	UFUNCTION()
 	void PlayerDeath();
 
 	//TODO parsing the actor hierarchy is and always will be a crime
