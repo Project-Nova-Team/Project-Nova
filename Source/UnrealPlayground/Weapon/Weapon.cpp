@@ -35,12 +35,6 @@ void AWeapon::Tick(float DeltaTime)
 
 void AWeapon::InteractionEvent(const APawn* EventSender)
 {
-	////If a pawn who sent the interaction has a combat component, pick the weapon up
-	//UShooterCombatComponent* CombatComponent = EventSender->FindComponentByClass<UShooterCombatComponent>();
-	//if (CombatComponent != nullptr)
-	//{
-	//	CombatComponent->PickUpNewWeapon(this);
-	//}
 }
 
 void AWeapon::SetActorTick(bool status)
@@ -64,6 +58,8 @@ void AWeapon::SetWeaponSceneValues(const USceneComponent* TraceOriginComponent, 
 		Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 		PrimaryActorTick.SetTickFunctionEnable(true);
+
+		TraceOrigin = TraceOriginComponent;
 	}
 
 	//A pawn has dropped the weapon
@@ -84,6 +80,6 @@ void AWeapon::SetWeaponSceneValues(const USceneComponent* TraceOriginComponent, 
 		PrimaryActorTick.SetTickFunctionEnable(false);
 	}
 
-	TraceOrigin = TraceOriginComponent;
-	HeldWeaponMesh = HeldWeapon;
+	if(HeldWeapon != nullptr)
+		HeldWeaponMesh = HeldWeapon;
 }

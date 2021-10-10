@@ -33,7 +33,7 @@ public:
 
 	void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	void PickUpNewWeapon(AGun* const NewWeapon);
+	void PickUpNewGun(AGun* const NewWeapon);
 
 	void PickUpMeleeWeapon(AMeleeWeapon* const NewWeapon);
 
@@ -72,6 +72,8 @@ protected:
 	void BeginPlay() override;
 
 private:
+
+	int GetWeaponCount();
 
 	/** The currently active weapon. This is the weapon that will be fired, reloaded, etc.*/
 	UPROPERTY(Category = Weapons, EditAnywhere)

@@ -93,7 +93,7 @@ void AGun::InteractionEvent(const APawn* EventSender)
 	UShooterCombatComponent* CombatComponent = EventSender->FindComponentByClass<UShooterCombatComponent>();
 	if (CombatComponent != nullptr)
 	{
-		CombatComponent->PickUpNewWeapon(this);
+		CombatComponent->PickUpNewGun(this);
 	}
 }
 
