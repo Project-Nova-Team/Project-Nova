@@ -94,6 +94,7 @@ void AShooter::BeginPlay()
 
 	OnActorBeginOverlap.AddDynamic(this, &AShooter::OnTriggerEnter);
 	OnActorEndOverlap.AddDynamic(this, &AShooter::OnTriggerExit);
+	Health->OnDeath.AddDynamic(this, &AShooter::HandleDeath);
 }
 
 void AShooter::Tick(float DeltaTime)
@@ -102,6 +103,12 @@ void AShooter::Tick(float DeltaTime)
 	InputState.Tick(DeltaTime);
 	StateMachine->Tick(DeltaTime);
 	ScanInteractiveObject();
+
+	if (InputState.bIsTryingToThrowPrimary)
+	{
+		MakeSound(NoiseAmount);
+		InputState.bIsTryingToThrowPrimary = false;
+	}
 }
 
 void AShooter::ScanInteractiveObject()
@@ -191,6 +198,33 @@ void AShooter::OnTriggerExit(AActor* OverlappedActor, AActor* OtherActor)
 		OnScanMiss.Broadcast(ScanHit);
 		UE_LOG(LogTemp, Warning, TEXT("Exit Trigger"));
 	}
+}
+
+void AShooter::ShooterMakeNoise(FVector Location, float Volume)
+{
+	OnMakeNoise.Broadcast(Location, Volume);
+}
+
+void AShooter::MakeSound(const float Volume)
+{
+	FHitResult SoundHit;
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(this);
+
+	const FVector TraceStart = Camera->GetComponentLocation();
+	const FVector TraceEnd = TraceStart + Camera->GetForwardVector() * 10000.f;
+	const bool bHit = GetWorld()->LineTraceSingleByChannel(SoundHit, TraceStart, TraceEnd, ECC_Camera, QueryParams);
+
+	if (bHit)
+	{	
+		ShooterMakeNoise(SoundHit.ImpactPoint, Volume);
+		DrawDebugSphere(GetWorld(), SoundHit.ImpactPoint, 20, 20, FColor::Blue, true);
+	}
+}
+
+void AShooter::HandleDeath()
+{
+	StateMachine->SetState("Death");
 }
 
 bool AShooter::GetCanVault()
