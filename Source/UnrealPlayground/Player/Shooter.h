@@ -15,10 +15,9 @@ class UShooterCombatComponent;
 class UHealthComponent;
 class UAIPerceptionStimuliSourceComponent;
 class IInteractiveObject;
+class AGun;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FScanEvent, FHitResult, ScanData);
-// TAKING IN SCAN HIT HERE IS BAD!!!!!!! PLS FIX
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FVaultEvent, FHitResult, ScanData2);
 
 struct FShooterInput : public FWeaponInput
 {
@@ -102,8 +101,17 @@ public:
 	/** Returns the input state. Note: contents are mutable*/
 	FShooterInput* GetInput() { return &InputState; }
 
+	/** Returns the Skeletal Mesh component of this shooter*/
+	USkeletalMeshComponent* GetSkeletalMeshComponent() { return ShooterSkeletalMesh; }
+
+	/** Returns the Shooter_Movement component attached to this shooter*/
+	UShooterMovementComponent* GetShooterMovement() { return ShooterMovement; }
+
 	/** Returns the Perception Source component which enables AI to sense stimulus produced by this actor*/
 	UAIPerceptionStimuliSourceComponent* GetPerceptionSource() const { return PerceptionSource; }
+
+	/** Returns State Machine. Maybe consider moving this to shooter movement component?*/
+	UShooterStateMachine* GetStateMachine() { return StateMachine; }
 
 	/** Draws debug traces for a variety of position tests if enabled*/
 	UPROPERTY(Category = Pawn, EditAnywhere)
@@ -117,13 +125,6 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FScanEvent OnScanMiss;
 
-	/**Invoked when the shooter can vault and presses space*/
-	UPROPERTY(BlueprintAssignable)
-	FVaultEvent OnVaultPress;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	UAnimMontage *VaultAnimMontage;
-
 	UPROPERTY(BlueprintReadOnly)
 	/** Set when player overlaps or unoverlaps vault trigger*/
 	uint8 bIsInsideVaultTrigger : 1;
@@ -135,23 +136,6 @@ public:
 	/** Returns whether player is in vault trigger and is looking at vault object*/
 	UFUNCTION(BlueprintCallable)
 	bool GetCanVault();
-
-	/** Animation Hooks**/
-
-	/** Returns whether this shooter is walking*/
-	UFUNCTION(BlueprintCallable, Category = "Animation")
-	bool IsWalking();
-
-	/** Returns whether this shooter is falling*/
-	UFUNCTION(BlueprintCallable, Category = "Animation")
-	bool IsFalling();
-
-	/** Broadcasts event for vaulting animation*/
-	UFUNCTION(BlueprintCallable, Category = "Animation")
-	void StartVaultAnimation();
-
-	UFUNCTION(BlueprintCallable, Category = "Animation")
-	void PlayVaultMontage();
 	
 protected:
 	virtual void BeginPlay() override;
@@ -165,7 +149,7 @@ private:
 	void OnTriggerExit(AActor* OverlappedActor, AActor* OtherActor);
 
 	UPROPERTY(Category = Mesh, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	USkeletalMeshComponent* Arms;
+	USkeletalMeshComponent* ShooterSkeletalMesh;
 
 	UPROPERTY(Category = Mesh, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	USkeletalMeshComponent* WeaponMesh;
@@ -218,8 +202,8 @@ private:
 	void AimRelease()					{ InputState.bIsTryingToAim = false; }
 	void InteractPress()				{ InputState.bIsTryingToInteract = true; }
 	void InteractRelease()				{ InputState.bIsTryingToInteract = false; }
-	void SwapPress()					{ InputState.bIsTryingToSwap = true; }
-	//void SwapRelease()					{ InputState.bIsTryingToSwap = false; }
+	void SwapPressUp()					{ InputState.bIsTryingToSwapUp = true; }
+	void SwapPressDown()				{ InputState.bIsTryingToSwapDown = true; }
 	void MeleePress()					{ InputState.bIsTryingToMelee = true; }
 	void MeleeRelease()					{ InputState.bIsTryingToMelee = false; }
 	void SprintPress()					{ InputState.bIsTryingToSprint = true; }

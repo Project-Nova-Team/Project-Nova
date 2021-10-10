@@ -1,6 +1,7 @@
 #include "ShooterHUD.h"
 #include "ShooterController.h"
 #include "Player/Shooter.h"
+#include "../UnrealPlayground/Weapon/Gun.h"
 #include "Weapon/ShooterCombatComponent.h"
 
 AShooterHUD::AShooterHUD()
