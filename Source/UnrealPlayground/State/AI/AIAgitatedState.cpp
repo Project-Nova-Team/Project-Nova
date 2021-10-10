@@ -9,7 +9,7 @@ void UAIAgitatedState::Initialize(UStateMachine* StateMachine, UObject* ContextO
 void UAIAgitatedState::OnEnter()
 {
 	//Don't call super here, we dont want to register investigations on agitation!
-	this->StaticClass()->GetName(AI->CurrentState);
+	AI->CurrentState = GetClass()->GetFName().GetPlainNameString();
 	AI->RunBehaviorTree(Tree);
 	AI->SetSearchParameters(false);
 }

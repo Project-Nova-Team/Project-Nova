@@ -12,6 +12,7 @@ void UAIAttackState::OnEnter()
 	AI->ClearSearchParameters();
 	AI->SetMoveLocation(AI->GetTarget()->GetActorLocation());
 	AI->SetLastAggressionTime(AI->GetWorld()->GetTimeSeconds());
+	AI->SetAggression(true);
 }
 
 void UAIAttackState::Tick(const float DeltaTime)

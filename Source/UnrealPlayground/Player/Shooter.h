@@ -100,6 +100,8 @@ public:
 	/** Returns the state machine attached to the shooter which drives player movement*/
 	UShooterStateMachine* GetStateMachine() const { return StateMachine; }
 
+	UHealthComponent* GetHealth() const { return Health; }
+
 	/** Returns the input state. Note: contents are mutable*/
 	FShooterInput* GetInput() { return &InputState; }
 
@@ -144,6 +146,10 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void ShooterMakeNoise(FVector Location, float Volume);
 
+	/** Sets the death state in the state machine when the shooter dies*/
+	UFUNCTION()
+	void HandleDeath();
+
 	/** Animation Hooks**/
 
 	/** Returns whether this shooter is walking*/
@@ -160,7 +166,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Animation")
 	void PlayVaultMontage();
-	
+
 protected:
 	virtual void BeginPlay() override;
 

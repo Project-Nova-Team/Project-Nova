@@ -4,6 +4,7 @@
 #include "ShooterHUD.h"
 #include "Player/Shooter.h"
 #include "AI/AICell.h"
+#include "Gameplay/HealthComponent.h"
 
 AShooterGameMode::AShooterGameMode()
 {
@@ -38,10 +39,17 @@ void AShooterGameMode::InitGame(const FString& MapName, const FString& Options, 
 	{
 		Cell->SetPlayer(Player);
 	}
+
+	Player->GetHealth()->OnDeath.AddDynamic(this, &AShooterGameMode::PlayerDeath);
 }
 
 void AShooterGameMode::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	DelayedActionManager->TickRunningActions(DeltaTime);
+}
+
+void AShooterGameMode::PlayerDeath()
+{
+	//Do reset pipeline stuff here when player dies
 }

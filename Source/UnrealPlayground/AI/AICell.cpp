@@ -76,6 +76,11 @@ void AAICell::SignalCellStimulus(const FVector StimulusSource, const float Stren
 
 	for (AAIBaseController* AI : AIUnits)
 	{
+		if (AI->IsDead())
+		{
+			continue;
+		}
+
 		const float SqrDist = (AI->GetPawn()->GetActorLocation() - StimulusSource).SizeSquared();
 		
 		if (SqrDist < CurrentClosestDistance)
@@ -85,12 +90,18 @@ void AAICell::SignalCellStimulus(const FVector StimulusSource, const float Stren
 		}
 	}
 
-	bool bInvestigationInitiated = Strength < 0;
+	NearestTemp = NearestAI;
+
+	//The cell either has no AI or all the AI are dead
+	if (NearestAI == nullptr)
+	{
+		return;
+	}
 
 	//This stimulus was not global, lets determine if we should search
-	if (!bInvestigationInitiated)
+	if (Strength >= 0)
 	{
-		bInvestigationInitiated = NearestAI->DetermineSearch(StimulusSource, Strength);
+		NearestAI->DetermineSearch(StimulusSource, Strength);
 	}
 
 	//This stimulus was global, lets gurantee an investigation from the nearest AI
@@ -122,7 +133,7 @@ void AAICell::RegisterInvestigator(bool StartingInvestigation)
 			AI->SetInvestigationLocation(AI->GetTarget()->GetActorLocation());		
 		}
 
-		SetAllUnitStates("Agitated", true);
+		SetAllUnitStates("Agitated", false, NearestTemp);
 	}
 
 	//All Investigations in this cell have stopped, stop agitation
@@ -181,7 +192,7 @@ void AAICell::SetAllUnitStatesList(const FString NewState, const bool bIgnoreLow
 	for (AAIBaseController* AI : AIUnits)
 	{
 		//naive
-		if (Ignore.Contains(AI))
+		if (AI->IsDead() || Ignore.Contains(AI))
 		{
 			continue;
 		}

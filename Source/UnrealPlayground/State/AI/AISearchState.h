@@ -11,5 +11,4 @@ class UNREALPLAYGROUND_API UAISearchState : public UAIState
 
 public:
 	void OnEnter() override;
-	void OnExit() override;
 };

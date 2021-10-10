@@ -38,7 +38,7 @@ public:
 	/** Sets search parameters in blackboard*/
 	virtual void SetSearchParameters(const bool bUseTargetLoc);
 
-	virtual bool DetermineSearch(const FVector SourceLocation, const float SourceVolume);
+	virtual void DetermineSearch(const FVector SourceLocation, const float SourceVolume);
 
 	UAIStateMachine* GetStateMachine() const { return StateMachine; }
 
@@ -56,6 +56,8 @@ public:
 	bool IsAggressive() const { return bAggressive; }
 
 	bool IsInvestigating() const { return bInvestigating; }
+
+	bool IsDead() const { return bIsDead; }
 
 	bool CanSeeTarget() const { return bHasVisionOfTarget; }
 
@@ -125,6 +127,10 @@ protected:
 
 	/** World space position where the investigation should take place*/
 	FVector InvestigationLocation;
+
+	/** Called when this AI takes damage so it can report the event to the perception system*/
+	UFUNCTION()
+	void Damaged(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 
 	/** 
 	 * Invoked when this controller's perception component recieves a stimulus
@@ -227,8 +233,16 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "AI | Search")
 	int32 AnnoyanceThreshold;
 
+	/** Cleans up and pauses BT logic and perceptual stimulus reponse*/
 	UFUNCTION()
-	void OnOwnerDeath();
+	void OwnerDeath() { SetLifeStatus(false); }
+
+	/** 
+	 * Sets the activity of perceptual stimulus and also informs the AIBase character to reset its components
+	 * 
+	 * @param	bIsAlive				New status for the AI. True if the AI is respawning, False if it is dying
+	 */
+	void SetLifeStatus(const bool bIsAlive);
 	
 	/**
 	 * Is this AI agressive and trying to attack its target
@@ -242,6 +256,8 @@ protected:
 
 	/** Was the last visual stimulus a success*/
 	uint8 bHasVisionOfTarget : 1;
+
+	uint8 bIsDead : 1;
 
 	/** Game time the target last registered an agression*/
 	float LastAgressiveTime;
