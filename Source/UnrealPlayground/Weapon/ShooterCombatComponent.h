@@ -75,6 +75,10 @@ private:
 
 	int GetWeaponCount();
 
+	void SwapToGun();
+
+	void SwapToMelee();
+
 	/** The currently active weapon. This is the weapon that will be fired, reloaded, etc.*/
 	UPROPERTY(Category = Weapons, EditAnywhere)
 	AWeapon* CurrentWeapon;

@@ -65,6 +65,14 @@ public:
 	 */
 	void FireWithNoise(const bool bIsAimed, FRotator BulletRotation);
 
+	/**
+	 * Fires the weapon applying recoil and bloom
+	 *
+	 * @param	bIsAimed				Whether or not whoever is holding the weapon is aiming the weapon, which determines bloom and recoil
+	 * @param	BulletRotation			Orientation the spawned actor begins in
+	 */
+	void FireShotgun(const bool bIsAimed, FRotator BulletRotation);
+
 	/** Packages relevant information to display to the UI in blueprint*/
 	FWeaponUIData GetWeaponUI() const;
 
@@ -103,6 +111,10 @@ public:
 	void SetGunSceneValues(const USceneComponent* TraceOriginComponent, const USkeletalMeshComponent* HeldWeapon, const USkeletalMeshSocket* BulletSocket);
 
 	EWeaponFireType GetWeaponType() const { return WeaponFireType; }
+
+	int GetAmmoCount() { return CurrentAmmo; }
+
+	int GetClipSize() { return ClipSize; }
 
 	/** Field of view when zoomed in using this weapon*/
 	UPROPERTY(EditAnywhere, Category = "Weapon | Aiming")
