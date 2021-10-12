@@ -27,13 +27,16 @@ public:
 
 	/** Broadcasts event for vaulting animation*/
 	UFUNCTION(BlueprintCallable, Category = "Animation")
-		void BroadcastVaultEvent();
+	void BroadcastVaultEvent();
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
-		UAnimMontage* VaultAnimMontage;
+	UAnimMontage* VaultAnimMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
-		UAnimMontage* SwapAnimMontage;
+	UAnimMontage* SwapAnimMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
+	UAnimMontage* ReloadAnimMontage;
 
 private:
 
@@ -58,6 +61,9 @@ private:
 
 	UFUNCTION(BlueprintCallable, Category = "Animation")
 		void PlaySwapMontage();
+
+	UFUNCTION(BlueprintCallable, Category = "Animation")
+		void PlayReloadMontage();
 
 	/** Called when a montage ends*/
 	UFUNCTION()

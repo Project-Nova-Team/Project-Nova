@@ -80,6 +80,7 @@ public:
 	void AddExcessAmmo(int AmmoAddAmount);
 
 	/** Reloads the weapon*/
+	UFUNCTION(BlueprintCallable)
 	void Reload();
 
 	/** Reutnrs the current angular velocity of weapon impulse from firing*/

@@ -161,6 +161,8 @@ void UShooterCombatComponent::SwapWeapons(TEnumAsByte<ESwapState> SwapDirection)
 		}
 		else
 		{
+			// If we only have a gun and a knife, swap between the two knife is always in slot 2,
+			// If you only have one gun it's always in slot 0
 			if (CurrentWeaponIndex == 0)
 			{
 				CurrentWeaponIndex = 2;
@@ -176,6 +178,7 @@ void UShooterCombatComponent::SwapWeapons(TEnumAsByte<ESwapState> SwapDirection)
 		if (NextWeapon != nullptr)
 		{
 			// If next weapon is a gun, set up gun things. Otherwise set up melee things.
+			//Both methods had to be separated due to different specific behaviors.
 			if (NextWeapon->IsA(AGun::StaticClass()))
 			{
 				SwapToGun();
@@ -198,6 +201,8 @@ void UShooterCombatComponent::SwapWeapons(TEnumAsByte<ESwapState> SwapDirection)
 		}
 		else
 		{
+			// If we only have a gun and a knife, swap between the two knife is always in slot 2,
+			// If you only have one gun it's always in slot 0
 			if (CurrentWeaponIndex == 0)
 			{
 				CurrentWeaponIndex = 2;
@@ -213,6 +218,7 @@ void UShooterCombatComponent::SwapWeapons(TEnumAsByte<ESwapState> SwapDirection)
 		if (NextWeapon != nullptr)
 		{
 			// If next weapon is a gun, set up gun things. Otherwise set up melee things.
+			//Both methods had to be separated due to different specific behaviors.
 			if (NextWeapon->IsA(AGun::StaticClass()))
 			{
 				SwapToGun();
@@ -277,10 +283,12 @@ void UShooterCombatComponent::HandleStandardActions(const bool bNoWeapon)
 
 	if (Input->bIsTryingToReload)
 	{
-		PrimaryGun->Reload();
-		Input->bIsTryingToReload = false;
-		//We probably want to use the animation to reset lockout and actually call the reload function on the weapon
-		//Lets figure out how to do that instead of using the DelayedActionManager
+		if (CurrentWeapon->IsA(AGun::StaticClass()))
+		{
+			bIsLockedOut = true;
+			BroadcastReloadEvent();
+			Input->bIsTryingToReload = false;
+		}
 	}
 
 
@@ -300,7 +308,7 @@ void UShooterCombatComponent::HandleStandardActions(const bool bNoWeapon)
 				}
 				else if (PrimaryGun->GetWeaponType() == FT_Burst)
 				{
-					for (int i = 0; i < (PrimaryGun->GetClipSize()/2); i++)
+					for (float i = 0.f; i < (PrimaryGun->GetClipSize()/2); i++)
 						PrimaryGun->FireShotgun(bIsAimed, Rotation);
 					Input->bIsTryingToFire = false;
 				}
@@ -391,6 +399,11 @@ void UShooterCombatComponent::BroadcastSwapEvent()
 	OnWeaponSwapRequest.Broadcast();
 }
 
+void UShooterCombatComponent::BroadcastReloadEvent()
+{
+	OnReloadRequest.Broadcast();
+}
+
 int UShooterCombatComponent::GetWeaponCount()
 {
 	int count = 0;
@@ -414,6 +427,7 @@ void UShooterCombatComponent::SwapToGun()
 		Camera->FieldOfView = StartingCameraFOV;
 	}
 
+	// Swap offhand into primary
 	if (OffhandGun != nullptr)
 	{
 		AGun* const Temp = PrimaryGun;
