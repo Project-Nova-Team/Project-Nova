@@ -15,6 +15,7 @@ class AWeapon;
 struct FDelayedActionHandle;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FSwapEvent);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FReloadEvent);
 
 UENUM(BlueprintType)
 enum ESwapState
@@ -58,6 +59,7 @@ public:
 	void InitializeInput(FWeaponInput* WeaponInput) { Input = WeaponInput; }
 
 	/** Returns a pointer to the weapon currently in hand*/
+	UFUNCTION(BlueprintCallable)
 	AGun* GetPrimaryWeapon() const { return PrimaryGun; }
 
 	/** Enum that holds swap up or swap down, based on scroll direction*/
@@ -66,7 +68,7 @@ public:
 
 	/** Switches out the primary and secondary weapons*/
 	UFUNCTION(BlueprintCallable)
-		void SwapWeapons(TEnumAsByte<ESwapState> SwapDirection);
+	void SwapWeapons(TEnumAsByte<ESwapState> SwapDirection);
 
 protected:
 	void BeginPlay() override;
@@ -126,9 +128,16 @@ private:
 	UFUNCTION(BlueprintCallable, Category = "Animation")
 	void BroadcastSwapEvent();
 
+	/** Broadcasts event for reload animation*/
+	UFUNCTION(BlueprintCallable, Category = "Animation")
+	void BroadcastReloadEvent();
+
 	/**Invoked when the shooter swaps weapons*/
 	UPROPERTY(BlueprintAssignable)
 	FSwapEvent OnWeaponSwapRequest;
+
+	UPROPERTY(BlueprintAssignable)
+	FReloadEvent OnReloadRequest;
 
 	/** Brendan Tell me if this is Wrong!!!!*/
 	UPROPERTY()
