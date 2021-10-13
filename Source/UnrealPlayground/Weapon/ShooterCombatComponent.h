@@ -62,6 +62,10 @@ public:
 	UFUNCTION(BlueprintCallable)
 	AGun* GetPrimaryWeapon() const { return PrimaryGun; }
 
+	/** Returns a pointer to the weapon currently in hand*/
+	UFUNCTION(BlueprintCallable)
+	AWeapon* GetCurrentWeapon() const { return CurrentWeapon; }
+
 	/** Enum that holds swap up or swap down, based on scroll direction*/
 	UPROPERTY(BlueprintReadOnly)
 	TEnumAsByte<ESwapState> SwapState;
