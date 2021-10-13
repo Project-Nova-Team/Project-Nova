@@ -427,13 +427,17 @@ void UShooterCombatComponent::SwapToGun()
 		Camera->FieldOfView = StartingCameraFOV;
 	}
 
+	UE_LOG(LogTemp, Warning, TEXT("%s"), *CurrentWeapon->GetName());
+
 	// Swap offhand into primary
-	if (OffhandGun != nullptr)
+	if (OffhandGun != nullptr && CurrentWeapon->IsA(AGun::StaticClass()))
 	{
 		AGun* const Temp = PrimaryGun;
 		PrimaryGun = OffhandGun;
 		OffhandGun = Temp;
 	}
+
+	PrimaryGun = Cast<AGun>(WeaponArray[CurrentWeaponIndex]);
 
 	// Switch mesh to current array weapon
 	WeaponMesh->SetSkeletalMesh(WeaponArray[CurrentWeaponIndex]->GetSkeletalMesh());
