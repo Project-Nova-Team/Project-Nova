@@ -44,7 +44,7 @@ uint8 UAIStateMachine::GetActiveWeight()
 	return Cast<UAIState>(GetActiveState())->Weight;
 }
 
-uint8 UAIStateMachine::GetWeightAtKey(const FString Key)
+uint8 UAIStateMachine::GetWeightAtKey(const FString& Key)
 {
 	return Cast<UAIState>(GetStateAtKey(Key))->Weight;
 }

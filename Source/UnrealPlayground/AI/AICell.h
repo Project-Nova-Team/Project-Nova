@@ -22,7 +22,7 @@ public:
 	void RegisterAudioStimulus(FVector Location, float Volume);
 
 	UFUNCTION(BlueprintCallable)
-	int GetInvestigationCount() const { return InvestigationCount; }
+	int32 GetInvestigationCount() const { return InvestigationCount; }
 
 	/** Sets the reference to the player, called by the game mode instance on InitGame*/
 	void SetPlayer(AShooter* Value) { Player = Value; }
@@ -60,7 +60,7 @@ private:
 	/** How many AI belonging to this cell are currently tasked as an investigator*/
 	int32 InvestigationCount;
 
-	/** How many AI belonging to this cell are currently aggressive and contributing to Attacking the player*/
+	/** Collection of AI belonging to this cell are currently aggressive and contributing to Attacking the player*/
 	int32 AgressorCount;
 
 	/** Gets every AI unit inside the cell volume and marks it as belonging to this cell*/
@@ -75,15 +75,6 @@ private:
 	 * @param	bIgnoreLower		If true, each AI will only respect a change if it has a higher priority
 	 */
 	void SetAllUnitStates(const FString NewState, const bool bIgnoreLower = false, AAIBaseController* Ignore = nullptr);
-
-	/** 
-	 * Sets the state of every AI in the cell. A collection of AI may be supplied to skip state change
-	 * 
-	 * @param	NewState			New state for the AI
-	 * @param	Ignore				Collection of Units to skip setting this state on
-	 * @param	bIgnoreLower		If true, each AI will only respect a change if it has a higher priority
-	 */
-	void SetAllUnitStatesList(const FString NewState, const bool bIgnoreLower = false, const TSet<AAIBaseController*> Ignore = TSet<AAIBaseController*>());
 
 	/**
 	 *	Selects the nearest AI in the cell to an audio source to investigate

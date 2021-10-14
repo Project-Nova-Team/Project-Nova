@@ -13,7 +13,7 @@ public:
 	UShooterStateMachine() { }
 	~UShooterStateMachine() { }
 	virtual void Initialize(UObject* Context) override;
-	void SetState(const FString NewStateKey) override;
+	void SetState(const FString& NewStateKey) override;
 
 	UState* GetPreviousState() { return PreviousState; }
 

@@ -22,14 +22,15 @@ void UState::ClearTransitionFlags()
 void UState::FlagTransition(const FString Key, const uint8 Weight)
 {
 	/*This horizontal evaluation may indicate there is an architectural issue in the StateMachine's design*/
-	const UState* TransitionState = GetMachine()->GetStates()[Key];
+	UState* TransitionState = GetMachine()->GetStates()[Key];
 
 	if (TransitionState != nullptr)
 	{
-		if (TransitionState->GetIsActive() && Weight > CurrentWeight)
+		if (TransitionState != this && TransitionState->GetIsActive() && Weight > CurrentWeight)
 		{
 			bTransitionFlagged = true;
 			SetFlaggedKey(Key);
+			SetFlaggedState(TransitionState);
 			SetCurrentWeight(Weight);
 		}
 	}
@@ -45,7 +46,7 @@ void UState::FlagTransition(UState* State, const uint8 Weight)
 {
 	if (State != nullptr)
 	{
-		if (State->GetIsActive() && Weight > CurrentWeight)
+		if (State != this && State->GetIsActive() && Weight > CurrentWeight)
 		{
 			bTransitionFlagged = true;
 			SetFlaggedState(State);
