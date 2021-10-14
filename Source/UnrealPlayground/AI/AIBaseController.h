@@ -24,7 +24,7 @@ public:
 
 	/** Shorthand way to set state without introducing needless dependencies*/
 	UFUNCTION(BlueprintCallable)
-	void SetState(const FString Key);
+	void SetState(const FString& Key);
 
 	UFUNCTION(BlueprintCallable)
 	void SetAggression(const bool Value);

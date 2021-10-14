@@ -10,6 +10,7 @@ AAICell::AAICell()
 	PrimaryActorTick.bCanEverTick = true;
 	GetBrushComponent()->SetCollisionProfileName("OverlapOnlyPawn");
 	GetBrushComponent()->SetGenerateOverlapEvents(true);
+	GetBrushComponent()->SetCollisionResponseToChannel(ECC_Visibility, ECollisionResponse::ECR_Ignore);
 }
 
 void AAICell::BeginPlay()
@@ -137,9 +138,8 @@ void AAICell::RegisterInvestigator(bool StartingInvestigation)
 	}
 
 	//All Investigations in this cell have stopped, stop agitation
-	if (InvestigationCount <= 0)
+	if (InvestigationCount == 0 && AgressorCount == 0)
 	{
-		InvestigationCount = 0;
 		SetAllUnitStates("Patrol");
 	}
 }
@@ -175,28 +175,13 @@ void AAICell::RegisterAudioStimulus(FVector Location, float Volume)
 
 void AAICell::SetAllUnitStates(const FString NewState, const bool bIgnoreLower, AAIBaseController* Ignore)
 {
-	if (Ignore == nullptr)
-	{
-		SetAllUnitStatesList(NewState, bIgnoreLower);
-	}
-	
-	else
-	{
-		const TSet<AAIBaseController*> Arr = { Ignore };
-		SetAllUnitStatesList(NewState, bIgnoreLower, Arr);
-	}
-}
-
-void AAICell::SetAllUnitStatesList(const FString NewState, const bool bIgnoreLower, const TSet<AAIBaseController*> Ignore)
-{
 	for (AAIBaseController* AI : AIUnits)
 	{
-		//naive
-		if (AI->IsDead() || Ignore.Contains(AI))
+		if (AI->IsDead() || AI == Ignore)
 		{
 			continue;
 		}
-		
+
 		//If we are ignoring lower priority states we need to check if the new state is higher
 		if (bIgnoreLower)
 		{
@@ -206,7 +191,7 @@ void AAICell::SetAllUnitStatesList(const FString NewState, const bool bIgnoreLow
 
 			if (CurrentWeight >= NewWeight)
 			{
-				return;
+				continue;
 			}
 		}
 

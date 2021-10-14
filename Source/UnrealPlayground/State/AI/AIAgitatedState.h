@@ -5,7 +5,7 @@
 #include "AIAgitatedState.generated.h"
 
 UCLASS()
-class UNREALPLAYGROUND_API UAIAgitatedState : public UAISearchState
+class UNREALPLAYGROUND_API UAIAgitatedState : public UAIState
 {
 	GENERATED_BODY()
 public:

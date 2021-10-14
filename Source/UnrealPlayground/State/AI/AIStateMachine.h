@@ -15,12 +15,11 @@ public:
 	UAIStateMachine() { }
 	~UAIStateMachine() { }
 
-	void SetState(const FString Key) override { Super::SetState(Key); }
 	virtual void Initialize(UObject* Context) override;
 
 	void PostInitLoadTrees(const TMap<FString, UBehaviorTree*>& TreeMap);
 
-	uint8 GetWeightAtKey(const FString Key);
+	uint8 GetWeightAtKey(const FString& Key);
 
 	uint8 GetActiveWeight();
 };

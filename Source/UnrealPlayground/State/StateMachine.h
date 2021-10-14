@@ -54,7 +54,7 @@ protected:
 	void SetInitialState(UState* State) { ActiveState = State; }
 
 	/** Internally executes state transition logic*/
-	virtual void SetState(const FString NewStateKey);
+	virtual void SetState(const FString& NewStateKey);
 
 	/** Internally executes state transition logic*/
 	virtual void SetState(UState* NewState);

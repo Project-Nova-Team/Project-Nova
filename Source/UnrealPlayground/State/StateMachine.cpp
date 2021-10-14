@@ -43,7 +43,7 @@ void UStateMachine::RemoveState(const FString Key)
 	}
 }
 
-void UStateMachine::SetState(const FString NewStateKey)
+void UStateMachine::SetState(const FString& NewStateKey)
 {
 	ActiveState->OnExit();
 	ActiveState->ClearTransitionFlags();

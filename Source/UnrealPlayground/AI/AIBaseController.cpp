@@ -4,6 +4,7 @@
 #include "BehaviorTree/BlackboardComponent.h"
 #include "BrainComponent.h"
 #include "Sense.h"
+#include "../State/State.h"
 #include "../State/AI/AIStateMachine.h"
 #include "../Gameplay/HealthComponent.h"
 #include "Components/SplineComponent.h"
@@ -94,7 +95,7 @@ void AAIBaseController::SetLifeStatus(const bool bIsAlive)
 	if (!bIsAlive)
 	{	
 		BrainComponent->PauseLogic("Death");
-		StateMachine->SetState("Dead");
+		SetState("Dead");
 		SetAggression(false);
 		SetInvestigation(false);
 	}
@@ -102,7 +103,7 @@ void AAIBaseController::SetLifeStatus(const bool bIsAlive)
 	else
 	{
 		BrainComponent->ResumeLogic("Respawn");
-		StateMachine->SetState("Patrol");		
+		SetState("Patrol");		
 	}
 }
 
@@ -112,12 +113,9 @@ void AAIBaseController::Damaged(AActor* DamagedActor, float Damage, const class 
 	UAISense_Damage::ReportDamageEvent(GetWorld(), AIOwner, DamageCauser, Damage, AILoc, AILoc);
 }
 
-void AAIBaseController::SetState(const FString Key)
+void AAIBaseController::SetState(const FString& Key)
 {
-	if (StateMachine->GetActiveState() != StateMachine->GetStateAtKey(Key))
-	{
-		StateMachine->SetState(Key);
-	}
+	StateMachine->GetActiveState()->FlagTransition(Key);
 }
 
 void AAIBaseController::ClearSearchParameters()
@@ -141,7 +139,7 @@ void AAIBaseController::SetAggression(const bool Value)
 	{
 		OnAggression.Broadcast(Value);
 		bAggressive = Value;
-	}	
+	}
 }
 
 void AAIBaseController::SetInvestigation(const bool Value)
