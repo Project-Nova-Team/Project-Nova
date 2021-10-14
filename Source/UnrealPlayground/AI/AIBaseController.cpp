@@ -9,6 +9,8 @@
 #include "../Gameplay/HealthComponent.h"
 #include "Components/SplineComponent.h"
 
+#include "DrawDebugHelpers.h"
+
 AAIBaseController::AAIBaseController()
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -60,6 +62,7 @@ void AAIBaseController::BeginPlay()
 	//Init blackboard values
 	Blackboard->SetValueAsBool("bHasPatrolPath", bHasPatrolPath);
 	Blackboard->SetValueAsVector("HomeLocation", Home);
+	SetStartingSearch(true);
 }
 
 void AAIBaseController::LoadStateTrees()
@@ -103,7 +106,8 @@ void AAIBaseController::SetLifeStatus(const bool bIsAlive)
 	else
 	{
 		BrainComponent->ResumeLogic("Respawn");
-		SetState("Patrol");		
+		SetState("Patrol");
+		SetStartingSearch(true);
 	}
 }
 
@@ -115,7 +119,7 @@ void AAIBaseController::Damaged(AActor* DamagedActor, float Damage, const class 
 
 void AAIBaseController::SetState(const FString& Key)
 {
-	StateMachine->GetActiveState()->FlagTransition(Key);
+	StateMachine->SetStateImmediate(Key, 1);
 }
 
 void AAIBaseController::ClearSearchParameters()
@@ -212,11 +216,7 @@ void AAIBaseController::ReactToPhysical(AActor* const Invoker, const FAIStimulus
 
 void AAIBaseController::ReactToSound(AActor* const Invoker, const FAIStimulus& Stimulus)
 {
-	//Not extensible, we should use a weighting system
-	if (StateMachine->GetActiveState() != StateMachine->GetStateAtKey("Attack"))
-	{
-		OnHeardSound.Broadcast(Stimulus.StimulusLocation, Stimulus.Strength);
-	}
+	OnHeardSound.Broadcast(Stimulus.StimulusLocation, Stimulus.Strength);
 }
 
 void AAIBaseController::DetermineSearch(const FVector SourceLocation, const float SourceVolume)
@@ -233,6 +233,8 @@ void AAIBaseController::DetermineSearchInternal(const FVector& SourceLocation, c
 {
 	InvestigationScore = IncomingScore;
 	InvestigationLocation = SourceLocation;
+
+	DrawDebugSphere(GetWorld(), InvestigationLocation, 100, 20, FColor::Yellow, true);
 
 	UState* const Current = StateMachine->GetActiveState();
 	FString Staged = "";

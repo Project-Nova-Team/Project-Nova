@@ -67,6 +67,8 @@ public:
 
 	float GetLastFollowTime() const { return LastFollowTime; }
 
+	void SetLastFollowTime(const float Time) { LastFollowTime = Time; }
+
 	void SetMoveLocation(const FVector Location);
 
 	FVector GetInvestigationLocation() const { return InvestigationLocation; }

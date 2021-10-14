@@ -10,6 +10,5 @@ class UNREALPLAYGROUND_API UAISearchState : public UAIState
 	GENERATED_BODY()
 
 public:
-	void OnEnter() override;
 	void OnExit() override;
 };

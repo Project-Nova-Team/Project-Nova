@@ -51,9 +51,6 @@ private:
 	/** Past down by the game mode instance, this reference will then be given to every AI in the cell*/
 	AShooter* Player;
 
-	//Hack
-	AAIBaseController* NearestTemp;
-
 	/** World space location of the current stimulus*/
 	FVector CurrentStimulusLocation;
 
