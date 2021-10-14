@@ -19,4 +19,5 @@ void UAIFollowState::OnEnter()
 {
 	Super::OnEnter();
 	AI->SetSearchParameters(true);
+	AI->SetLastFollowTime(AI->GetWorld()->GetTimeSeconds());
 }

@@ -91,8 +91,6 @@ void AAICell::SignalCellStimulus(const FVector StimulusSource, const float Stren
 		}
 	}
 
-	NearestTemp = NearestAI;
-
 	//The cell either has no AI or all the AI are dead
 	if (NearestAI == nullptr)
 	{
@@ -114,12 +112,6 @@ void AAICell::SignalCellStimulus(const FVector StimulusSource, const float Stren
 
 void AAICell::RegisterInvestigator(bool StartingInvestigation)
 {
-	//Don't care about investigators if anyone is aggressive
-	if (AgressorCount > 0)
-	{
-		return;
-	}
-
 	const int Change = StartingInvestigation ? 1 : -1;
 	InvestigationCount += Change;
 
@@ -129,12 +121,9 @@ void AAICell::RegisterInvestigator(bool StartingInvestigation)
 		//Lets let every AI be able to turn towards the source
 		for (AAIBaseController* AI : AIUnits)
 		{
-			AI->SetStartingSearch(true);
-			//TODO this just faces towards the player
-			AI->SetInvestigationLocation(AI->GetTarget()->GetActorLocation());		
+			AI->SetInvestigationLocation(CurrentStimulusLocation);		
 		}
-
-		SetAllUnitStates("Agitated", false, NearestTemp);
+		SetAllUnitStates("Agitated", true);
 	}
 
 	//All Investigations in this cell have stopped, stop agitation
@@ -167,7 +156,7 @@ void AAICell::RegisterAudioStimulus(FVector Location, float Volume)
 {
 	CurrentStimulusLocation = FVector::ZeroVector;
 
-	if (Volume > 0)
+	if (Volume > 0 && AgressorCount == 0)
 	{
 		UAISense_Hearing::ReportNoiseEvent(GetWorld(), Location, Volume, Player);
 	}

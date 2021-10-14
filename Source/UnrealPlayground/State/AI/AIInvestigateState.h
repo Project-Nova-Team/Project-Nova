@@ -1,11 +1,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "AISearchState.h"
+#include "AIInvestigationState.h"
 #include "AIInvestigateState.generated.h"
 
 UCLASS()
-class UNREALPLAYGROUND_API UAIInvestigateState : public UAISearchState
+class UNREALPLAYGROUND_API UAIInvestigateState : public UAIInvestigationState
 {
 	GENERATED_BODY()
 
