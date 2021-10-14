@@ -19,7 +19,7 @@ public:
 	UState* GetActiveState() const { return ActiveState; }
 
 	/** Gets state at key value*/
-	UState* GetStateAtKey(const FString& Key) const { return States[Key]; }
+	UState* GetStateAtKey(const FString Key) const { return States[Key]; }
 
 	/** Gets the collection of states this StateMachine has*/
 	TMap<FString, UState*> GetStates() const { return States; }
@@ -39,7 +39,7 @@ public:
 	* 
 	* @param	Key						The key of the state in this state machine's map that is getting removed
 	*/
-	void RemoveState(const FString& Key);
+	void RemoveState(const FString Key);
 
 	/**
 	 * Immediatly transitions to the given state instead of waiting for the next tick cycle
@@ -48,7 +48,7 @@ public:
 	 * @param	Key						The key of the state in this state machine's map
 	 * @param	Weight				Priority value for this change, higher values have higher priority
 	 */
-	void SetStateImmediate(const FString& Key, const uint8 Weight);
+	void SetStateImmediate(const FString Key, const uint8 Weight);
 
 	/** 
 	 * Immediatly transitions to the given state instead of waiting for the next tick cycle
@@ -76,7 +76,7 @@ protected:
 	void SetInitialState(UState* State) { ActiveState = State; }
 
 	/** Internally executes state transition logic*/
-	virtual void SetState(const FString& NewStateKey);
+	virtual void SetState(const FString NewStateKey);
 
 	/** Internally executes state transition logic*/
 	virtual void SetState(UState* NewState);

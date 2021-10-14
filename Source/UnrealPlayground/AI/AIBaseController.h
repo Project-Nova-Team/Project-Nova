@@ -24,7 +24,7 @@ public:
 
 	/** Shorthand way to set state without introducing needless dependencies*/
 	UFUNCTION(BlueprintCallable)
-	void SetState(const FString& Key);
+	void SetState(const FString Key);
 
 	UFUNCTION(BlueprintCallable)
 	void SetAggression(const bool Value);
@@ -57,6 +57,7 @@ public:
 
 	bool IsInvestigating() const { return bInvestigating; }
 
+	UFUNCTION(BlueprintCallable)
 	bool IsDead() const { return bIsDead; }
 
 	bool CanSeeTarget() const { return bHasVisionOfTarget; }
@@ -152,7 +153,7 @@ protected:
 	virtual void ReactToSound(AActor* const Invoker, const FAIStimulus& Stimulus);
 
 	/** Selects what state to enter based on an audio signal while patrolling*/
-	virtual void DetermineSearchInternal(const FVector& SourceLocation, const float IncomingScore);
+	virtual void DetermineSearchInternal(const FVector SourceLocation, const float IncomingScore);
 
 	/** Package behavior trees and pass them to the state machine here*/
 	virtual void LoadStateTrees();
@@ -177,6 +178,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "AI | Trees")
 	UBehaviorTree* AttackTree;
+
+	UPROPERTY(EditAnywhere, Category = "AI | Trees")
+	UBehaviorTree* EmptyTree;
 	
 	/** The index point of the patrol path the AI is at*/
 	UPROPERTY(VisibleAnywhere, Category = "AI | Patrol")

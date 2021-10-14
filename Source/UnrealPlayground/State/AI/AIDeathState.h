@@ -13,6 +13,4 @@ class UNREALPLAYGROUND_API UAIDeathState : public UAIState
 public: 
 	UAIDeathState() { }
 	~UAIDeathState() { }
-
-	void OnEnter() override { AI->CurrentState = GetClass()->GetFName().GetPlainNameString(); }
 };

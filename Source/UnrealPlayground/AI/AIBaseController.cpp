@@ -9,8 +9,6 @@
 #include "../Gameplay/HealthComponent.h"
 #include "Components/SplineComponent.h"
 
-#include "DrawDebugHelpers.h"
-
 AAIBaseController::AAIBaseController()
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -75,6 +73,7 @@ void AAIBaseController::LoadStateTrees()
 	TreeMap.Add("Investigate", InvestigationTree);
 	TreeMap.Add("Track", TrackTree);
 	TreeMap.Add("Follow", FollowTree);
+	TreeMap.Add("Dead", EmptyTree);
 
 	StateMachine->PostInitLoadTrees(TreeMap);
 }
@@ -100,7 +99,6 @@ void AAIBaseController::SetLifeStatus(const bool bIsAlive)
 		BrainComponent->PauseLogic("Death");
 		SetState("Dead");
 		SetAggression(false);
-		SetInvestigation(false);
 	}
 
 	else
@@ -117,7 +115,7 @@ void AAIBaseController::Damaged(AActor* DamagedActor, float Damage, const class 
 	UAISense_Damage::ReportDamageEvent(GetWorld(), AIOwner, DamageCauser, Damage, AILoc, AILoc);
 }
 
-void AAIBaseController::SetState(const FString& Key)
+void AAIBaseController::SetState(const FString Key)
 {
 	StateMachine->SetStateImmediate(Key, 1);
 }
@@ -158,7 +156,7 @@ void AAIBaseController::SetInvestigation(const bool Value)
 
 void AAIBaseController::SetStartingSearch(const bool Value)
 {
-	Blackboard->SetValueAsBool("bStartingSearch", Value);
+	Blackboard->SetValueAsBool("bSearchStarting", Value);
 }
 
 void AAIBaseController::SetMoveLocation(const FVector Location)
@@ -229,12 +227,10 @@ void AAIBaseController::DetermineSearch(const FVector SourceLocation, const floa
 	}
 }
 
-void AAIBaseController::DetermineSearchInternal(const FVector& SourceLocation, const float IncomingScore)
+void AAIBaseController::DetermineSearchInternal(const FVector SourceLocation, const float IncomingScore)
 {
 	InvestigationScore = IncomingScore;
 	InvestigationLocation = SourceLocation;
-
-	DrawDebugSphere(GetWorld(), InvestigationLocation, 100, 20, FColor::Yellow, true);
 
 	UState* const Current = StateMachine->GetActiveState();
 	FString Staged = "";
