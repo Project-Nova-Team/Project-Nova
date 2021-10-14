@@ -26,7 +26,7 @@ void UStateMachine::AddState(UObject* Context, const FString Key, UState* NewSta
 	States.Add(Key, NewState);
 }
 
-void UStateMachine::RemoveState(const FString& Key)
+void UStateMachine::RemoveState(const FString Key)
 {
 	if (States[Key] != nullptr)
 	{
@@ -43,7 +43,7 @@ void UStateMachine::RemoveState(const FString& Key)
 	}
 }
 
-void UStateMachine::SetState(const FString& NewStateKey)
+void UStateMachine::SetState(const FString NewStateKey)
 {
 	ActiveState->OnExit();
 	ActiveState->ClearTransitionFlags();
@@ -59,7 +59,7 @@ void UStateMachine::SetState(UState* NewState)
 	ActiveState->OnEnter();
 }
 
-void UStateMachine::SetStateImmediate(const FString& NewStateKey, const uint8 Weight)
+void UStateMachine::SetStateImmediate(const FString NewStateKey, const uint8 Weight)
 {
 	if (ActiveState->FlagTransition(NewStateKey, Weight))
 	{

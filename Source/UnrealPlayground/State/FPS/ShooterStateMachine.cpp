@@ -21,7 +21,7 @@ void UShooterStateMachine::Initialize(UObject* Context)
 	this->GetActiveState()->OnEnter();
 }
 
-void UShooterStateMachine::SetState(const FString& NewStateKey)
+void UShooterStateMachine::SetState(const FString NewStateKey)
 {
 	PreviousState = GetActiveState();
 	Super::SetState(NewStateKey);

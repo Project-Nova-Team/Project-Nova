@@ -62,16 +62,8 @@ void AAICell::SetAIUnits()
 	}
 }
 
-void AAICell::SignalCellStimulus(const FVector StimulusSource, const float Strength)
+AAIBaseController* AAICell::GetNearestAI(const FVector& Point)
 {
-	//This stimulus has already been registered by another AI, skip it
-	if (!CurrentStimulusLocation.IsNearlyZero())
-	{
-		return;
-	}
-	CurrentStimulusLocation = StimulusSource;
-
-	//Find the nearest AI to the stimulus
 	AAIBaseController* NearestAI = nullptr;
 	float CurrentClosestDistance = 1e10f; // big enough
 
@@ -82,8 +74,8 @@ void AAICell::SignalCellStimulus(const FVector StimulusSource, const float Stren
 			continue;
 		}
 
-		const float SqrDist = (AI->GetPawn()->GetActorLocation() - StimulusSource).SizeSquared();
-		
+		const float SqrDist = (AI->GetPawn()->GetActorLocation() - Point).SizeSquared();
+
 		if (SqrDist < CurrentClosestDistance)
 		{
 			CurrentClosestDistance = SqrDist;
@@ -91,23 +83,27 @@ void AAICell::SignalCellStimulus(const FVector StimulusSource, const float Stren
 		}
 	}
 
+	return NearestAI;
+}
+
+void AAICell::SignalCellStimulus(const FVector StimulusSource, const float Strength)
+{
+	//This stimulus has already been registered by another AI, skip it
+	if (!CurrentStimulusLocation.IsNearlyZero())
+	{
+		return;
+	}
+	CurrentStimulusLocation = StimulusSource;
+
+	AAIBaseController* const NearestAI = GetNearestAI(StimulusSource);
+	
 	//The cell either has no AI or all the AI are dead
 	if (NearestAI == nullptr)
 	{
 		return;
 	}
 
-	//This stimulus was not global, lets determine if we should search
-	if (Strength >= 0)
-	{
-		NearestAI->DetermineSearch(StimulusSource, Strength);
-	}
-
-	//This stimulus was global, lets gurantee an investigation from the nearest AI
-	else
-	{
-		NearestAI->SetState("Investigate");
-	}
+	NearestAI->DetermineSearch(StimulusSource, Strength);
 }
 
 void AAICell::RegisterInvestigator(bool StartingInvestigation)
@@ -145,10 +141,16 @@ void AAICell::RegisterAggressor(bool StaringAggression)
 	}
 
 	//All aggressors in this cell have stopped, stop attack and start agitation
-	if (AgressorCount <= 0)
+	if (AgressorCount == 0)
 	{
-		RegisterAudioStimulus(FVector::ZeroVector, 0);
-		SignalCellStimulus(Player->GetActorLocation(), -1);
+		//Hacky way to get the target
+		AAIBaseController* NearestAI = GetNearestAI(AIUnits[0]->GetTargetLocation());
+
+		if (NearestAI != nullptr)
+		{
+			SetAllUnitStates("Agitated", false, NearestAI);
+			NearestAI->SetState("Investigate");
+		}
 	}
 }
 

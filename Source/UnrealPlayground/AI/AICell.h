@@ -83,4 +83,6 @@ private:
 	 */
 	UFUNCTION()
 	void SignalCellStimulus(const FVector StimulusSource, const float Strength);
+
+	AAIBaseController* GetNearestAI(const FVector& Point);
 };
