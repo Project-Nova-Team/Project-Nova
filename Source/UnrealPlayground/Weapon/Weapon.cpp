@@ -1,8 +1,7 @@
 #include "Weapon.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Engine/SkeletalMeshSocket.h"
-#include "Bullet.h"
-#include "ShooterCombatComponent.h"
+#include "CombatComponent.h"
 
 AWeapon::AWeapon()
 {
@@ -35,19 +34,20 @@ void AWeapon::Tick(float DeltaTime)
 
 void AWeapon::InteractionEvent(const APawn* EventSender)
 {
+	//We are already being held by another combat component
+	if (OwningComponent != nullptr)
+	{
+		return;
+	}
+	
+	//If the EventSender has a combat component, pick this weapon up
+	if (UCombatComponent* Combat = EventSender->FindComponentByClass<UCombatComponent>())
+	{
+		Combat->PickUpWeapon(this);
+	}
 }
 
-void AWeapon::SetActorTick(bool status)
-{
-	PrimaryActorTick.SetTickFunctionEnable(status);
-}
-
-void AWeapon::SetHeldWeaponMesh(const USkeletalMeshComponent* MeshToSet)
-{
-	HeldWeaponMesh = MeshToSet;
-}
-
-void AWeapon::SetWeaponSceneValues(const USceneComponent* TraceOriginComponent, const USkeletalMeshComponent* HeldWeapon)
+void AWeapon::SetWeaponSceneValues(USceneComponent* TraceOriginComponent)
 {
 	//A pawn has picked the weapon up
 	if (TraceOriginComponent != nullptr)
@@ -76,10 +76,6 @@ void AWeapon::SetWeaponSceneValues(const USceneComponent* TraceOriginComponent, 
 
 		//Apply a force to make it look like the gun was thrown
 		Mesh->AddForce(TraceOrigin->GetForwardVector().GetSafeNormal2D() * ThrowForce);
-
 		PrimaryActorTick.SetTickFunctionEnable(false);
 	}
-
-	if(HeldWeapon != nullptr)
-		HeldWeaponMesh = HeldWeapon;
 }
