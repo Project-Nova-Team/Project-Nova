@@ -6,7 +6,7 @@
 #include "../State/State.h"
 #include "../State/FPS/ShooterStateMachine.h"
 #include "../Player/ShooterMovementComponent.h"
-#include "../Weapon/ShooterCombatComponent.h"
+#include "../Weapon/CombatComponent.h"
 #include "ShooterAnimInstance.generated.h"
 
 
@@ -75,8 +75,6 @@ protected:
 
 	UShooterMovementComponent* ShooterMovement;
 
-	// Combat Component for Swap
 	UPROPERTY(BlueprintReadOnly)
-	UShooterCombatComponent* ShooterCombat;
-	
+	UCombatComponent* ShooterCombat;
 };

@@ -21,25 +21,31 @@ void UCombatComponent::BeginPlay()
 
 	if (Arsenal.Num() > 0)
 	{
-		for (AWeapon* w : Arsenal)
+		for (AWeapon* Weapon : Arsenal)
 		{
-			w->SetGunSceneValues(TraceOrigin, WeaponMesh, WeaponMesh->GetSocketByName("barrel"));
+			Weapon->SetWeaponSceneValues(TraceOrigin);
 		}
-	}
 
-	CurrentWeaponIndex = 0;
+		PickUpWeapon(Arsenal[0]);
+	}
 }
 
-void UCombatComponent::PickUpNewGun(AGun* NewWeapon)
+void UCombatComponent::PickUpWeapon(AWeapon* NewWeapon)
 {
+	Arsenal.Emplace(NewWeapon);
+	//We are holding too many weapons, drop the currently held one
+	if (Arsenal.Num() > MaxWeaponCount)
+	{
+		Arsenal[CurrentWeaponIndex]->SetWeaponSceneValues(nullptr);
+		Arsenal.SwapMemory(CurrentWeaponIndex, Arsenal.Num() - 1);
+		Arsenal.RemoveAt(Arsenal.Num() - 1, true);
+	}
+	
 	USkeletalMesh* const NewMesh = NewWeapon->GetSkeletalMesh();
 	WeaponMesh->SetSkeletalMesh(NewMesh);
 
-}
-
-void UCombatComponent::AddAmmmoToWeapon(AGun* Weapon, int AmmoAddAmount)
-{
-	Weapon->AddExcessAmmo(AmmoAddAmount);
+	//Play swap animation when picking up a new weapon
+	OnSwap.Broadcast();
 }
 
 void UCombatComponent::ReceiveSwap(const int32 Direction)
@@ -70,7 +76,7 @@ void UCombatComponent::ReceiveAttack(const bool bAttackEnabled)
 	
 	if (bAttackEnabled)
 	{
-		Arsenal[CurrentWeaponIndex]->Attack(bIsAimed);
+		Arsenal[CurrentWeaponIndex]->StartAttack();
 	}
 	
 	else
@@ -101,27 +107,28 @@ void UCombatComponent::ReceiveAim(const bool bAimEnabled)
 	}
 }
 
-float UCombatComponent::GetWeaponRecoilVelocity() const
-{
-	AGun* WeaponAsGun = Cast<AGun>(Arsenal[CurrentWeaponIndex]);
 
-	//Only guns have recoil velocity
+//FIX - BAD - Weapon should have each of these values
+
+float UCombatComponent::GetWeaponRecoilVelocity() const
+{	
+	AGun* const WeaponAsGun = Cast<AGun>(Arsenal[CurrentWeaponIndex]);
+
 	if (WeaponAsGun != nullptr)
 	{
-		return WeaponAsGun->GetRecoilVelocity();
+		WeaponAsGun->GetRecoilVelocity();
 	}
-	
+
 	return 0;
 }
 
 float UCombatComponent::GetWeaponRecoilRecovery() const
 {
-	AGun* WeaponAsGun = Cast<AGun>(Arsenal[CurrentWeaponIndex]);
+	AGun* const WeaponAsGun = Cast<AGun>(Arsenal[CurrentWeaponIndex]);
 
-	//Only guns have recoil recovery
 	if (WeaponAsGun != nullptr)
 	{
-		return WeaponAsGun->GetRecoilRecovery();
+		WeaponAsGun->GetRecoilRecovery();
 	}
 
 	return NoWeaponRecoilRecovery;
@@ -129,12 +136,11 @@ float UCombatComponent::GetWeaponRecoilRecovery() const
 
 float UCombatComponent::GetWeaponBloom() const
 {
-	AGun* WeaponAsGun = Cast<AGun>(Arsenal[CurrentWeaponIndex]);
+	AGun* const WeaponAsGun = Cast<AGun>(Arsenal[CurrentWeaponIndex]);
 
-	//Only guns have bloom
 	if (WeaponAsGun != nullptr)
 	{
-		return WeaponAsGun->GetBloom();
+		WeaponAsGun->GetBloom();
 	}
 
 	return NoWeaponBloom;

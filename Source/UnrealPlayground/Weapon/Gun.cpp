@@ -1,8 +1,18 @@
 #include "Gun.h"
-#include "Weapon.h"
+#include "Bullet.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Engine/SkeletalMeshSocket.h"
-#include "Bullet.h"
+
+
+FWeaponUIData AGun::GetWeaponUI() const
+{
+	FWeaponUIData Data;
+	Data.AmmoInClip = CurrentAmmo;
+	Data.ExcessAmmo = ExccessAmmo;
+	Data.ClipSize = ClipSize;
+
+	return Data;
+}
 
 AGun::AGun()
 {
@@ -77,17 +87,6 @@ void AGun::Tick(float DeltaTime)
 		const float BloomBleed = BloomFallOff * DeltaTime;
 		AddBloom(-BloomBleed);
 	}
-
-}
-
-void AGun::InteractionEvent(const APawn* EventSender)
-{
-	//If a pawn who sent the interaction has a combat component, pick the weapon up
-	UCombatComponent* CombatComponent = EventSender->FindComponentByClass<UShooterCombatComponent>();
-	if (CombatComponent != nullptr)
-	{
-		CombatComponent->PickUpNewGun(this);
-	}
 }
 
 void AGun::FireStraight()
@@ -108,42 +107,33 @@ void AGun::FireStraight()
 	bCanFire = false;
 
 	const FVector TraceStart = TraceOrigin->GetComponentLocation();
+	const FVector ProjectileStart = BulletOrigin->GetSocketLocation(HeldWeaponMesh);
 	const FVector TraceDirection = TraceOrigin->GetForwardVector();
-	const FVector TraceEnd = TraceStart + TraceDirection * MaxFireRange;
 
+	//Compute the projectile travel vector
+	//Here we assume the projectile will end up exactly where a hitscan says it will
+	//its possible it misses (the target moved out of the way) in which case the projectile will be far off!
+	//potential solution, check if the bullet distance traveled is greater than ProjectileStart and ProjectileEndGuess
+	//and correct the path if it is and hasn't collided yet
+	//Lets playtest and find out
 	FHitResult Hit;
-	GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_Visibility, QueryParams);
+	const FVector TraceEnd = TraceStart + (TraceDirection * MaxFireRange);
+	const bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_Visibility, QueryParams);
+	const FVector ProjectileEndGuess = bHit ? Hit.ImpactPoint : TraceEnd;
 
-	if (Hit.IsValidBlockingHit() && Hit.Actor != nullptr)
-	{
-		float DamageFactor = BodyMultiplier;
+	const FVector ProjectileDirection = (ProjectileEndGuess - ProjectileStart).GetSafeNormal();
+	const FQuat ProjectileRotation = ProjectileDirection.ToOrientationQuat();
 
-		if (Hit.BoneName == "Head")
-		{
-			DamageFactor = HeadMultiplier;
-		}
+	//Get a bullet from the pool and send it off
+	ABullet* Bullet = GetAvailableBullet();
+	Bullet->SetActorLocationAndRotation(ProjectileStart, ProjectileRotation);
+	Bullet->SetTrajectory(TraceStart, TraceDirection, ProjectileDirection);
 
-		else if (Hit.BoneName == "Limb")
-		{
-			DamageFactor = LimbMultiplier;
-		}
-
-		const float Damage = DamageFactor * BaseDamage;
-		//We don't use this but its required by Unreal's damage events
-		const FDamageEvent DamageEvent;
-
-		Hit.Actor->TakeDamage(Damage, DamageEvent, nullptr, this);
-	}
-
-#if WITH_EDITOR
-	if (bTraceDebug)
-	{
-		DrawDebugLine(GetWorld(), TraceStart, Hit.ImpactPoint, FColor::Red, true);
-	}
-#endif
+	//Apply recoil
+	AddRecoilVelocity(Recoil * RecoilAimFactor);
 }
 
-void AGun::FireWithNoise(const bool bIsAimed, FRotator BulletRotation)
+void AGun::FireWithNoise()
 {
 	if (!bCanFire)
 	{
@@ -164,19 +154,16 @@ void AGun::FireWithNoise(const bool bIsAimed, FRotator BulletRotation)
 	const FVector ProjectileStart = BulletOrigin->GetSocketLocation(HeldWeaponMesh);
 	FVector TraceDirection = TraceOrigin->GetForwardVector();
 
-	//If weapon is not aimed, apply bloom
-	if (!bIsAimed)
-	{
-		const float HorizontalRandom = FMath::FRandRange(-CurrentBloom, CurrentBloom) / 180.f;
-		const float VerticalRandom = FMath::FRandRange(-CurrentBloom, CurrentBloom) / 180.f;
+	//Apply bloom
+	const float HorizontalRandom = FMath::FRandRange(-CurrentBloom, CurrentBloom) / 180.f;
+	const float VerticalRandom = FMath::FRandRange(-CurrentBloom, CurrentBloom) / 180.f;
 
-		const FVector TraceXY = FMath::Lerp(TraceDirection, TraceOrigin->GetRightVector(), HorizontalRandom);
-		const FVector TraceZ = FMath::Lerp(TraceDirection, TraceOrigin->GetUpVector(), VerticalRandom);
-		TraceDirection = (TraceXY + TraceZ).GetSafeNormal();
+	const FVector TraceXY = FMath::Lerp(TraceDirection, TraceOrigin->GetRightVector(), HorizontalRandom);
+	const FVector TraceZ = FMath::Lerp(TraceDirection, TraceOrigin->GetUpVector(), VerticalRandom);
+	TraceDirection = (TraceXY + TraceZ).GetSafeNormal();
 
-		AddBloom(Bloom);
-	}
-
+	AddBloom(Bloom);
+	
 	//Compute the projectile travel vector
 	//Here we assume the projectile will end up exactly where a hitscan says it will
 	//its possible it misses (the target moved out of the way) in which case the projectile will be far off!
@@ -185,7 +172,7 @@ void AGun::FireWithNoise(const bool bIsAimed, FRotator BulletRotation)
 	//Lets playtest and find out
 	FHitResult Hit;
 	const FVector TraceEnd = TraceStart + (TraceDirection * MaxFireRange);
-	const bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_Pawn, QueryParams);
+	const bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_Visibility, QueryParams);
 	const FVector ProjectileEndGuess = bHit ? Hit.ImpactPoint : TraceEnd;
 
 	const FVector ProjectileDirection = (ProjectileEndGuess - ProjectileStart).GetSafeNormal();
@@ -196,9 +183,7 @@ void AGun::FireWithNoise(const bool bIsAimed, FRotator BulletRotation)
 	Bullet->SetActorLocationAndRotation(ProjectileStart, ProjectileRotation);
 	Bullet->SetTrajectory(TraceStart, TraceDirection, ProjectileDirection);
 
-	//Apply recoil
-	const float RecoilFactor = bIsAimed ? RecoilAimFactor : 1.f;
-	AddRecoilVelocity(Recoil * RecoilFactor);
+	AddRecoilVelocity(Recoil);
 }
 
 ABullet* AGun::GetAvailableBullet()
@@ -291,12 +276,3 @@ void AGun::SetGunSceneValues(const USceneComponent* TraceOriginComponent, const 
 	BulletOrigin = BulletSocket;
 }
 
-FWeaponUIData AGun::GetWeaponUI() const
-{
-	FWeaponUIData Data;
-	Data.AmmoInClip = CurrentAmmo;
-	Data.ExcessAmmo = ExccessAmmo;
-	Data.ClipSize = ClipSize;
-
-	return Data;
-}
