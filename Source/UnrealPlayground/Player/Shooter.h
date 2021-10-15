@@ -5,13 +5,13 @@
 #include "ShooterMovementComponent.h"
 #include "WeaponInput.h"
 #include "Animation/AnimInstance.h"
+#include "../Weapon/CombatComponent.h"
 #include "Shooter.generated.h"
 
 class UCapsuleComponent;
 class UCameraComponent;
 class UShooterStateMachine;
 class UPawnMovementComponent;
-class UShooterCombatComponent;
 class UHealthComponent;
 class UAIPerceptionStimuliSourceComponent;
 class IInteractiveObject;
@@ -91,7 +91,7 @@ public:
 	USceneComponent* GetAnchor() const { return CameraAnchor; }
 	
 	/** Returns the combat component attached to this shooter*/
-	UShooterCombatComponent* GetCombat() const { return Combat; }
+	UCombatComponent* GetCombat() const { return Combat; }
 
 	/** Returns the camera component attached to this shooter*/
 	UCameraComponent* GetCamera() const { return Camera; }
@@ -181,7 +181,7 @@ private:
 	UCameraComponent* Camera;
 
 	UPROPERTY(Category = Shooter, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	UShooterCombatComponent* Combat;
+	UCombatComponent* Combat;
 
 	UPROPERTY(Category = Shooter, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	UAIPerceptionStimuliSourceComponent* PerceptionSource;
@@ -210,9 +210,9 @@ private:
 	void VaultRelease()					{ InputState.bIsTryingToVault = false; }
 	void CrouchPress()					{ InputState.bIsHoldingCrouch = true; }
 	void CrouchRelease()				{ InputState.bIsHoldingCrouch = false; }
-	void ShootPress()					{ InputState.bIsTryingToFire = true; }
-	void ShootRelease()					{ InputState.bIsTryingToFire = false; }
-	void AimPress()						{ InputState.bIsTryingToAim = true; }
+	void ShootPress()					{ Combat->ReceiveAttack(true); }
+	void ShootRelease()					{ Combat->ReceiveAttack(false); }
+	void AimPress()						{ Combat->ReceiveAim(true); }
 	void AimRelease()					{ InputState.bIsTryingToAim = false; }
 	void InteractPress()				{ InputState.bIsTryingToInteract = true; }
 	void InteractRelease()				{ InputState.bIsTryingToInteract = false; }

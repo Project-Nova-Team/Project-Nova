@@ -6,11 +6,10 @@
 #include "../Utility/DelayedActionManager.h"
 #include "../ShooterGameMode.h"
 #include "../State/FPS/ShooterStateMachine.h"
-#include "../Weapon/ShooterCombatComponent.h"
 #include "../Gameplay/HealthComponent.h"
-#include "../Weapon/Gun.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "../Gameplay/VaultTrigger.h"
+#include "../Gameplay/InteractiveObject.h"
 
 void FShooterInput::Tick(const float DeltaTime)
 {
@@ -165,7 +164,6 @@ void AShooter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	InputComponent->BindAction("Interact", IE_Released, this, &AShooter::InteractRelease);
 	InputComponent->BindAction("Swap Up", IE_Pressed, this, &AShooter::SwapPressUp);
 	InputComponent->BindAction("Swap Down", IE_Pressed, this, &AShooter::SwapPressDown);
-	//InputComponent->BindAction("Swap", IE_Released, this, &AShooter::SwapRelease);
 	InputComponent->BindAction("Melee", IE_Pressed, this, &AShooter::MeleePress);
 	InputComponent->BindAction("Melee", IE_Released, this, &AShooter::MeleeRelease);
 	InputComponent->BindAction("Shoot", IE_Pressed, this, &AShooter::ShootPress);
@@ -185,7 +183,6 @@ void AShooter::OnTriggerEnter(AActor* OverlappedActor, AActor* OtherActor)
 	if (OtherActor->IsA(AVaultTrigger::StaticClass()))
 	{
 		bIsInsideVaultTrigger = true;
-		UE_LOG(LogTemp, Warning, TEXT("Enter Trigger"));
 	}
 }
 
@@ -196,7 +193,6 @@ void AShooter::OnTriggerExit(AActor* OverlappedActor, AActor* OtherActor)
 		bIsInsideVaultTrigger = false;
 		// force player to stop being able to scan vault object by broadcasting a miss scan. Is there a better way we could do this?
 		OnScanMiss.Broadcast(ScanHit);
-		UE_LOG(LogTemp, Warning, TEXT("Exit Trigger"));
 	}
 }
 

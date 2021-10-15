@@ -1,14 +1,11 @@
-// Fill out your copyright notice in the Description page of Project Settings.
 #include "Gun.h"
 #include "Weapon.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Bullet.h"
 
-// Sets default values
 AGun::AGun()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 	StartingPoolSize = 3;
@@ -34,6 +31,8 @@ AGun::AGun()
 	BloomCrouchBase = 5.f;
 	BloomProneBase = 2.5f;
 	BloomBaseMovementMultiplier = 3.f;
+
+	PrimaryActorTick.SetTickFunctionEnable(false);
 }
 
 // Called when the game starts or when spawned
@@ -49,19 +48,13 @@ void AGun::BeginPlay()
 		ABullet* NewBullet = Cast<ABullet>(NewActor);
 		NewBullet->InitializeOwner(BaseDamage, BodyMultiplier, LimbMultiplier, HeadMultiplier, MaxFireRange, ProjectileSpeed);
 		BulletPool.Add(NewBullet);
-	}
-
-	// This? 
-	PrimaryActorTick.SetTickFunctionEnable(false);
+	}	
 }
 
-// Called every frame
 void AGun::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	//TODO exceptionally long delta times or small fire rates can fail
-	//Since this all runs client side it may not matter
 	if (!bCanFire)
 	{
 		FireTimer += DeltaTime;
@@ -90,7 +83,7 @@ void AGun::Tick(float DeltaTime)
 void AGun::InteractionEvent(const APawn* EventSender)
 {
 	//If a pawn who sent the interaction has a combat component, pick the weapon up
-	UShooterCombatComponent* CombatComponent = EventSender->FindComponentByClass<UShooterCombatComponent>();
+	UCombatComponent* CombatComponent = EventSender->FindComponentByClass<UShooterCombatComponent>();
 	if (CombatComponent != nullptr)
 	{
 		CombatComponent->PickUpNewGun(this);
