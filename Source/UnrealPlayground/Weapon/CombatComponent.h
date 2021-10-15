@@ -18,8 +18,6 @@ class UNREALPLAYGROUND_API UCombatComponent : public UActorComponent
 public:
 	UCombatComponent();
 
-	void AddAmmmoToWeapon(AGun* Weapon, int AmmoAddAmount);
-
 	/** Returns the angular velocity of recoil caused from weapon fire or 0 if no weapon*/
 	float GetWeaponRecoilVelocity() const;
 
@@ -86,6 +84,13 @@ protected:
 	 */
 	UPROPERTY(EditAnywhereCategory = "Weapons | General")
 	float NoWeaponRecoilRecovery;
+
+	/** 
+	 * Max number of weapons that can exist in the Arsenal. Picking up a new weapon while holding this many weapons
+	 * Will drop the currently held weapon for the new one
+	 */
+	UPROPERTY(EditAnywhere, Category = "Weapons | General")
+	int8 MaxWeaponCount;
 
 	/**
 	 * Whether or not the weapon is being aimed down the sights
