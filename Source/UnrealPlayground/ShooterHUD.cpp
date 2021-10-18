@@ -2,11 +2,10 @@
 #include "ShooterController.h"
 #include "Player/Shooter.h"
 #include "../UnrealPlayground/Weapon/Gun.h"
-#include "Weapon/ShooterCombatComponent.h"
+#include "Weapon/CombatComponent.h"
 
 AShooterHUD::AShooterHUD()
 {
-	PrimaryActorTick.bCanEverTick = true;
 	bShowHUD = false;
 }
 
@@ -19,26 +18,44 @@ void AShooterHUD::Initialize()
 		Shooter = Cast<AShooter>(Pawn);
 		Combat = Shooter->GetCombat();
 	}
+
+	Combat->OnArsenalAddition.AddUObject(this, &AShooterHUD::ReceiveWeapon);
+	Combat->OnArsenalRemoval.AddUObject(this, &AShooterHUD::ReleaseWeapon);
 }
 
 void AShooterHUD::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	Bloom = Combat->GetWeaponBloom();
+}
 
-	if (Combat == nullptr)
-	{
-		return;
-	}
+void AShooterHUD::ReceiveWeapon(AWeapon* NewWeapon)
+{
+	NewWeapon->OnUpdateUI.BindUObject(this, &AShooterHUD::InternalUpdate);
+	InternalUpdate();
+}
 
-	bPlayerHasWeapon = Combat->GetPrimaryWeapon() != nullptr;
+void AShooterHUD::ReleaseWeapon(AWeapon* NewWeapon)
+{
+	NewWeapon->OnUpdateUI.Unbind();
+	InternalUpdate();
+}
+
+void AShooterHUD::InternalUpdate()
+{
+	bPlayerHasWeapon = Combat->GetHeldWeapon() != nullptr;
 	Bloom = Combat->GetWeaponBloom();
 
-	if (bPlayerHasWeapon)
+	AGun* HeldAsGun = Cast<AGun>(Combat->GetHeldWeapon());
+
+	if(HeldAsGun != nullptr)
 	{
-		const FWeaponUIData Data = Combat->GetPrimaryWeapon()->GetWeaponUI();
+		const FGunUIData Data = HeldAsGun->GetGunUI();
 		MaxAmmoInWeapon = Data.ClipSize;
 		AmmoInWeapon = Data.AmmoInClip;
 		ExcessAmmo = Data.ExcessAmmo;
+
+		//TODO set FWeaponUIData fields here as well
 	}
 
 	else
@@ -47,4 +64,6 @@ void AShooterHUD::Tick(float DeltaTime)
 		AmmoInWeapon = 0;
 		ExcessAmmo = 0;
 	}
+
+	OnUpdate.Broadcast();
 }

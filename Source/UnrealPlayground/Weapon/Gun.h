@@ -5,8 +5,6 @@
 #include "Weapon.h"
 #include "Gun.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FWeaponEvent);
-
 UENUM()
 enum EWeaponFireType
 {
@@ -16,19 +14,19 @@ enum EWeaponFireType
 };
 
 USTRUCT(BlueprintType)
-struct FWeaponUIData
+struct FGunUIData : public FWeaponUIData
 {
 	GENERATED_BODY()
 
 public:
 	UPROPERTY()
-		uint16 AmmoInClip;
+	uint16 AmmoInClip;
 
 	UPROPERTY()
-		uint16 ExcessAmmo;
+	uint16 ExcessAmmo;
 
 	UPROPERTY()
-		uint16 ClipSize;
+	uint16 ClipSize;
 };
 
 
@@ -49,24 +47,22 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	/** Fires a bullet in a straight line with no bloom*/
-	void FireStraight();
+	void StartAttack() override { bAttacking = true; }
 
-	/**
-	 * Fires the weapon applying recoil and bloom
-	 *
-	 * @param	bIsAimed				Whether or not whoever is holding the weapon is aiming the weapon, which determines bloom
-	 */
-	void FireWithNoise(const bool bIsAimed);
+	void StopAttack() override { bAttacking = false; }
+
+	bool IsReloadable() override;
+
+	bool IsAimable() override { return true; }
 
 	/** Packages relevant information to display to the UI in blueprint*/
-	FWeaponUIData GetWeaponUI() const;
+	FGunUIData GetGunUI() const;
 
 	/** Adds to ammo pool. Called when picking up ammo*/
 	void AddExcessAmmo(int AmmoAddAmount);
 
 	/** Reloads the weapon*/
-	void Reload();
+	void Reload() override;
 
 	/** Reutnrs the current angular velocity of weapon impulse from firing*/
 	float GetRecoilVelocity() const { return RecoilVelocity; }
@@ -87,20 +83,19 @@ public:
 	 */
 	void SetBloomMin(const EWeaponFireStance Stance, const bool bIsMoving);
 
-	/**
-	 * Sets the owning pawn and sets up values the weapon needs
-	 *
-	 * @param	TraceOriginComponent	A scene component used to determine where the firing trace begins
-	 * @param	HeldWeapon				The skeletal mesh component of the owning actor
-	 * @param	BulletSocket			Socket at the barrel of the gun where bullets spawn
-	 */
-	void SetGunSceneValues(const USceneComponent* TraceOriginComponent, const USkeletalMeshComponent* HeldWeapon, const USkeletalMeshSocket* BulletSocket);
+	void SetWeaponSceneValues(USceneComponent* TraceOriginComponent, USkeletalMeshComponent* ProjectileOriginMesh) override;
 
 	EWeaponFireType GetWeaponType() const { return WeaponFireType; }
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	/** Fires a bullet in a straight line with no bloom*/
+	virtual void FireStraight();
+
+	/** Fires the weapon applying recoil and bloom*/
+	virtual void FireWithNoise();
 
 	/** Used to track if the weapon is ready to fire*/
 	float FireTimer;
@@ -117,6 +112,10 @@ protected:
 	/** Whether or not the weapon is ready to fire*/
 	uint8 bCanFire : 1;
 
+	/** True if the owning combat component has successfully issued a fire command*/
+	uint8 bAttacking : 1;
+
+
 	/** Template class of bullet actor we use for this weapon*/
 	UPROPERTY(EditAnywhere, Category = "Weapon | General")
 	TSubclassOf<ABullet> BulletTemplate;
@@ -124,21 +123,25 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Weapon | General")
 	TEnumAsByte<EWeaponFireType> WeaponFireType;
 
-	/** The max range this weapon can be fired*/
-	UPROPERTY(VisibleAnywhere, Category = "Weapon | General")
-	float MaxFireRange;
-
 	/** Field of view when zoomed in using this weapon*/
-	UPROPERTY(EditAnywhere, Category = "Weapon | Aiming")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon | General")
 	float AimFOV;
 
 	/** How many bullets are pooled on begin play*/
 	UPROPERTY(VisibleAnywhere, Category = "Weapon | General")
 	int16 StartingPoolSize;
 
+	/** Need every weapon to have a socket with this name*/
+	UPROPERTY(VisibleAnywhere, Category = "Weapon | General")
+	FName BarrelSocketName;
+
 	/** How many seconds it takes for this weapon to be ready to fire again*/
 	UPROPERTY(EditAnywhere, Category = "Weapon | Firing")
 	float FireRate;
+
+	/** The max range this weapon can be fired*/
+	UPROPERTY(EditAnywhere, Category = "Weapon | Firing", meta = (ClampMax = "10000.0"))
+	float MaxFireRange;
 
 	/**
 	 * How much recoil is applied each time the weapon is fired
@@ -239,19 +242,6 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Weapon | Debug")
 	uint8 bTraceDebug : 1;
 
-	
-
-	//Begin Multicast Delegate Events
-
-	/** Invoked when the weapon fires*/
-	UPROPERTY(BlueprintAssignable)
-	FWeaponEvent OnWeaponFire;
-
-	/** Invoked when the weapon is prompted to reload*/
-	UPROPERTY(BlueprintAssignable)
-	FWeaponEvent OnWeaponReload;
-
-private:
 	ABullet* GetAvailableBullet();
 
 	/** Alters the angular velocity of camera rotation caused by weapon spread*/
@@ -265,6 +255,10 @@ private:
 
 	/** Parameters used during line tracing*/
 	FCollisionQueryParams QueryParams;
+
+private:
+
+	//Maybe this should be static so every gun can pull from a single pool?
 
 	/** Object pool of bullet actors we access when firing this weapon*/
 	TArray<ABullet*> BulletPool;

@@ -5,10 +5,10 @@
 #include "CombatComponent.generated.h"
 
 class AGun;
-class AMeleeWeapon;
 class AWeapon;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FAnimEvent);
+DECLARE_MULTICAST_DELEGATE_OneParam(FWeaponCollectionEvent, AWeapon*);
 
 UCLASS()
 class UNREALPLAYGROUND_API UCombatComponent : public UActorComponent
@@ -27,9 +27,34 @@ public:
 	/** Returns the rate at which the effect of weapon recoil resets*/
 	float GetWeaponRecoilRecovery() const;
 
+	/** Returns the max degrees of recoil offset from a gun*/
+	float GetWeaponRecoilLimit() const;
+
+	/** 
+	 * An anim instance should call this function with the status of a reload montage
+	 * If interrupted, (by something like a swap), we dont want to add ammo to the gun
+	 * We want to make sure the animation fully completed to actually give ammo!
+	 */
+	void ReceiveReloadComplete(const bool bInterrupted);
+
+	/** An anim instance should call this function with the status of a vault/aim/attack montage*/
+	void ReceiveAnimationComplete();
+
+	/** An anim instance should call this function with the status of an swap montage*/
+	void ReceiveSwapComplete();
+
+	UFUNCTION(BlueprintCallable)
+	FORCEINLINE AWeapon* GetHeldWeapon() const { return (Arsenal.Num() > 0) ? Arsenal[CurrentWeaponIndex] : nullptr; }
+
 	bool GetIsAimed() const { return bIsAimed; }
 
-	bool IsActionLocked() const { return bIsReloading || bIsInAnimation || bIsSwapping; }
+	bool IsActionLocked() const { return (GetHeldWeapon() == nullptr) || bIsReloading || bIsInAnimation || bIsSwapping; }
+
+	bool IsNonSwapLocked() const { return (GetHeldWeapon() == nullptr) || bIsInAnimation || bIsAimed; }
+
+	bool IsAttackLocked() const { return (GetHeldWeapon() == nullptr) || bIsInAnimation || bIsSwapping; }
+
+	bool IsReloadLocked() const { return (GetHeldWeapon() == nullptr) || bIsReloading || bIsInAnimation || bIsAimed; }
 
 	void SetUpConstruction(USceneComponent* TraceComponent, USkeletalMeshComponent* MeshComponent);
 
@@ -45,10 +70,31 @@ public:
 	void ReceiveSwap(const int32 Direction);
 
 	/** Sets the aim state of the weapon*/
-	void ReceiveAim(const bool bAimEnabled);
-	
+	void ReceiveAim();
+
+	/** Reloads the weapon*/
+	void ReceiveReload();
+
+	FAnimEvent OnAimStart;
+
+	FAnimEvent OnAimStop;
+
+	FAnimEvent OnReload;
+
+	FAnimEvent OnSwap;
+
+	FAnimEvent OnAttack;
+
+	/** Invoked when a new weapon is added to the arensal*/
+	FWeaponCollectionEvent OnArsenalAddition;
+
+	/** Invoked when a new weapon is removed to the arensal*/
+	FWeaponCollectionEvent OnArsenalRemoval;
+
 protected:
 	void BeginPlay() override;
+
+	void SwapEvent();
 
 	/** Collection of weapons on this component*/
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapons | Arsenal")
@@ -59,17 +105,6 @@ protected:
 
 	/** The scene component belonging to the owning pawn that we use to track where we initially begin a trace when firing*/
 	USceneComponent* TraceOrigin;
-
-	FAnimEvent OnAimStart;
-
-	FAnimEvent OnAimStop;
-
-	FAnimEvent OnReload;
-
-	FAnimEvent OnSwap;
-
-	/** Sets aim state and invokes any necessary events to help with animation*/
-	void HandleAimState(const bool bNoWeapon);
 
 	/**
 	 * If no weapon is being held, what should the bloom value be?
@@ -82,7 +117,7 @@ protected:
 	 * If no weapon is being held, how fast should recoil recover
 	 * NOTE: Unless this covers an incredibly unique edge case and is likely never going to be used
 	 */
-	UPROPERTY(EditAnywhereCategory = "Weapons | General")
+	UPROPERTY(EditAnywhere, Category = "Weapons | General")
 	float NoWeaponRecoilRecovery;
 
 	/** 
@@ -90,7 +125,7 @@ protected:
 	 * Will drop the currently held weapon for the new one
 	 */
 	UPROPERTY(EditAnywhere, Category = "Weapons | General")
-	int8 MaxWeaponCount;
+	uint8 MaxWeaponCount;
 
 	/**
 	 * Whether or not the weapon is being aimed down the sights
@@ -108,9 +143,6 @@ protected:
 	/** True if the we are currently playing a "look down the sights" animation or melee attack animation*/
 	uint8 bIsInAnimation : 1;
 
-	/** 
-	 * Current index of the Arsenal array. The weapon at this index is the currently held weapon
-	 * only using a byte since who really needs more than 256 weapons
-	 */
-	uint8 CurrentWeaponIndex;
+	/** Current index of the Arsenal array. The weapon at this index is the currently held weapon*/
+	int32 CurrentWeaponIndex;
 };

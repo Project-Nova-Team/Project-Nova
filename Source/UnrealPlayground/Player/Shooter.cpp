@@ -10,6 +10,10 @@
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "../Gameplay/VaultTrigger.h"
 #include "../Gameplay/InteractiveObject.h"
+#include "../Gameplay/MeleeComponent.h"
+
+//Lazy
+#include "../Animation/ShooterAnimInstance.h"
 
 void FShooterInput::Tick(const float DeltaTime)
 {
@@ -54,10 +58,12 @@ AShooter::AShooter()
 	CameraAnchor = CreateDefaultSubobject<USceneComponent>(TEXT("Anchor"));
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	ShooterMovement = CreateDefaultSubobject<UShooterMovementComponent>(TEXT("Movement"));
+	Melee = CreateDefaultSubobject<UMeleeComponent>(TEXT("Melee"));
 
 	SetRootComponent(Collider);
 	CameraAnchor->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 	Camera->AttachToComponent(CameraAnchor, FAttachmentTransformRules::KeepRelativeTransform);
+	Melee->AttachToComponent(Camera, FAttachmentTransformRules::KeepRelativeTransform);
 
 	Collider->SetCollisionProfileName("Pawn");
 	Collider->SetCapsuleHalfHeight(ShooterMovement->StandingHeight);
@@ -70,7 +76,7 @@ AShooter::AShooter()
 	WeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh"));
 	WeaponMesh->SetupAttachment(ShooterSkeletalMesh, TEXT("WeaponSocket"));
 
-	Combat = CreateDefaultSubobject<UShooterCombatComponent>(TEXT("Combat"));
+	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("Combat"));
 	Combat->SetUpConstruction(Camera, WeaponMesh);
 
 	Health = CreateDefaultSubobject<UHealthComponent>(TEXT("Health"));
@@ -87,9 +93,9 @@ void AShooter::BeginPlay()
 
 	StateMachine = NewObject<UShooterStateMachine>();
 	StateMachine->Initialize(this);
+	Cast<UShooterAnimInstance>(ShooterSkeletalMesh->GetAnimInstance())->BindVault(); //laaazy
 
 	InputState.Owner = this;
-	Combat->InitializeInput(&InputState);
 
 	OnActorBeginOverlap.AddDynamic(this, &AShooter::OnTriggerEnter);
 	OnActorEndOverlap.AddDynamic(this, &AShooter::OnTriggerExit);
@@ -119,8 +125,6 @@ void AShooter::ScanInteractiveObject()
 	const FVector TraceEnd = TraceStart + Camera->GetForwardVector() * FMath::Min(ShooterMovement->StandingHeight * 2.f, ShooterMovement->InteractionDistance);
 	const bool bHit = GetWorld()->LineTraceSingleByChannel(ScanHit, TraceStart, TraceEnd, ECC_Camera, QueryParams);
 
-	//Do we need to look at something to interact? Do we need to just be near it?
-
 	//We're looking at an object that is interactive
 	if(bHit && ScanHit.Actor != nullptr && ScanHit.Actor->Implements<UInteractiveObject>())
 	{	
@@ -139,13 +143,6 @@ void AShooter::ScanInteractiveObject()
 	{
 		OnScanMiss.Broadcast(ScanHit);
 	}
-
-#if WITH_EDITOR
-	if (bTraceDebug)
-	{
-		DrawDebugLine(GetWorld(), TraceStart, TraceEnd, FColor::Magenta, false, 0.02f);
-	}
-#endif
 }
 
 void AShooter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -214,7 +211,6 @@ void AShooter::MakeSound(const float Volume)
 	if (bHit)
 	{	
 		ShooterMakeNoise(SoundHit.ImpactPoint, Volume);
-		DrawDebugSphere(GetWorld(), SoundHit.ImpactPoint, 20, 20, FColor::Blue, true);
 	}
 }
 

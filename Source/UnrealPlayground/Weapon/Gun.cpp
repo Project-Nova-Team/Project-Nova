@@ -4,9 +4,9 @@
 #include "Engine/SkeletalMeshSocket.h"
 
 
-FWeaponUIData AGun::GetWeaponUI() const
+FGunUIData AGun::GetGunUI() const
 {
-	FWeaponUIData Data;
+	FGunUIData Data;
 	Data.AmmoInClip = CurrentAmmo;
 	Data.ExcessAmmo = ExccessAmmo;
 	Data.ClipSize = ClipSize;
@@ -19,13 +19,18 @@ AGun::AGun()
 	PrimaryActorTick.bCanEverTick = true;
 
 	StartingPoolSize = 3;
-	ProjectileSpeed = 5000.f;
+	ProjectileSpeed = 3000.f;
 
 	AimFOV = 60.f;
+	BarrelSocketName = "barrel";
 
 	ClipSize = 100;
 	MaxHeldAmmo = 100;
 	MaxFireRange = 10000.f;
+
+	BodyMultiplier = 1.f;
+	HeadMultiplier = 2.f;
+	LimbMultiplier = 0.5f;
 
 	FireRate = 0.05f;
 	Recoil = 20.f;
@@ -76,6 +81,19 @@ void AGun::Tick(float DeltaTime)
 		}
 	}
 
+	else if (bAttacking)
+	{
+		if (bIsAimed)
+		{
+			FireStraight();
+		}
+
+		else
+		{
+			FireWithNoise();
+		}
+	}
+
 	if (RecoilVelocity > 0)
 	{
 		const float RecoilBleed = RecoilFallOff * DeltaTime;
@@ -89,25 +107,28 @@ void AGun::Tick(float DeltaTime)
 	}
 }
 
+bool AGun::IsReloadable()
+{
+	return (ExccessAmmo > 0) && (CurrentAmmo < ClipSize);
+}
+
 void AGun::FireStraight()
 {
-	if (!bCanFire)
-	{
-		return;
-	}
-
-	OnWeaponFire.Broadcast();
+	OnWeaponAttack.Broadcast();
 
 	if (CurrentAmmo == 0)
 	{
+		StopAttack();
 		return;
 	}
 
 	CurrentAmmo--;
 	bCanFire = false;
 
+	OnUpdateUI.ExecuteIfBound();
+
 	const FVector TraceStart = TraceOrigin->GetComponentLocation();
-	const FVector ProjectileStart = BulletOrigin->GetSocketLocation(HeldWeaponMesh);
+	const FVector ProjectileStart = BulletOrigin->GetSocketLocation(ProjectileOrigin);
 	const FVector TraceDirection = TraceOrigin->GetForwardVector();
 
 	//Compute the projectile travel vector
@@ -131,27 +152,30 @@ void AGun::FireStraight()
 
 	//Apply recoil
 	AddRecoilVelocity(Recoil * RecoilAimFactor);
+
+	if (WeaponFireType == EWeaponFireType::FT_Semi)
+	{
+		StopAttack();
+	}
 }
 
 void AGun::FireWithNoise()
 {
-	if (!bCanFire)
-	{
-		return;
-	}
-
-	OnWeaponFire.Broadcast();
+	OnWeaponAttack.Broadcast();
 
 	if (CurrentAmmo == 0)
 	{
+		StopAttack();
 		return;
 	}
 
 	CurrentAmmo--;
 	bCanFire = false;
 
+	OnUpdateUI.ExecuteIfBound();
+
 	const FVector TraceStart = TraceOrigin->GetComponentLocation();
-	const FVector ProjectileStart = BulletOrigin->GetSocketLocation(HeldWeaponMesh);
+	const FVector ProjectileStart = BulletOrigin->GetSocketLocation(ProjectileOrigin);
 	FVector TraceDirection = TraceOrigin->GetForwardVector();
 
 	//Apply bloom
@@ -184,6 +208,11 @@ void AGun::FireWithNoise()
 	Bullet->SetTrajectory(TraceStart, TraceDirection, ProjectileDirection);
 
 	AddRecoilVelocity(Recoil);
+
+	if (WeaponFireType == EWeaponFireType::FT_Semi)
+	{
+		StopAttack();
+	}
 }
 
 ABullet* AGun::GetAvailableBullet()
@@ -214,11 +243,14 @@ void AGun::Reload()
 
 	CurrentAmmo += AmmoToRestore;
 	ExccessAmmo -= AmmoToRestore;
+
+	OnUpdateUI.ExecuteIfBound();
 }
 
 void AGun::AddExcessAmmo(int AmmoAddAmount)
 {
 	ExccessAmmo += AmmoAddAmount;
+	OnUpdateUI.ExecuteIfBound();
 }
 
 void AGun::AddRecoilVelocity(const float Velocity)
@@ -235,7 +267,9 @@ void AGun::AddBloom(const float BloomAmount)
 
 void AGun::SetBloomMin(const EWeaponFireStance Stance, const bool bIsMoving)
 {
-	float Base = 0.f;
+	//TODO get this working agian. Fire stance was a hacky solution
+
+	/*float Base = 0.f;
 
 	switch (Stance)
 	{
@@ -251,14 +285,14 @@ void AGun::SetBloomMin(const EWeaponFireStance Stance, const bool bIsMoving)
 	}
 
 	const float Multiplier = bIsMoving ? BloomBaseMovementMultiplier : 1.f;
-	BloomMin = Base * Multiplier;
+	BloomMin = Base * Multiplier;*/
 }
 
-void AGun::SetGunSceneValues(const USceneComponent* TraceOriginComponent, const USkeletalMeshComponent* HeldWeapon, const USkeletalMeshSocket* BulletSocket)
+void AGun::SetWeaponSceneValues(USceneComponent* TraceOriginComponent, USkeletalMeshComponent* ProjectileOriginMesh)
 {
-	AWeapon::SetWeaponSceneValues(TraceOriginComponent, HeldWeapon);
+	Super::SetWeaponSceneValues(TraceOriginComponent, ProjectileOriginMesh);
 
-	//A pawn has picked the weapon up
+	//Pawn picked the weapon up
 	if (TraceOriginComponent != nullptr)
 	{
 		//Don't shoot ourselves
@@ -271,8 +305,15 @@ void AGun::SetGunSceneValues(const USceneComponent* TraceOriginComponent, const 
 		{
 			Bullet->SetBulletQueryParams(QueryParams);
 		}
+
+		BulletOrigin = ProjectileOriginMesh->GetSocketByName(BarrelSocketName);
+		PrimaryActorTick.SetTickFunctionEnable(true);
 	}
 
-	BulletOrigin = BulletSocket;
+	//Pawn dropped the weapon, stop ticking
+	else
+	{
+		BulletOrigin = nullptr;
+		PrimaryActorTick.SetTickFunctionEnable(false);
+	}	
 }
-

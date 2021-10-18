@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 #include "AmmoPickup.h"
 #include "GameFramework/Pawn.h"
-#include "../Weapon/ShooterCombatComponent.h"
+#include "../Weapon/CombatComponent.h"
 
 // Sets default values
 AAmmoPickup::AAmmoPickup()
@@ -12,7 +12,7 @@ AAmmoPickup::AAmmoPickup()
 // Add ammo
 void AAmmoPickup::InteractionEvent(const APawn* EventSender)
 {
-	UShooterCombatComponent* PlayerCombatComponent = EventSender->FindComponentByClass<UShooterCombatComponent>();
+	/*UCombatComponent* PlayerCombatComponent = EventSender->FindComponentByClass<UCombatComponent>();
 
 	if (PlayerCombatComponent != nullptr)
 	{
@@ -30,7 +30,7 @@ void AAmmoPickup::InteractionEvent(const APawn* EventSender)
 
 			SetActorLocation(DestroyPos);
 		}
-	}
+	}*/
 }
 	
 
