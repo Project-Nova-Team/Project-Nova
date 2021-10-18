@@ -17,19 +17,6 @@ AWeapon::AWeapon()
 	ThrowForce = 100000.f;
 
 	BaseDamage = 25.f;
-	BodyMultiplier = 1.f;
-	HeadMultiplier = 2.f;
-	LimbMultiplier = 0.5f;
-}
-
-void AWeapon::BeginPlay()
-{
-	Super::BeginPlay();
-}
-
-void AWeapon::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
 }
 
 void AWeapon::InteractionEvent(const APawn* EventSender)
@@ -44,6 +31,7 @@ void AWeapon::InteractionEvent(const APawn* EventSender)
 	if (UCombatComponent* Combat = EventSender->FindComponentByClass<UCombatComponent>())
 	{
 		Combat->PickUpWeapon(this);
+		OwningComponent = Combat;
 	}
 }
 
@@ -73,6 +61,7 @@ void AWeapon::SetWeaponSceneValues(USceneComponent* TraceOriginComponent, USkele
 		//Apply a force to make it look like the gun was thrown
 		Mesh->AddForce(TraceOrigin->GetForwardVector().GetSafeNormal2D() * ThrowForce);
 		PrimaryActorTick.SetTickFunctionEnable(false);
+		OwningComponent = nullptr;
 	}
 
 	TraceOrigin = TraceOriginComponent;

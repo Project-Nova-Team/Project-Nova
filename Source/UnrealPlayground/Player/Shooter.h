@@ -4,14 +4,13 @@
 #include "GameFramework/Pawn.h"
 #include "ShooterMovementComponent.h"
 #include "WeaponInput.h"
-#include "Animation/AnimInstance.h"
 #include "../Weapon/CombatComponent.h"
 #include "Shooter.generated.h"
 
 class UCapsuleComponent;
 class UCameraComponent;
 class UShooterStateMachine;
-class UPawnMovementComponent;
+class UMeleeComponent;
 class UHealthComponent;
 class UAIPerceptionStimuliSourceComponent;
 class IInteractiveObject;
@@ -82,39 +81,42 @@ public:
 
 	friend struct FShooterInput;
 
-	USkeletalMeshComponent* GetWeaponMesh() const { return WeaponMesh; }
+	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const { return WeaponMesh; }
 
 	/** Returns the capsule component attached to this shooter*/
-	UCapsuleComponent* GetCollider() const { return Collider; }
+	FORCEINLINE UCapsuleComponent* GetCollider() const { return Collider; }
 
 	/** Returns the camera anchor component attached to this shooter*/
-	USceneComponent* GetAnchor() const { return CameraAnchor; }
+	FORCEINLINE USceneComponent* GetAnchor() const { return CameraAnchor; }
 	
 	/** Returns the combat component attached to this shooter*/
-	UCombatComponent* GetCombat() const { return Combat; }
+	FORCEINLINE UCombatComponent* GetCombat() const { return Combat; }
 
 	/** Returns the camera component attached to this shooter*/
-	UCameraComponent* GetCamera() const { return Camera; }
+	FORCEINLINE UCameraComponent* GetCamera() const { return Camera; }
 
 	/** Returns the state machine attached to the shooter which drives player movement*/
-	UShooterStateMachine* GetStateMachine() const { return StateMachine; }
+	FORCEINLINE UShooterStateMachine* GetStateMachine() const { return StateMachine; }
 
-	UHealthComponent* GetHealth() const { return Health; }
+	FORCEINLINE UHealthComponent* GetHealth() const { return Health; }
 
 	/** Returns the input state. Note: contents are mutable*/
-	FShooterInput* GetInput() { return &InputState; }
+	FORCEINLINE FShooterInput* GetInput() { return &InputState; }
 
 	/** Returns the Skeletal Mesh component of this shooter*/
-	USkeletalMeshComponent* GetSkeletalMeshComponent() { return ShooterSkeletalMesh; }
+	FORCEINLINE USkeletalMeshComponent* GetSkeletalMeshComponent() { return ShooterSkeletalMesh; }
 
-	/** Returns the Shooter_Movement component attached to this shooter*/
-	UShooterMovementComponent* GetShooterMovement() { return ShooterMovement; }
+	/** Returns the Shooter Movement component attached to this shooter*/
+	FORCEINLINE UShooterMovementComponent* GetShooterMovement() { return ShooterMovement; }
+
+	/** Returns the Melee component attached to this shooter*/
+	FORCEINLINE UMeleeComponent* GetMelee() { return Melee; }
 
 	/** Returns the Perception Source component which enables AI to sense stimulus produced by this actor*/
-	UAIPerceptionStimuliSourceComponent* GetPerceptionSource() const { return PerceptionSource; }
+	FORCEINLINE UAIPerceptionStimuliSourceComponent* GetPerceptionSource() const { return PerceptionSource; }
 
 	/** Returns State Machine. Maybe consider moving this to shooter movement component?*/
-	UShooterStateMachine* GetStateMachine() { return StateMachine; }
+	FORCEINLINE UShooterStateMachine* GetStateMachine() { return StateMachine; }
 
 	/** Draws debug traces for a variety of position tests if enabled*/
 	UPROPERTY(Category = Pawn, EditAnywhere)
@@ -181,6 +183,9 @@ private:
 	UCameraComponent* Camera;
 
 	UPROPERTY(Category = Shooter, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UMeleeComponent* Melee;
+
+	UPROPERTY(Category = Shooter, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	UCombatComponent* Combat;
 
 	UPROPERTY(Category = Shooter, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
@@ -212,18 +217,18 @@ private:
 	void CrouchRelease()				{ InputState.bIsHoldingCrouch = false; }
 	void ShootPress()					{ Combat->ReceiveAttack(true); }
 	void ShootRelease()					{ Combat->ReceiveAttack(false); }
-	void AimPress()						{ Combat->ReceiveAim(true); }
-	void AimRelease()					{ InputState.bIsTryingToAim = false; }
+	void AimPress()						{ Combat->ReceiveAim(); }
+	void AimRelease()					{  }
 	void InteractPress()				{ InputState.bIsTryingToInteract = true; }
 	void InteractRelease()				{ InputState.bIsTryingToInteract = false; }
-	void SwapPressUp()					{ InputState.bIsTryingToSwapUp = true; }
-	void SwapPressDown()				{ InputState.bIsTryingToSwapDown = true; }
+	void SwapPressUp()					{ Combat->ReceiveSwap(-1); }
+	void SwapPressDown()				{ Combat->ReceiveSwap(1); }
 	void MeleePress()					{ InputState.bIsTryingToMelee = true; }
 	void MeleeRelease()					{ InputState.bIsTryingToMelee = false; }
 	void SprintPress()					{ InputState.bIsTryingToSprint = true; }
 	void SprintRelease()				{ InputState.bIsTryingToSprint = false; }
-	void ReloadPress()					{ InputState.bIsTryingToReload = true; }
-	void ReloadRelease()				{ InputState.bIsTryingToReload = false; }
+	void ReloadPress()					{ Combat->ReceiveReload(); }
+	void ReloadRelease()				{  }
 	void ThrowPrimaryPress()			{ InputState.bIsTryingToThrowPrimary = true; }
 	void ThrowPrimaryRelease()			{ InputState.bIsTryingToThrowPrimary = false; }
 	void ThrowSecondaryPress()			{ InputState.bIsTryingToThrowSecondary = true; }

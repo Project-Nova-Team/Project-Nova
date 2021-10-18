@@ -10,6 +10,17 @@ class USkeletalMeshSocket;
 class UCombatComponent;
 enum EWeaponFireStance;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FWeaponEvent);
+DECLARE_DELEGATE(FWeaponUIEvent);
+
+USTRUCT(BlueprintType)
+struct FWeaponUIData
+{
+	GENERATED_BODY()
+	
+public:
+};
+
 UCLASS()
 class UNREALPLAYGROUND_API AWeapon : public AActor, public IInteractiveObject
 {
@@ -17,8 +28,11 @@ class UNREALPLAYGROUND_API AWeapon : public AActor, public IInteractiveObject
 	
 public:	
 	AWeapon();
-	virtual void Tick(float DeltaTime) override;
+
 	void InteractionEvent(const APawn* EventSender) override;
+
+	/** TODO stop inlining once we get some fields in FWeaponUIData*/
+	FWeaponUIData GetWeaponUI() const { return FWeaponUIData(); }
 
 	/** Returns the mesh this weapon uses*/
 	FORCEINLINE USkeletalMeshComponent* GetMeshComponent() const { return Mesh; }
@@ -29,6 +43,11 @@ public:
 	/** Returns the combat component this weapon is attached to, if any*/
 	FORCEINLINE UCombatComponent* GetOwningComponent() const { return OwningComponent; }
 
+	virtual bool IsReloadable() { return false; }
+
+	UFUNCTION(BlueprintCallable)
+	virtual bool IsAimable() { return false; }
+
 	/** Initiates an attack. Returns true if the attack was executed successfully.*/
 	virtual void StartAttack() { }
 
@@ -37,6 +56,16 @@ public:
 
 	/** Sets the aim status of the weapon*/
 	virtual void SetAim(const bool bNewAim) { bIsAimed = bNewAim; }
+
+	virtual void Reload() { }
+
+	/**
+	 * Passes references of scene components to the weapon so it knows where to begin weapon fire/traces from
+	 *
+	 * @param	TraceOriginComponent				Scene component a traveling hitscan beam is fired from. Typically the camera of a player
+	 * @param	ProjectileOriginMesh				Scene component we use to get a socket on a gun barrel to fire a cosmetic projectile from
+	 */
+	virtual void SetWeaponSceneValues(USceneComponent* TraceOriginComponent, USkeletalMeshComponent* ProjectileOriginMesh);
 
 	/**
 	* Pointer to a level object that determines where the line trace begins for firing
@@ -50,17 +79,14 @@ public:
 	 */
 	USkeletalMeshComponent* ProjectileOrigin;
 
-	/**
-	 * Passes references of scene components to the weapon so it knows where to begin weapon fire/traces from
-	 * 
-	 * @param	TraceOriginComponent				Scene component a traveling hitscan beam is fired from. Typically the camera of a player
-	 * @param	ProjectileOriginMesh				Scene component we use to get a socket on a gun barrel to fire a cosmetic projectile from
-	 */
-	void SetWeaponSceneValues(USceneComponent* TraceOriginComponent, USkeletalMeshComponent* ProjectileOriginMesh);
+	/** When invoked, any HUD subscribed to this event will update values*/
+	FWeaponUIEvent OnUpdateUI;
+
+	/** Invoked when the weapon attacks. Useful for audio*/
+	UPROPERTY(BlueprintAssignable)
+	FWeaponEvent OnWeaponAttack;
 
 protected:
-	
-	virtual void BeginPlay() override;
 
 	UPROPERTY(VisibleAnywhere, Category = "Mesh")
 	USkeletalMeshComponent* Mesh;
