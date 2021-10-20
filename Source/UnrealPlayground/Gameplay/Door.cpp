@@ -18,10 +18,6 @@ void ADoor::BeginPlay()
 	Super::BeginPlay();
 	Trigger->OnComponentBeginOverlap.AddDynamic(this, &ADoor::EnterOverlap);
 	Trigger->OnComponentEndOverlap.AddDynamic(this, &ADoor::ExitOverlap);
-
-	TimeToOpenClose = 2.f;
-
-	DoorExtents = 300.f;
 }
 
 // Called every frame
