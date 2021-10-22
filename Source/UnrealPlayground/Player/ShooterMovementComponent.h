@@ -4,12 +4,6 @@
 #include "GameFramework/PawnMovementComponent.h"
 #include "ShooterMovementComponent.generated.h"
 
-/** 
- * This component contains values used for gameplay 
- * Designers can access all the properties from the shooter blueprint and adjust accordingly
- * USMovementState and its children read these values to perform game logic
- */
-
 
 struct FBaseInfo
 {
@@ -23,6 +17,11 @@ struct FBaseInfo
 	FVector OldLocation;
 };
 
+/**
+ * This component contains values used for gameplay
+ * Designers can access all the properties from the shooter blueprint and adjust accordingly
+ * USMovementState and its children read these values to perform game logic
+ */
 UCLASS()
 class UNREALPLAYGROUND_API UShooterMovementComponent : public UPawnMovementComponent
 {
@@ -178,6 +177,7 @@ public:
 	FHitResult GroundHitData;
 
 	/** Input relative to the camera's forward vector*/
+	UPROPERTY(BlueprintReadOnly)
 	FVector CameraRelativeInput;
 
 	/** The velocity applied to the shooter from input*/

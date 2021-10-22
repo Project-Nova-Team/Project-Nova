@@ -1,8 +1,7 @@
 #include "Weapon.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Engine/SkeletalMeshSocket.h"
-#include "Bullet.h"
-#include "ShooterCombatComponent.h"
+#include "CombatComponent.h"
 
 AWeapon::AWeapon()
 {
@@ -18,35 +17,22 @@ AWeapon::AWeapon()
 	ThrowForce = 100000.f;
 
 	BaseDamage = 25.f;
-	BodyMultiplier = 1.f;
-	HeadMultiplier = 2.f;
-	LimbMultiplier = 0.5f;
-}
-
-void AWeapon::BeginPlay()
-{
-	Super::BeginPlay();
-}
-
-void AWeapon::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
 }
 
 void AWeapon::InteractionEvent(const APawn* EventSender)
 {
-}
-
-void AWeapon::SetInteractiveObjectHidden(bool ActiveState)
-{
-	// Hides visible components
-	SetActorHiddenInGame(ActiveState);
-
-	// Disables collision components
-	SetActorEnableCollision(false);
-
-	// Stops the Actor from ticking
-	SetActorTickEnabled(false);
+	//We are already being held by another combat component
+	if (OwningComponent != nullptr)
+	{
+		return;
+	}
+	
+	//If the EventSender has a combat component, pick this weapon up
+	if (UCombatComponent* Combat = EventSender->FindComponentByClass<UCombatComponent>())
+	{
+		Combat->PickUpWeapon(this);
+		OwningComponent = Combat;
+	}
 }
 
 void AWeapon::SetActorTick(bool status)
@@ -68,10 +54,6 @@ void AWeapon::SetWeaponSceneValues(const USceneComponent* TraceOriginComponent, 
 		Mesh->SetVisibility(false);
 		Mesh->SetSimulatePhysics(false);
 		Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
-		PrimaryActorTick.SetTickFunctionEnable(true);
-
-		TraceOrigin = TraceOriginComponent;
 	}
 
 	//A pawn has dropped the weapon
@@ -88,10 +70,10 @@ void AWeapon::SetWeaponSceneValues(const USceneComponent* TraceOriginComponent, 
 
 		//Apply a force to make it look like the gun was thrown
 		Mesh->AddForce(TraceOrigin->GetForwardVector().GetSafeNormal2D() * ThrowForce);
-
 		PrimaryActorTick.SetTickFunctionEnable(false);
+		OwningComponent = nullptr;
 	}
 
-	if(HeldWeapon != nullptr)
-		HeldWeaponMesh = HeldWeapon;
+	TraceOrigin = TraceOriginComponent;
+	ProjectileOrigin = ProjectileOriginMesh;
 }

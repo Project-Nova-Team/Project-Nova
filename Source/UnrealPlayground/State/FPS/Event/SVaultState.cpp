@@ -1,13 +1,9 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "SVaultState.h"
 
 void USVaultState::OnEnter()
 {
 	Super::OnEnter();
-
-	// Broadcasts event for shooter anim blueprint that triggers Montage_Play
-	ShooterAnimInstance->BroadcastVaultEvent();
+	OnVaultEnter.Broadcast();
 }
 
 void USVaultState::OnExit()
@@ -15,9 +11,7 @@ void USVaultState::OnExit()
 	Super::OnExit();
 }
 
-void USVaultState::Initialize(UStateMachine* StateMachine, UObject* ContextObject)
+void USVaultState::ReceiveVaultAnimComplete()
 {
-	Super::Initialize(StateMachine, ContextObject);
-
-	ShooterAnimInstance = Cast<UShooterAnimInstance>(Shooter->GetSkeletalMeshComponent()->GetAnimInstance());
+	FlagTransition("Walking");
 }
