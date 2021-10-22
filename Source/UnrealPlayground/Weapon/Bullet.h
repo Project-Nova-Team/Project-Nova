@@ -42,7 +42,7 @@ private:
 
 	/** Mesh this bullet actor uses*/
 	UPROPERTY(Category = Mesh, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		UStaticMeshComponent* Mesh;
+	UStaticMeshComponent* Mesh;
 
 	/** Starting location of the trace*/
 	FVector TraceStart;
