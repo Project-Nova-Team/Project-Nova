@@ -18,13 +18,13 @@ public:
 	UFUNCTION()
 	void Heal(const float HealAmount);
 
-protected:
-	virtual void BeginPlay() override;
-
 	/** Event that is fired when taking damage that would leave us below 0 health*/
 	UPROPERTY(BlueprintAssignable)
 	FHealthEvent OnDeath;
-	
+
+protected:
+	virtual void BeginPlay() override;
+
 	/** The maximum amount of health that can be had at any given time*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
 	float MaxHealth;
