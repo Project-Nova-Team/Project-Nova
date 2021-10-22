@@ -63,9 +63,9 @@ public:
 	 * Passes references of scene components to the weapon so it knows where to begin weapon fire/traces from
 	 *
 	 * @param	TraceOriginComponent				Scene component a traveling hitscan beam is fired from. Typically the camera of a player
-	 * @param	ProjectileOriginMesh				Scene component we use to get a socket on a gun barrel to fire a cosmetic projectile from
+	 * @param	ProjectileOrigin					Scene component we use to get a socket on a gun barrel to fire a cosmetic projectile from
 	 */
-	virtual void SetWeaponSceneValues(USceneComponent* TraceOriginComponent, USkeletalMeshComponent* ProjectileOriginMesh);
+	virtual void SetWeaponSceneValues(USceneComponent* TraceOriginComponent, USkeletalMeshComponent* ProjectileOrigin);
 
 	/**
 	* Pointer to a level object that determines where the line trace begins for firing
@@ -77,7 +77,7 @@ public:
 	 * Pointer to a the skeletal mesh component of the weapon's owner. This is provided
 	 * so we can access a socket on the mesh to fire a cosmetic projectile from 
 	 */
-	USkeletalMeshComponent* ProjectileOrigin;
+	USkeletalMeshComponent* ProjectileOriginMesh;
 
 	/** When invoked, any HUD subscribed to this event will update values*/
 	FWeaponUIEvent OnUpdateUI;

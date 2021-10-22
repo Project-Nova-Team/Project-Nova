@@ -35,17 +35,7 @@ void AWeapon::InteractionEvent(const APawn* EventSender)
 	}
 }
 
-void AWeapon::SetActorTick(bool status)
-{
-	PrimaryActorTick.SetTickFunctionEnable(status);
-}
-
-void AWeapon::SetHeldWeaponMesh(const USkeletalMeshComponent* MeshToSet)
-{
-	HeldWeaponMesh = MeshToSet;
-}
-
-void AWeapon::SetWeaponSceneValues(const USceneComponent* TraceOriginComponent, const USkeletalMeshComponent* HeldWeapon)
+void AWeapon::SetWeaponSceneValues(USceneComponent* TraceOriginComponent, USkeletalMeshComponent* HeldWeapon)
 {
 	//A pawn has picked the weapon up
 	if (TraceOriginComponent != nullptr)
@@ -54,6 +44,7 @@ void AWeapon::SetWeaponSceneValues(const USceneComponent* TraceOriginComponent, 
 		Mesh->SetVisibility(false);
 		Mesh->SetSimulatePhysics(false);
 		Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		PrimaryActorTick.SetTickFunctionEnable(true);
 	}
 
 	//A pawn has dropped the weapon
@@ -75,5 +66,5 @@ void AWeapon::SetWeaponSceneValues(const USceneComponent* TraceOriginComponent, 
 	}
 
 	TraceOrigin = TraceOriginComponent;
-	ProjectileOrigin = ProjectileOriginMesh;
+	ProjectileOriginMesh = HeldWeapon;
 }
