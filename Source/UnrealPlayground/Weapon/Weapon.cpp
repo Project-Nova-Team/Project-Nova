@@ -37,6 +37,18 @@ void AWeapon::InteractionEvent(const APawn* EventSender)
 {
 }
 
+void AWeapon::SetInteractiveObjectHidden(bool ActiveState)
+{
+	// Hides visible components
+	SetActorHiddenInGame(ActiveState);
+
+	// Disables collision components
+	SetActorEnableCollision(false);
+
+	// Stops the Actor from ticking
+	SetActorTickEnabled(false);
+}
+
 void AWeapon::SetActorTick(bool status)
 {
 	PrimaryActorTick.SetTickFunctionEnable(status);
