@@ -55,14 +55,6 @@ public:
 
 	bool IsAimable() override { return true; }
 
-	/**
-	 * Fires the weapon applying recoil and bloom
-	 *
-	 * @param	bIsAimed				Whether or not whoever is holding the weapon is aiming the weapon, which determines bloom and recoil
-	 * @param	BulletRotation			Orientation the spawned actor begins in
-	 */
-	void FireShotgun(const bool bIsAimed, FRotator BulletRotation);
-
 	/** Packages relevant information to display to the UI in blueprint*/
 	FGunUIData GetGunUI() const;
 
@@ -102,10 +94,6 @@ public:
 	int GetAmmoCount() { return CurrentAmmo; }
 
 	int GetClipSize() { return ClipSize; }
-
-	/** Field of view when zoomed in using this weapon*/
-	UPROPERTY(EditAnywhere, Category = "Weapon | Aiming")
-	float AimFOV;
 
 protected:
 	// Called when the game starts or when spawned
