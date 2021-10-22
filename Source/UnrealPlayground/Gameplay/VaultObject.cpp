@@ -13,5 +13,9 @@ AVaultObject::AVaultObject()
 
 void AVaultObject::InteractionEvent(const APawn* EventSender)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Interacted with vault object"));
+}
+
+void AVaultObject::SetInteractiveObjectHidden(bool ActiveStatus)
+{
+
 }

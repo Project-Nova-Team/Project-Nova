@@ -1,3 +1,5 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
 #pragma once
 
 #include "CoreMinimal.h"
@@ -68,20 +70,20 @@ private:
 
 	/** Returns whether this shooter is walking*/
 	UFUNCTION(BlueprintCallable, Category = "Animation")
-	bool IsWalking();
+		bool IsWalking();
 
 	/** Returns whether this shooter is falling*/
 	UFUNCTION(BlueprintCallable, Category = "Animation")
-	bool IsFalling();
+		bool IsFalling();
 
 
 	/** Execute Montages*/
 
 	UFUNCTION(BlueprintCallable, Category = "Animation")
-	void PlayVaultMontage();
+		void PlayVaultMontage();
 
 	UFUNCTION(BlueprintCallable, Category = "Animation")
-	void PlaySwapMontage();
+		void PlaySwapMontage();
 
 	UFUNCTION(BlueprintCallable, Category = "Animation")
 	void PlayReloadMontage();
