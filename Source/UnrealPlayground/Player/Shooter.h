@@ -19,10 +19,11 @@ class AGun;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FScanEvent, FHitResult, ScanData);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FShooterMakeNoise, FVector, Location, float, Volume);
 
+
 struct FShooterInput : public FWeaponInput
 {
-public:
 	FShooterInput() { }
+
 	/** 
 	* Runs within the shooter's Tick to handle any input states that need to be watched 
 	* @param	DeltaTime				Time slice
@@ -38,20 +39,11 @@ public:
 	/** How long crouch has been held for since the last release*/
 	float CurrentCrouchHoldTime;
 
-	/** X-axis movement input*/
-	float MoveX;
-
-	/** Y-axis movement input*/
-	float MoveY;
-
-	/** X-axis look input*/
-	float LookX;
-
-	/** Y-axis look input*/
-	float LookY;
-
 	/** Whether or not the player is pressing the jump button*/
 	uint8 bIsTryingToVault : 1;
+
+	/** Whether or not the player is pressing the interact button*/
+	uint8 bIsTryingToInteract : 1;
 
 	/** Whether or not the player is pressing the crouch button*/
 	uint8 bIsHoldingCrouch : 1;
@@ -102,6 +94,10 @@ public:
 
 	/** Returns the input state. Note: contents are mutable*/
 	FORCEINLINE FShooterInput* GetInput() { return &InputState; }
+
+	/** Returns the input state. Note: contents are mutable*/
+	UFUNCTION(BlueprintCallable)
+	FORCEINLINE FWeaponInput GetInputRaw() { return FWeaponInput(InputState); }
 
 	/** Returns the Skeletal Mesh component of this shooter*/
 	FORCEINLINE USkeletalMeshComponent* GetSkeletalMeshComponent() { return ShooterSkeletalMesh; }
@@ -206,6 +202,8 @@ private:
 	/** Casts a trace from the camera to see if there is an object nearby we can interact with*/	
 	void ScanInteractiveObject();
 
+	
+
 	///		 Begin Input Bindings	   ///
 	void MoveInputX(const float Value)	{ InputState.MoveX = Value; }
 	void MoveInputY(const float Value)	{ InputState.MoveY = Value; }
@@ -223,17 +221,10 @@ private:
 	void InteractRelease()				{ InputState.bIsTryingToInteract = false; }
 	void SwapPressUp()					{ Combat->ReceiveSwap(-1); }
 	void SwapPressDown()				{ Combat->ReceiveSwap(1); }
-	void MeleePress()					{ InputState.bIsTryingToMelee = true; }
-	void MeleeRelease()					{ InputState.bIsTryingToMelee = false; }
 	void SprintPress()					{ InputState.bIsTryingToSprint = true; }
 	void SprintRelease()				{ InputState.bIsTryingToSprint = false; }
 	void ReloadPress()					{ Combat->ReceiveReload(); }
 	void ReloadRelease()				{  }
-	void ThrowPrimaryPress()			{ InputState.bIsTryingToThrowPrimary = true; }
-	void ThrowPrimaryRelease()			{ InputState.bIsTryingToThrowPrimary = false; }
-	void ThrowSecondaryPress()			{ InputState.bIsTryingToThrowSecondary = true; }
-	void ThrowSecondaryRelease()		{ InputState.bIsTryingToThrowSecondary = false; }
-
 
 	//TODO delete all of this
 #if WITH_EDITOR

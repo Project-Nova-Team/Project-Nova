@@ -71,6 +71,7 @@ void AShotgun::FireWithNoise()
 	//Apply recoil & bloom
 	AddRecoilVelocity(Recoil * RecoilAimFactor);
 	AddBloom(Bloom);
+	AddImpulseVelocity(Impulse);
 
 	if (WeaponFireType == EWeaponFireType::FT_Semi)
 	{

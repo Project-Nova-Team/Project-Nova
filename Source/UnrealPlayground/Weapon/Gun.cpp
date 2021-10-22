@@ -39,6 +39,11 @@ AGun::AGun()
 	RecoilRecovery = 30.f;
 	RecoilAngularLimit = 15.f;
 
+	Impulse = 200.f;
+	ImpulseFallOff = 1000.f;
+	ImpulseRecovery = 60.f;
+	ImpulseMax = 50.f;
+
 	BloomMax = 90.f;
 	Bloom = 5.f;
 	BloomFallOff = 20.f;
@@ -100,6 +105,20 @@ void AGun::Tick(float DeltaTime)
 		AddRecoilVelocity(-RecoilBleed);
 	}
 
+	if (ImpulseVelocity > 0)
+	{
+		const float ImpulseBleed = ImpulseFallOff * DeltaTime;
+		AddImpulseVelocity(-ImpulseBleed);
+		ImpulsePosition += ImpulseVelocity * DeltaTime;
+		ImpulsePosition = FMath::Clamp(ImpulsePosition, 0.f, ImpulseMax);
+	}
+
+	else if(ImpulsePosition != 0)
+	{
+		ImpulsePosition -= ImpulseRecovery * DeltaTime;
+		ImpulsePosition = FMath::Clamp(ImpulsePosition, 0.f, ImpulseMax);
+	}
+
 	if (CurrentBloom != BloomMin)
 	{
 		const float BloomBleed = BloomFallOff * DeltaTime;
@@ -150,8 +169,9 @@ void AGun::FireStraight()
 	Bullet->SetActorLocationAndRotation(ProjectileStart, ProjectileRotation);
 	Bullet->SetTrajectory(TraceStart, TraceDirection, ProjectileDirection);
 
-	//Apply recoil
+	//Apply recoil/Impulse
 	AddRecoilVelocity(Recoil * RecoilAimFactor);
+	AddImpulseVelocity(Impulse);
 
 	if (WeaponFireType == EWeaponFireType::FT_Semi)
 	{
@@ -208,6 +228,7 @@ void AGun::FireWithNoise()
 	Bullet->SetTrajectory(TraceStart, TraceDirection, ProjectileDirection);
 
 	AddRecoilVelocity(Recoil);
+	AddImpulseVelocity(Impulse);
 
 	if (WeaponFireType == EWeaponFireType::FT_Semi)
 	{
@@ -263,6 +284,12 @@ void AGun::AddBloom(const float BloomAmount)
 {
 	CurrentBloom += BloomAmount;
 	CurrentBloom = FMath::Clamp(CurrentBloom, BloomMin, BloomMax);
+}
+
+void AGun::AddImpulseVelocity(const float Velocity)
+{
+	ImpulseVelocity += Velocity;
+	ImpulseVelocity = FMath::Clamp(ImpulseVelocity, 0.f, ImpulseMax);
 }
 
 void AGun::SetBloomMin(const EWeaponFireStance Stance, const bool bIsMoving)

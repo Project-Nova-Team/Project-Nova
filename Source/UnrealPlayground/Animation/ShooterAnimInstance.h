@@ -11,6 +11,7 @@ class UShooterMovementComponent;
 class UCombatComponent;
 class UMeleeComponent;
 class USVaultState;
+struct FDelayedActionHandle;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FAimEvent);
 
@@ -120,6 +121,19 @@ protected:
 	UPROPERTY(BlueprintReadOnly)
 	UMeleeComponent* ShooterMelee;
 
+	/** Returns the transform of the weapon socket by name*/
+	UFUNCTION(BlueprintCallable)
+	FTransform GetWeaponSocketTransform(FName SocketName);
+
+	UFUNCTION(BlueprintCallable)
+	void StartFOVLerp(const float TargetFOV, const float Time);
+
+	void LerpFOV(const float StartFOV, const float TargetFOV);
+
 	//Ugly
 	USVaultState* Vault;
+
+private:
+	/**Handle for aim fov lerping*/
+	FDelayedActionHandle* AimHandle;
 };
