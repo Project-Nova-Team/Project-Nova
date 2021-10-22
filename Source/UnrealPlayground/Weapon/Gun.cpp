@@ -147,7 +147,7 @@ void AGun::FireStraight()
 	OnUpdateUI.ExecuteIfBound();
 
 	const FVector TraceStart = TraceOrigin->GetComponentLocation();
-	const FVector ProjectileStart = BulletOrigin->GetSocketLocation(ProjectileOrigin);
+	const FVector ProjectileStart = BulletOrigin->GetSocketLocation(ProjectileOriginMesh);
 	const FVector TraceDirection = TraceOrigin->GetForwardVector();
 
 	//Compute the projectile travel vector
@@ -195,7 +195,7 @@ void AGun::FireWithNoise()
 	OnUpdateUI.ExecuteIfBound();
 
 	const FVector TraceStart = TraceOrigin->GetComponentLocation();
-	const FVector ProjectileStart = BulletOrigin->GetSocketLocation(ProjectileOrigin);
+	const FVector ProjectileStart = BulletOrigin->GetSocketLocation(ProjectileOriginMesh);
 	FVector TraceDirection = TraceOrigin->GetForwardVector();
 
 	//Apply bloom
@@ -234,55 +234,6 @@ void AGun::FireWithNoise()
 	{
 		StopAttack();
 	}
-}
-
-void AGun::FireShotgun(const bool bIsAimed, FRotator BulletRotation)
-{
-	if (CurrentAmmo == 0)
-	{
-		return;
-	}
-
-	OnWeaponFire.Broadcast();
-
-	CurrentAmmo--;
-
-	const FVector TraceStart = TraceOrigin->GetComponentLocation();
-	const FVector ProjectileStart = BulletOrigin->GetSocketLocation(HeldWeaponMesh);
-	FVector TraceDirection = TraceOrigin->GetForwardVector();
-
-	const float HorizontalRandom = FMath::FRandRange(-CurrentBloom, CurrentBloom) / 180.f;
-	const float VerticalRandom = FMath::FRandRange(-CurrentBloom, CurrentBloom) / 180.f;
-
-	const FVector TraceXY = FMath::Lerp(TraceDirection, TraceOrigin->GetRightVector(), HorizontalRandom);
-	const FVector TraceZ = FMath::Lerp(TraceDirection, TraceOrigin->GetUpVector(), VerticalRandom);
-	TraceDirection = (TraceXY + TraceZ).GetSafeNormal();
-
-	AddBloom(Bloom);
-
-
-	//Compute the projectile travel vector
-	//Here we assume the projectile will end up exactly where a hitscan says it will
-	//its possible it misses (the target moved out of the way) in which case the projectile will be far off!
-	//potential solution, check if the bullet distance traveled is greater than ProjectileStart and ProjectileEndGuess
-	//and correct the path if it is and hasn't collided yet
-	//Lets playtest and find out
-	FHitResult Hit;
-	const FVector TraceEnd = TraceStart + (TraceDirection * MaxFireRange);
-	const bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_Pawn, QueryParams);
-	const FVector ProjectileEndGuess = bHit ? Hit.ImpactPoint : TraceEnd;
-
-	const FVector ProjectileDirection = (ProjectileEndGuess - ProjectileStart).GetSafeNormal();
-	const FQuat ProjectileRotation = ProjectileDirection.ToOrientationQuat();
-
-	//Get a bullet from the pool and send it off
-	ABullet* Bullet = GetAvailableBullet();
-	Bullet->SetActorLocationAndRotation(ProjectileStart, ProjectileRotation);
-	Bullet->SetTrajectory(TraceStart, TraceDirection, ProjectileDirection);
-
-	//Apply recoil
-	const float RecoilFactor = bIsAimed ? RecoilAimFactor : 1.f;
-	AddRecoilVelocity(Recoil * RecoilFactor);
 }
 
 ABullet* AGun::GetAvailableBullet()
@@ -364,9 +315,9 @@ void AGun::SetBloomMin(const EWeaponFireStance Stance, const bool bIsMoving)
 	BloomMin = Base * Multiplier;*/
 }
 
-void AGun::SetWeaponSceneValues(USceneComponent* TraceOriginComponent, USkeletalMeshComponent* ProjectileOriginMesh)
+void AGun::SetWeaponSceneValues(USceneComponent* TraceOriginComponent, USkeletalMeshComponent* ProjectileOrigin)
 {
-	Super::SetWeaponSceneValues(TraceOriginComponent, ProjectileOriginMesh);
+	Super::SetWeaponSceneValues(TraceOriginComponent, ProjectileOrigin);
 
 	//Pawn picked the weapon up
 	if (TraceOriginComponent != nullptr)
@@ -382,7 +333,7 @@ void AGun::SetWeaponSceneValues(USceneComponent* TraceOriginComponent, USkeletal
 			Bullet->SetBulletQueryParams(QueryParams);
 		}
 
-		BulletOrigin = ProjectileOriginMesh->GetSocketByName(BarrelSocketName);
+		BulletOrigin = ProjectileOrigin->GetSocketByName(BarrelSocketName);
 		PrimaryActorTick.SetTickFunctionEnable(true);
 	}
 
