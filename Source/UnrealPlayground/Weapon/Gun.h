@@ -52,7 +52,7 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	void InteractionEvent(const APawn* EventSender) override;
+	virtual void InteractionEvent(const APawn* EventSender) override;
 
 	/** Fires the weapon in a straight line with no recoil or bloom*/
 	void FireStraight();
@@ -65,6 +65,14 @@ public:
 	 */
 	void FireWithNoise(const bool bIsAimed, FRotator BulletRotation);
 
+	/**
+	 * Fires the weapon applying recoil and bloom
+	 *
+	 * @param	bIsAimed				Whether or not whoever is holding the weapon is aiming the weapon, which determines bloom and recoil
+	 * @param	BulletRotation			Orientation the spawned actor begins in
+	 */
+	void FireShotgun(const bool bIsAimed, FRotator BulletRotation);
+
 	/** Packages relevant information to display to the UI in blueprint*/
 	FWeaponUIData GetWeaponUI() const;
 
@@ -72,7 +80,12 @@ public:
 	void AddExcessAmmo(int AmmoAddAmount);
 
 	/** Reloads the weapon*/
+	UFUNCTION(BlueprintCallable)
 	void Reload();
+
+	int GetExcessAmmo() const { return ExccessAmmo; }
+
+	int GetMaxHeldAmmo() const { return MaxHeldAmmo; }
 
 	/** Reutnrs the current angular velocity of weapon impulse from firing*/
 	float GetRecoilVelocity() const { return RecoilVelocity; }
@@ -103,6 +116,10 @@ public:
 	void SetGunSceneValues(const USceneComponent* TraceOriginComponent, const USkeletalMeshComponent* HeldWeapon, const USkeletalMeshSocket* BulletSocket);
 
 	EWeaponFireType GetWeaponType() const { return WeaponFireType; }
+
+	int GetAmmoCount() { return CurrentAmmo; }
+
+	int GetClipSize() { return ClipSize; }
 
 	/** Field of view when zoomed in using this weapon*/
 	UPROPERTY(EditAnywhere, Category = "Weapon | Aiming")

@@ -59,6 +59,11 @@ void UShooterAnimInstance::PlaySwapMontage()
 	Montage_Play(SwapAnimMontage, 1.0f);
 }
 
+void UShooterAnimInstance::PlayReloadMontage()
+{
+	Montage_Play(ReloadAnimMontage, .3f);
+}
+
 void UShooterAnimInstance::OnMontageEndMethod(UAnimMontage* Montage, bool bInterupted)
 {
 	// If the montage is vault or swap, go to walk anim on end. 

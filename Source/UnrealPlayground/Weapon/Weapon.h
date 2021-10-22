@@ -23,6 +23,8 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	void InteractionEvent(const APawn* EventSender) override;
 
+	void SetInteractiveObjectHidden(bool ActiveState) override;
+
 	/** Returns the mesh this weapon uses*/
 	USkeletalMeshComponent* GetMeshComponent() const { return Mesh; }
 

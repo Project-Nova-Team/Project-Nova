@@ -8,6 +8,7 @@
 #include "AmmoPickup.generated.h"
 
 class UShooterCombatComponent;
+class AGun;
 
 UCLASS()
 class UNREALPLAYGROUND_API AAmmoPickup : public AActor, public IInteractiveObject
@@ -19,6 +20,8 @@ public:
 	AAmmoPickup();
 
 	virtual void InteractionEvent(const APawn* EventSender) override;
+
+	virtual void SetInteractiveObjectHidden(bool ActiveState) override;
 
 protected:
 	UPROPERTY(EditAnywhere)
