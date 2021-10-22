@@ -8,8 +8,6 @@ ADoor::ADoor()
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-
-
 }
 
 // Called when the game starts or when spawned
@@ -18,6 +16,8 @@ void ADoor::BeginPlay()
 	Super::BeginPlay();
 	Trigger->OnComponentBeginOverlap.AddDynamic(this, &ADoor::EnterOverlap);
 	Trigger->OnComponentEndOverlap.AddDynamic(this, &ADoor::ExitOverlap);
+
+	DoorMoveDuration = .7f;
 }
 
 // Called every frame
@@ -51,14 +51,18 @@ void ADoor::OpenDoor(float DeltaTime)
 	// player is in trigger
 	if (bOpen)
 	{
+		// if door has not finished opening
 		if (!Finished)
 		{
+			// if door open duration is less than the timer that started at the beginning
+			// of this method,
 			if (TimeTracker < DoorMoveDuration)
 			{
+				// Lerp from the position saved when player entered trigger to end pos
 				LeftDoorObject->SetRelativeLocation(FMath::Lerp(LeftDoorCurrentPosition, LeftDoorEndLocation, Alpha));
 				RightDoorObject->SetRelativeLocation(FMath::Lerp(RightDoorCurrentPosition, RightDoorEndLocation, Alpha));
 			}
-			//snap into place
+			//snap into place when door gets close to end (achillies and the tortoise paradox)
 			else
 			{
 				LeftDoorObject->SetRelativeLocation(LeftDoorEndLocation);
@@ -69,13 +73,18 @@ void ADoor::OpenDoor(float DeltaTime)
 	// player is out of trigger
 	else
 	{
+		// If door wasn't finished opening/closing
 		if (!Finished)
 		{
+			// if door open duration is less than the timer that started at the beginning
+			// of this method,
 			if (TimeTracker < DoorMoveDuration)
 			{
+				// move doors from current pos to start pos
 				LeftDoorObject->SetRelativeLocation(FMath::Lerp(LeftDoorCurrentPosition, LeftDoorStartingLocation, Alpha));
 				RightDoorObject->SetRelativeLocation(FMath::Lerp(RightDoorCurrentPosition, RightDoorStartingLocation, Alpha));
 			}
+			//snap into place when door gets close to end (achillies and the tortoise paradox)
 			else
 			{
 				LeftDoorObject->SetRelativeLocation(LeftDoorStartingLocation);
@@ -83,7 +92,7 @@ void ADoor::OpenDoor(float DeltaTime)
 			}
 		}
 
-
+		// if doors have reached their endpoint finished is true.
 		if (Alpha == 1.f)
 		{
 			Finished = true;

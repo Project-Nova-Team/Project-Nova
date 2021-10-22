@@ -52,7 +52,7 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	void InteractionEvent(const APawn* EventSender) override;
+	virtual void InteractionEvent(const APawn* EventSender) override;
 
 	/** Fires the weapon in a straight line with no recoil or bloom*/
 	void FireStraight();
@@ -82,6 +82,10 @@ public:
 	/** Reloads the weapon*/
 	UFUNCTION(BlueprintCallable)
 	void Reload();
+
+	int GetExcessAmmo() const { return ExccessAmmo; }
+
+	int GetMaxHeldAmmo() const { return MaxHeldAmmo; }
 
 	/** Reutnrs the current angular velocity of weapon impulse from firing*/
 	float GetRecoilVelocity() const { return RecoilVelocity; }
