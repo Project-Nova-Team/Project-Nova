@@ -18,6 +18,14 @@ public:
 	UFUNCTION()
 	void Heal(const float HealAmount);
 
+
+	/** Whether or not the current health is equal to the max health*/
+	UPROPERTY(BlueprintReadOnly, Category = "Health")
+	uint8 bIsFullHealth : 1;
+
+protected:
+	virtual void BeginPlay() override;
+
 	/** Event that is fired when taking damage that would leave us below 0 health*/
 	UPROPERTY(BlueprintAssignable)
 	FHealthEvent OnDeath;
@@ -36,10 +44,6 @@ protected:
 	/** The actual current health*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Health")
 	float Health;
-
-	/** Whether or not the current health is equal to the max health*/
-	UPROPERTY(BlueprintReadOnly, Category = "Health")
-	uint8 bIsFullHealth : 1;
 
 	/** Whether or not the owner is currently able to take damage*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")

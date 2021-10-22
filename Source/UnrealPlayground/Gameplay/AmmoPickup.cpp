@@ -17,20 +17,26 @@ void AAmmoPickup::InteractionEvent(const APawn* EventSender)
 	if (PlayerCombatComponent != nullptr)
 	{
 		if (PlayerCombatComponent->GetPrimaryWeapon() != nullptr)
-		{
-			// CHECK IF AMMO IS FULL BEFORE YOU CAN PICK UP!
-			
-			// Debug message
-			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Purple, "Ammo Pickup");
+		{			
+			if (AmmoAmount + PlayerCombatComponent->GetPrimaryWeapon()->GetExcessAmmo() <= PlayerCombatComponent->GetPrimaryWeapon()->GetMaxHeldAmmo())
+			{
+				SetInteractiveObjectHidden(true);
 
-			// Right now we are only adding ammo to primary weapon. Let's ask design team what they want to do.
-			PlayerCombatComponent->AddAmmmoToWeapon(PlayerCombatComponent->GetPrimaryWeapon(), AmmoAmount);
-
-			const FVector DestroyPos = FVector(0, 0, -10000);
-
-			SetActorLocation(DestroyPos);
+				// Right now we are only adding ammo to primary weapon. Let's ask design team what they want to do.
+				PlayerCombatComponent->AddAmmmoToWeapon(PlayerCombatComponent->GetPrimaryWeapon(), AmmoAmount);
+			} 
 		}
 	}*/
 }
-	
 
+void AAmmoPickup::SetInteractiveObjectHidden(bool ActiveState)
+{
+	// Hides visible components
+	SetActorHiddenInGame(ActiveState);
+
+	// Disables collision components
+	SetActorEnableCollision(false);
+
+	// Stops the Actor from ticking
+	SetActorTickEnabled(false);
+}

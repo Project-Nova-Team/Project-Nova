@@ -19,6 +19,8 @@ public:
 
 	virtual void InteractionEvent(const APawn* EventSender) override;
 
+	virtual void SetInteractiveObjectHidden(bool ActiveState) override;
+
 protected:
 
 	UPROPERTY(EditAnywhere)
