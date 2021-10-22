@@ -31,16 +31,18 @@ public:
 	* 
 	* @param		Key				The key being transitioned to
 	* @param		Weight			Priority value for this tick, higher values will have higher priority
+	* @returns		True			if the flag was successful
 	*/
-	virtual void FlagTransition(const FString Key, const uint8 Weight = 1);
+	virtual bool FlagTransition(const FString Key, const uint8 Weight = 1);
 
 	/**
 	* Flags this state to be transitioned from
 	*
 	* @param		State			The state being transitioned to
 	* @param		Weight			Priority value for this tick, higher values will have higher priority
+	* @returns		True			if the flag was successful
 	*/
-	virtual void FlagTransition(UState* State, const uint8 Weight = 1);
+	virtual bool FlagTransition(UState* State, const uint8 Weight = 1);
 
 	/** Resets flag, key, and weight values. Called once a transition has been approved*/
 	virtual void ClearTransitionFlags();
