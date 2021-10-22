@@ -37,7 +37,7 @@ void AShotgun::FireWithNoise()
 	for (int i = 0; i < BulletsPerShot; i++)
 	{
 		const FVector TraceStart = TraceOrigin->GetComponentLocation();
-		const FVector ProjectileStart = BulletOrigin->GetSocketLocation(ProjectileOrigin);
+		const FVector ProjectileStart = BulletOrigin->GetSocketLocation(ProjectileOriginMesh);
 		FVector TraceDirection = TraceOrigin->GetForwardVector();
 
 		//Apply bloom

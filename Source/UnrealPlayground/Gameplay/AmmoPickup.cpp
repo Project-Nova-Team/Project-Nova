@@ -28,15 +28,3 @@ void AAmmoPickup::InteractionEvent(const APawn* EventSender)
 		}
 	}*/
 }
-
-void AAmmoPickup::SetInteractiveObjectHidden(bool ActiveState)
-{
-	// Hides visible components
-	SetActorHiddenInGame(ActiveState);
-
-	// Disables collision components
-	SetActorEnableCollision(false);
-
-	// Stops the Actor from ticking
-	SetActorTickEnabled(false);
-}
