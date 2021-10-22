@@ -8,7 +8,7 @@
 // Sets default values
 AGun::AGun()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 	StartingPoolSize = 3;
@@ -183,6 +183,55 @@ void AGun::FireWithNoise(const bool bIsAimed, FRotator BulletRotation)
 
 		AddBloom(Bloom);
 	}
+
+	//Compute the projectile travel vector
+	//Here we assume the projectile will end up exactly where a hitscan says it will
+	//its possible it misses (the target moved out of the way) in which case the projectile will be far off!
+	//potential solution, check if the bullet distance traveled is greater than ProjectileStart and ProjectileEndGuess
+	//and correct the path if it is and hasn't collided yet
+	//Lets playtest and find out
+	FHitResult Hit;
+	const FVector TraceEnd = TraceStart + (TraceDirection * MaxFireRange);
+	const bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_Pawn, QueryParams);
+	const FVector ProjectileEndGuess = bHit ? Hit.ImpactPoint : TraceEnd;
+
+	const FVector ProjectileDirection = (ProjectileEndGuess - ProjectileStart).GetSafeNormal();
+	const FQuat ProjectileRotation = ProjectileDirection.ToOrientationQuat();
+
+	//Get a bullet from the pool and send it off
+	ABullet* Bullet = GetAvailableBullet();
+	Bullet->SetActorLocationAndRotation(ProjectileStart, ProjectileRotation);
+	Bullet->SetTrajectory(TraceStart, TraceDirection, ProjectileDirection);
+
+	//Apply recoil
+	const float RecoilFactor = bIsAimed ? RecoilAimFactor : 1.f;
+	AddRecoilVelocity(Recoil * RecoilFactor);
+}
+
+void AGun::FireShotgun(const bool bIsAimed, FRotator BulletRotation)
+{
+	if (CurrentAmmo == 0)
+	{
+		return;
+	}
+
+	OnWeaponFire.Broadcast();
+
+	CurrentAmmo--;
+
+	const FVector TraceStart = TraceOrigin->GetComponentLocation();
+	const FVector ProjectileStart = BulletOrigin->GetSocketLocation(HeldWeaponMesh);
+	FVector TraceDirection = TraceOrigin->GetForwardVector();
+
+	const float HorizontalRandom = FMath::FRandRange(-CurrentBloom, CurrentBloom) / 180.f;
+	const float VerticalRandom = FMath::FRandRange(-CurrentBloom, CurrentBloom) / 180.f;
+
+	const FVector TraceXY = FMath::Lerp(TraceDirection, TraceOrigin->GetRightVector(), HorizontalRandom);
+	const FVector TraceZ = FMath::Lerp(TraceDirection, TraceOrigin->GetUpVector(), VerticalRandom);
+	TraceDirection = (TraceXY + TraceZ).GetSafeNormal();
+
+	AddBloom(Bloom);
+
 
 	//Compute the projectile travel vector
 	//Here we assume the projectile will end up exactly where a hitscan says it will
