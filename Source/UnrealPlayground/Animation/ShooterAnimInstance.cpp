@@ -6,6 +6,7 @@
 #include "../Weapon/CombatComponent.h"
 #include "../Player/Shooter.h"
 #include "../Weapon/MeleeWeapon.h"
+#include "Camera/CameraComponent.h"
 
 
 void UShooterAnimInstance::NativeBeginPlay()
@@ -132,4 +133,22 @@ void UShooterAnimInstance::MontageEnd(UAnimMontage* Montage, bool bInterupted)
 	{
 		ShooterCombat->ReceiveAnimationComplete();
 	}
+}
+
+FTransform UShooterAnimInstance::GetWeaponSocketTransform(FName SocketName)
+{
+	return Shooter->GetWeaponMesh()->GetSocketTransform(SocketName);
+}
+
+void UShooterAnimInstance::StartFOVLerp(const float TargetFOV, const float Time)
+{
+	AimHandle = GetWorld()->
+		GetAuthGameMode<AShooterGameMode>()->
+		GetDelayedActionManager()->
+		StartOverTimeAction(this, &UShooterAnimInstance::LerpFOV, Time, ShooterCamera->FieldOfView, TargetFOV);
+}
+
+void UShooterAnimInstance::LerpFOV(const float StartFOV, const float TargetFOV)
+{
+	ShooterCamera->FieldOfView = FMath::Lerp(StartFOV, TargetFOV, AimHandle->CurrentActionProgress);
 }

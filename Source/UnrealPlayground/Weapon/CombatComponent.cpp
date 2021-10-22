@@ -122,7 +122,12 @@ void UCombatComponent::ReceiveAttack(const bool bAttackEnabled)
 	{
 		OnAttack.Broadcast();
 		Arsenal[CurrentWeaponIndex]->StartAttack();
-		bIsInAnimation = true;	
+
+		//lazy
+		if (Arsenal[CurrentWeaponIndex]->GetClass() == AMeleeWeapon::StaticClass())
+		{
+			bIsInAnimation = true;
+		}
 	}
 }
 

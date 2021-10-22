@@ -103,6 +103,13 @@ protected:
 	/** Value used to determine how much to sway the camera by*/
 	float RecoilVelocity;
 
+	/** Value used to determine the actual impulse position*/
+	float ImpulseVelocity;
+
+	/** Current scalar value of the actual impulse*/
+	UPROPERTY(BlueprintReadOnly)
+	float ImpulsePosition;
+
 	/** Current amount of bloom applied to the primary weapon (in degrees)*/
 	float CurrentBloom;
 
@@ -178,6 +185,22 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Weapon | Firing")
 	float RecoilAimFactor;
 
+	/** How much visual impulse is applied on weapon fire. Larger values provide bigger kick back*/
+	UPROPERTY(EditAnywhere, Category = "Weapon | Firing")
+	float Impulse;
+
+	/** How quickly impulse fades away. Larger values make the impulse last shorter */
+	UPROPERTY(EditAnywhere, Category = "Weapon | Firing")
+	float ImpulseFallOff;
+
+	/** Affects how quickly do we return to the original position after impulse ends*/
+	UPROPERTY(EditAnywhere, Category = "Weapon | Firing")
+	float ImpulseRecovery;
+
+	/** Maximum amount of impulse that can be applied to the weapon*/
+	UPROPERTY(EditAnywhere, Category = "Weapon | Firing")
+	float ImpulseMax;
+
 	/** How much bloom is added to the base when the weapon is fired from the hip*/
 	UPROPERTY(EditAnywhere, Category = "Weapon | Firing")
 	float Bloom;
@@ -249,6 +272,9 @@ protected:
 
 	/** Alters the amount of weapon spread applied to the weapon*/
 	void AddBloom(const float BloomAmount);
+
+	/** Alters the amount of impulse applied to the weapon*/
+	void AddImpulseVelocity(const float Velocity);
 
 	/** Short hand pointer to the socket attached to the HeldWeaponMesh at the barrel*/
 	const USkeletalMeshSocket* BulletOrigin;

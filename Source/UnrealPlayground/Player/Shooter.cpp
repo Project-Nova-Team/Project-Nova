@@ -108,12 +108,6 @@ void AShooter::Tick(float DeltaTime)
 	InputState.Tick(DeltaTime);
 	StateMachine->Tick(DeltaTime);
 	ScanInteractiveObject();
-
-	if (InputState.bIsTryingToThrowPrimary)
-	{
-		MakeSound(NoiseAmount);
-		InputState.bIsTryingToThrowPrimary = false;
-	}
 }
 
 void AShooter::ScanInteractiveObject()
@@ -161,18 +155,12 @@ void AShooter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	InputComponent->BindAction("Interact", IE_Released, this, &AShooter::InteractRelease);
 	InputComponent->BindAction("Swap Up", IE_Pressed, this, &AShooter::SwapPressUp);
 	InputComponent->BindAction("Swap Down", IE_Pressed, this, &AShooter::SwapPressDown);
-	InputComponent->BindAction("Melee", IE_Pressed, this, &AShooter::MeleePress);
-	InputComponent->BindAction("Melee", IE_Released, this, &AShooter::MeleeRelease);
 	InputComponent->BindAction("Shoot", IE_Pressed, this, &AShooter::ShootPress);
 	InputComponent->BindAction("Shoot", IE_Released, this, &AShooter::ShootRelease);
 	InputComponent->BindAction("Sprint", IE_Pressed, this, &AShooter::SprintPress);
 	InputComponent->BindAction("Sprint", IE_Released, this, &AShooter::SprintRelease);
 	InputComponent->BindAction("Reload", IE_Pressed, this, &AShooter::ReloadPress);
 	InputComponent->BindAction("Reload", IE_Released, this, &AShooter::ReloadRelease);
-	InputComponent->BindAction("Throw Primary", IE_Pressed, this, &AShooter::ThrowPrimaryPress);
-	InputComponent->BindAction("Throw Primary", IE_Released, this, &AShooter::ThrowPrimaryRelease);
-	InputComponent->BindAction("Throw Secondary", IE_Pressed, this, &AShooter::ThrowSecondaryPress);
-	InputComponent->BindAction("Throw Secondary", IE_Released, this, &AShooter::ThrowSecondaryRelease);
 }
 
 void AShooter::OnTriggerEnter(AActor* OverlappedActor, AActor* OtherActor)
@@ -218,6 +206,8 @@ void AShooter::HandleDeath()
 {
 	StateMachine->SetState("Death");
 }
+
+
 
 bool AShooter::GetCanVault()
 {
