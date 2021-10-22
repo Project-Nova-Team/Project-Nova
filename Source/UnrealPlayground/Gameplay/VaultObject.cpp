@@ -14,3 +14,8 @@ AVaultObject::AVaultObject()
 void AVaultObject::InteractionEvent(const APawn* EventSender)
 {
 }
+
+void AVaultObject::SetInteractiveObjectHidden(bool ActiveStatus)
+{
+
+}
