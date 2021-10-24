@@ -1,7 +1,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Gameplay/VaultObject.h"
 #include "GameFramework/HUD.h"
+#include "Components/SlateWrapperTypes.h"
 #include "ShooterHUD.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FUpdateHUD);
@@ -9,6 +11,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FUpdateHUD);
 class AShooter;
 class UCombatComponent;
 class AWeapon;
+class UUserWidget;
+class AShooterGameMode;
 
 UCLASS()
 class UNREALPLAYGROUND_API AShooterHUD : public AHUD
@@ -36,6 +40,30 @@ protected:
 
 	/** Called when OnUpdate is invoked. Updates member fields below so they can be read from blueprint*/
 	void InternalUpdate();
+
+	UFUNCTION()
+	void ShowPauseMenu();
+
+	void HidePauseMenu();
+
+	uint8 bIsPaused : 1;
+
+	/** Called when shooter looks at something interactable*/
+	UFUNCTION()
+	void ShowInteractionPrompt(FHitResult Hit);
+
+	/** Called when shooter is not looking at something interactable*/
+	UFUNCTION()
+	void HideInteractionPrompt(FHitResult Hit);
+
+	UPROPERTY(BlueprintReadWrite)
+	UUserWidget* InteractionPromptWidget;
+
+	UPROPERTY(BlueprintReadWrite)
+	UUserWidget* VaultPromptWidget;
+
+	UPROPERTY(BlueprintReadWrite)
+	UUserWidget* PauseMenuWidget;
 
 	/** Max ammo that can be stored in this weapon after reloading*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HUD")

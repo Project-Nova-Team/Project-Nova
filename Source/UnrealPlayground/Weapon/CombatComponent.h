@@ -7,7 +7,9 @@
 class AGun;
 class AWeapon;
 
+/** On Animation Delegate (Aim, Reload, Swap, Attack)*/
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FAnimEvent);
+/** On Weapon Pickup or Drop Delegate*/
 DECLARE_MULTICAST_DELEGATE_OneParam(FWeaponCollectionEvent, AWeapon*);
 
 UCLASS()
@@ -40,7 +42,7 @@ public:
 	/** An anim instance should call this function with the status of a vault/aim/attack montage*/
 	void ReceiveAnimationComplete();
 
-	/** An anim instance should call this function with the status of an swap montage*/
+	/** An anim instance should call this function with the status of a swap montage*/
 	void ReceiveSwapComplete();
 
 	UFUNCTION(BlueprintCallable)
