@@ -7,9 +7,7 @@
 class AGun;
 class AWeapon;
 
-/** On Animation Delegate (Aim, Reload, Swap, Attack)*/
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FAnimEvent);
-/** On Weapon Pickup or Drop Delegate*/
 DECLARE_MULTICAST_DELEGATE_OneParam(FWeaponCollectionEvent, AWeapon*);
 
 UCLASS()
@@ -32,7 +30,9 @@ public:
 	/** Returns the max degrees of recoil offset from a gun*/
 	float GetWeaponRecoilLimit() const;
 
-	/**
+	void SetIsInAnimation(const bool Value) { bIsInAnimation = Value; }
+
+	/** 
 	 * An anim instance should call this function with the status of a reload montage
 	 * If interrupted, (by something like a swap), we dont want to add ammo to the gun
 	 * We want to make sure the animation fully completed to actually give ammo!
@@ -42,11 +42,11 @@ public:
 	/** An anim instance should call this function with the status of a vault/aim/attack montage*/
 	void ReceiveAnimationComplete();
 
-	/** An anim instance should call this function with the status of a swap montage*/
+	/** An anim instance should call this function with the status of an swap montage*/
 	void ReceiveSwapComplete();
 
 	UFUNCTION(BlueprintCallable)
-		FORCEINLINE AWeapon* GetHeldWeapon() const { return (Arsenal.Num() > 0) ? Arsenal[CurrentWeaponIndex] : nullptr; }
+	FORCEINLINE AWeapon* GetHeldWeapon() const { return (Arsenal.Num() > 0) ? Arsenal[CurrentWeaponIndex] : nullptr; }
 
 	bool GetIsAimed() const { return bIsAimed; }
 
@@ -100,7 +100,7 @@ protected:
 
 	/** Collection of weapons on this component*/
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapons | Arsenal")
-		TArray<AWeapon*> Arsenal;
+	TArray<AWeapon*> Arsenal;
 
 	/** The skeletal mesh component that holds the actual weapon mesh on the owning pawn*/
 	USkeletalMeshComponent* WeaponMesh;
@@ -113,21 +113,21 @@ protected:
 	 * For the shooter, this will determine the size of the crosshair with no weapon
 	 */
 	UPROPERTY(EditAnywhere, Category = "Weapons | General")
-		float NoWeaponBloom;
+	float NoWeaponBloom;
 
 	/**
 	 * If no weapon is being held, how fast should recoil recover
 	 * NOTE: Unless this covers an incredibly unique edge case and is likely never going to be used
 	 */
 	UPROPERTY(EditAnywhere, Category = "Weapons | General")
-		float NoWeaponRecoilRecovery;
+	float NoWeaponRecoilRecovery;
 
-	/**
+	/** 
 	 * Max number of weapons that can exist in the Arsenal. Picking up a new weapon while holding this many weapons
 	 * Will drop the currently held weapon for the new one
 	 */
 	UPROPERTY(EditAnywhere, Category = "Weapons | General")
-		uint8 MaxWeaponCount;
+	uint8 MaxWeaponCount;
 
 	/**
 	 * Whether or not the weapon is being aimed down the sights
@@ -142,7 +142,7 @@ protected:
 	/** True if a swap is currently occuring. This will be set false by anim notifies*/
 	uint8 bIsSwapping : 1;
 
-	/** True if the we are currently playing a "look down the sights" animation or melee attack animation*/
+	/** True if the we are currently playing an animation that would prevent us from peforming other actions*/
 	uint8 bIsInAnimation : 1;
 
 	/** Current index of the Arsenal array. The weapon at this index is the currently held weapon*/
