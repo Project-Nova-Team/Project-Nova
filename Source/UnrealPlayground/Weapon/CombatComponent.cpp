@@ -58,7 +58,7 @@ void UCombatComponent::PickUpWeapon(AWeapon* NewWeapon)
 	else if (Arsenal.Num() > 1)
 	{
 		Arsenal[CurrentWeaponIndex]->StopAttack();
-		CurrentWeaponIndex++;
+		CurrentWeaponIndex = Arsenal.Num() - 1;
 		WeaponMesh->SetSkeletalMesh(Arsenal[CurrentWeaponIndex]->GetSkeletalMesh());
 		SwapEvent();
 	}
@@ -82,6 +82,10 @@ void UCombatComponent::SwapEvent()
 
 	//Update UI
 	Arsenal[CurrentWeaponIndex]->OnUpdateUI.ExecuteIfBound();
+
+	//Update component offset, the animation bp will take care of the IK offsets
+	WeaponMesh->SetRelativeLocation(Arsenal[CurrentWeaponIndex]->WeaponMeshOffset);
+	WeaponMesh->SetRelativeRotation(Arsenal[CurrentWeaponIndex]->WeaponMeshRotationOffset);
 }
 
 void UCombatComponent::ReceiveSwap(const int32 Direction)

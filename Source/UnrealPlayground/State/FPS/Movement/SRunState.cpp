@@ -8,27 +8,27 @@ void USRunState::Initialize(UStateMachine* StateMachine, UObject* ContextObject)
 	MoveAcceleration = Movement->RunAcceleration;
 }
 
-<<<<<<< Updated upstream
-=======
+<<<<<<< HEAD
 void USRunState::OnEnter()
 {
 	Super::OnEnter();
-	//Shooter->GetCombat()->SetIsInAnimation(true);
+	Shooter->GetCombat()->SetIsInAnimation(true);
 }
 
 void USRunState::OnExit()
 {
 	Super::OnExit();
-	//Shooter->GetCombat()->SetIsInAnimation(false);
+	Shooter->GetCombat()->SetIsInAnimation(false);
 }
 
->>>>>>> Stashed changes
+=======
+>>>>>>> parent of 462e351 (fixed the git reset)
 void USRunState::Tick(const float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	CheckForVault();
 	CheckForWalkState();
-	CheckForDiveState();
+	//CheckForDiveState();
 }
 
 void USRunState::CheckForWalkState()
