@@ -5,7 +5,20 @@
 #include "Engine/SkeletalMeshSocket.h"
 #include "Bullet.h"
 
+<<<<<<< Updated upstream
 // Sets default values
+=======
+FGunUIData AGun::GetGunUI() const
+{
+	FGunUIData Data;
+	Data.AmmoInClip = CurrentAmmo;
+	Data.ExcessAmmo = ExccessAmmo;
+	Data.ClipSize = ClipSize;
+
+	return Data;
+}
+
+>>>>>>> Stashed changes
 AGun::AGun()
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.

@@ -42,9 +42,9 @@ void ABullet::Tick(float DeltaTime)
 	SetActorLocation(GetActorLocation() + DeltaProjectile);
 
 	FHitResult Hit;
-	
+
 	GetWorld()->LineTraceSingleByChannel(Hit, CurrentTraceLocation, TraceEnd, ECC_Visibility, QueryParams);
-	
+
 	if (Hit.bBlockingHit)
 	{
 		if (Hit.Actor != nullptr)

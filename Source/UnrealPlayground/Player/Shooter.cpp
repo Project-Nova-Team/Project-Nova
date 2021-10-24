@@ -26,7 +26,7 @@ void FShooterInput::HandleCrouchInputStates(const float DeltaTime)
 	{
 		CurrentCrouchHoldTime += DeltaTime;
 		if (CurrentCrouchHoldTime >= Owner->ShooterMovement->ProneInputTime)
-		{		
+		{
 			CurrentCrouchHoldTime = 0;
 			bIsHoldingCrouch = false;
 			bIsTryingToProne = true;
@@ -115,7 +115,7 @@ void AShooter::ScanInteractiveObject()
 {
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(this);
-	
+
 	const FVector TraceStart = Camera->GetComponentLocation();
 	const FVector TraceEnd = TraceStart + Camera->GetForwardVector() * FMath::Min(ShooterMovement->StandingHeight * 2.f, ShooterMovement->InteractionDistance);
 	const bool bHit = GetWorld()->LineTraceSingleByChannel(ScanHit, TraceStart, TraceEnd, ECC_Camera, QueryParams);
@@ -123,10 +123,12 @@ void AShooter::ScanInteractiveObject()
 	//Do we need to look at something to interact? Do we need to just be near it?
 
 	//We're looking at an object that is interactive
-	if(bHit && ScanHit.Actor != nullptr && ScanHit.Actor->Implements<UInteractiveObject>())
-	{	
+	if (bHit && ScanHit.Actor != nullptr && ScanHit.Actor->Implements<UInteractiveObject>())
+	{
 		//Lets us do UI things in blueprint
 		OnScanHit.Broadcast(ScanHit);
+
+		bIsScanningInteractiveObject = true;
 
 		if (InputState.bIsTryingToInteract)
 		{
@@ -134,11 +136,16 @@ void AShooter::ScanInteractiveObject()
 			InteractiveObject->InteractionEvent(this);
 
 			InputState.bIsTryingToInteract = false;
-		}	
+		}
 	}
-	else 
+	else
 	{
-		OnScanMiss.Broadcast(ScanHit);
+		if (bIsScanningInteractiveObject)
+		{
+			OnScanMiss.Broadcast(ScanHit);
+			// makes sure that OnScanMiss is not always being called
+			bIsScanningInteractiveObject = false;
+		}
 	}
 
 #if WITH_EDITOR
@@ -174,10 +181,16 @@ void AShooter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	InputComponent->BindAction("Sprint", IE_Released, this, &AShooter::SprintRelease);
 	InputComponent->BindAction("Reload", IE_Pressed, this, &AShooter::ReloadPress);
 	InputComponent->BindAction("Reload", IE_Released, this, &AShooter::ReloadRelease);
+<<<<<<< Updated upstream
 	InputComponent->BindAction("Throw Primary", IE_Pressed, this, &AShooter::ThrowPrimaryPress);
 	InputComponent->BindAction("Throw Primary", IE_Released, this, &AShooter::ThrowPrimaryRelease);
 	InputComponent->BindAction("Throw Secondary", IE_Pressed, this, &AShooter::ThrowSecondaryPress);
 	InputComponent->BindAction("Throw Secondary", IE_Released, this, &AShooter::ThrowSecondaryRelease);
+=======
+	// bind pause to game mode because pausing is not a shooter behavior
+	InputComponent->BindAction("Pause", IE_Pressed, GetWorld()->GetAuthGameMode<AShooterGameMode>(), &AShooterGameMode::PauseGame)
+		.bExecuteWhenPaused = true;;
+>>>>>>> Stashed changes
 }
 
 void AShooter::OnTriggerEnter(AActor* OverlappedActor, AActor* OtherActor)
@@ -216,7 +229,7 @@ void AShooter::MakeSound(const float Volume)
 	const bool bHit = GetWorld()->LineTraceSingleByChannel(SoundHit, TraceStart, TraceEnd, ECC_Camera, QueryParams);
 
 	if (bHit)
-	{	
+	{
 		ShooterMakeNoise(SoundHit.ImpactPoint, Volume);
 		DrawDebugSphere(GetWorld(), SoundHit.ImpactPoint, 20, 20, FColor::Blue, true);
 	}
