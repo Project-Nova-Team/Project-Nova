@@ -3,7 +3,6 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Engine/SkeletalMeshSocket.h"
 
-<<<<<<< HEAD
 
 FGunUIData AGun::GetGunUI() const
 {
@@ -15,9 +14,6 @@ FGunUIData AGun::GetGunUI() const
 	return Data;
 }
 
-=======
-// Sets default values
->>>>>>> parent of 462e351 (fixed the git reset)
 AGun::AGun()
 {
 	PrimaryActorTick.bCanEverTick = true;
