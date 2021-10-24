@@ -17,6 +17,7 @@ AWeapon::AWeapon()
 	ThrowForce = 100000.f;
 
 	BaseDamage = 25.f;
+	ImpulseKickFactor = .3f;
 }
 
 void AWeapon::InteractionEvent(const APawn* EventSender)

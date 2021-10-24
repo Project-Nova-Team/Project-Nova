@@ -49,12 +49,18 @@ void UShooterAnimInstance::BindVault()
 
 void UShooterAnimInstance::ReceiveNewWeaponPickup(AWeapon* NewWeapon)
 {
-	NewWeapon->OnWeaponAttack.AddDynamic(this, &UShooterAnimInstance::PlayAttackMontage);
+	if (NewWeapon->IsA(AMeleeWeapon::StaticClass()))
+	{
+		NewWeapon->OnWeaponAttack.AddDynamic(this, &UShooterAnimInstance::PlayAttackMontage);
+	}
 }
 
 void UShooterAnimInstance::ReceiveNewWeaponDrop(AWeapon* NewWeapon)
 {
-	NewWeapon->OnWeaponAttack.RemoveDynamic(this, &UShooterAnimInstance::PlayAttackMontage);
+	if (NewWeapon->GetClass() == AMeleeWeapon::StaticClass())
+	{
+		NewWeapon->OnWeaponAttack.RemoveDynamic(this, &UShooterAnimInstance::PlayAttackMontage);
+	}
 }
 
 bool UShooterAnimInstance::IsWalking()
@@ -65,6 +71,11 @@ bool UShooterAnimInstance::IsWalking()
 bool UShooterAnimInstance::IsFalling()
 {
 	return !ShooterMovement->bIsOnGround;
+}
+
+bool UShooterAnimInstance::IsRunning()
+{
+	return Shooter->GetStateMachine()->GetActiveState() == Shooter->GetStateMachine()->GetStateAtKey("Running");
 }
 
 void UShooterAnimInstance::PlayVaultMontage()

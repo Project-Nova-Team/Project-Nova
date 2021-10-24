@@ -2,7 +2,6 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "InstructionComponent.h"
 #include "AIBase.generated.h"
 
 class UMeleeComponent;
