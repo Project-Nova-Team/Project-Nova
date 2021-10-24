@@ -30,6 +30,8 @@ public:
 	/** Returns the max degrees of recoil offset from a gun*/
 	float GetWeaponRecoilLimit() const;
 
+	void SetIsInAnimation(const bool Value) { bIsInAnimation = Value; }
+
 	/** 
 	 * An anim instance should call this function with the status of a reload montage
 	 * If interrupted, (by something like a swap), we dont want to add ammo to the gun
@@ -140,7 +142,7 @@ protected:
 	/** True if a swap is currently occuring. This will be set false by anim notifies*/
 	uint8 bIsSwapping : 1;
 
-	/** True if the we are currently playing a "look down the sights" animation or melee attack animation*/
+	/** True if the we are currently playing an animation that would prevent us from peforming other actions*/
 	uint8 bIsInAnimation : 1;
 
 	/** Current index of the Arsenal array. The weapon at this index is the currently held weapon*/

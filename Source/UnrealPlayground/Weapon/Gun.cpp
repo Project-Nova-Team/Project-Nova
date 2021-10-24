@@ -32,17 +32,18 @@ AGun::AGun()
 	HeadMultiplier = 2.f;
 	LimbMultiplier = 0.5f;
 
-	FireRate = 0.05f;
-	Recoil = 20.f;
+	FireRate = 0.15f;
+	Recoil = 40.f;
 	RecoilAimFactor = 0.5f;
 	RecoilFallOff = 300.f;
-	RecoilRecovery = 30.f;
-	RecoilAngularLimit = 15.f;
+	RecoilRecovery = 20.f;
+	RecoilAngularLimit = 10.f;
 
 	Impulse = 200.f;
-	ImpulseFallOff = 1000.f;
-	ImpulseRecovery = 60.f;
-	ImpulseMax = 50.f;
+	ImpulseFallOff = 500.f;
+	ImpulseRecovery = 200.f;
+	ImpulseVelocityMax = 50.f;
+	ImpulseMax = 10.f;
 
 	BloomMax = 90.f;
 	Bloom = 5.f;
@@ -289,7 +290,7 @@ void AGun::AddBloom(const float BloomAmount)
 void AGun::AddImpulseVelocity(const float Velocity)
 {
 	ImpulseVelocity += Velocity;
-	ImpulseVelocity = FMath::Clamp(ImpulseVelocity, 0.f, ImpulseMax);
+	ImpulseVelocity = FMath::Clamp(ImpulseVelocity, 0.f, ImpulseVelocityMax);
 }
 
 void AGun::SetBloomMin(const EWeaponFireStance Stance, const bool bIsMoving)

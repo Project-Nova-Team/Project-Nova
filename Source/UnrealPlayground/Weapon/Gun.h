@@ -205,7 +205,11 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Weapon | Firing")
 	float ImpulseRecovery;
 
-	/** Maximum amount of impulse that can be applied to the weapon*/
+	/** Maximum amount of impulse rate of change that can be applied to the weapon*/
+	UPROPERTY(EditAnywhere, Category = "Weapon | Firing")
+	float ImpulseVelocityMax;
+
+	/** Maximum amount of impulse offset that can be applied to the weapon*/
 	UPROPERTY(EditAnywhere, Category = "Weapon | Firing")
 	float ImpulseMax;
 
