@@ -2,6 +2,7 @@
 
 #include "SMovementState.h"
 #include "../../../Weapon/Gun.h"
+#include "../../../Weapon/ShooterCombatComponent.h"
 
 void USMovementState::Initialize(UStateMachine* StateMachine, UObject* ContextObject)
 {
@@ -192,7 +193,7 @@ void USMovementState::RotateCameraFromInput(const float DeltaTime)
 	if (RecoilVelocity > 0.f)
 	{	
 		float NewPitch = RelativeLook.Pitch + RecoilVelocity * DeltaTime;
-		const float AngularLimit = Shooter->GetCombat()->GetWeaponRecoilLimit();
+		const float AngularLimit = Shooter->GetCombat()->GetPrimaryWeapon()->GetRecoilLimit();
 
 		//The new recoil pitch would have us look further upwards than we allow, clamp it
 		if (NewPitch + AnchorRotation.Pitch > Movement->CameraMaxAngle)
@@ -214,7 +215,7 @@ void USMovementState::RotateCameraFromInput(const float DeltaTime)
 	//Weapon impulse ended, reset towards the anchors forward
 	else if (RelativeLook.Pitch > 0.f)
 	{
-		const float Delta = Shooter->GetCombat()->GetWeaponRecoilRecovery() * DeltaTime;
+		const float Delta = Shooter->GetCombat()->GetPrimaryWeapon()->GetRecoilRecovery() * DeltaTime;
 		float NewPitch = RelativeLook.Pitch - Delta;
 
 		//Don't rotate further down than where we started
