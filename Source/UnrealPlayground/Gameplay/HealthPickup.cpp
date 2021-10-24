@@ -20,7 +20,18 @@ void AHealthPickup::InteractionEvent(const APawn* EventSender)
 		// if health is not full, heal by heal amount
 		PawnHealthComponent->Heal(HealAmount);
 
-		//do idestroyable here
-		//SetInteractiveObjectHidden(true);
+		SetInteractiveObjectHidden(true);
 	}
+}
+
+void AHealthPickup::SetInteractiveObjectHidden(bool ActiveState)
+{
+	// Hides visible components
+	SetActorHiddenInGame(ActiveState);
+
+	// Disables collision components
+	SetActorEnableCollision(false);
+
+	// Stops the Actor from ticking
+	SetActorTickEnabled(false);
 }
