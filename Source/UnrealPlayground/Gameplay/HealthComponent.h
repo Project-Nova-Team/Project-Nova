@@ -23,9 +23,6 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Health")
 	uint8 bIsFullHealth : 1;
 
-protected:
-	virtual void BeginPlay() override;
-
 	/** Event that is fired when taking damage that would leave us below 0 health*/
 	UPROPERTY(BlueprintAssignable)
 	FHealthEvent OnDeath;

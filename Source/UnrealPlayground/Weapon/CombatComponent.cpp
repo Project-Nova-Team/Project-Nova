@@ -37,26 +37,21 @@ void UCombatComponent::BeginPlay()
 
 void UCombatComponent::PickUpWeapon(AWeapon* NewWeapon)
 {
-	// Emplace calls constructor of weapon, add does not. We can change this if need be
 	Arsenal.Emplace(NewWeapon);
 	//We are holding too many weapons, drop the currently held one
 	if (Arsenal.Num() > MaxWeaponCount)
 	{
-		// broadcast removal delegate
 		OnArsenalRemoval.Broadcast(Arsenal[CurrentWeaponIndex]);
-		// setting these values to null will add force to the weapon (throw)
 		Arsenal[CurrentWeaponIndex]->SetWeaponSceneValues(nullptr, nullptr);
-		// Element-wise array memory swap - current weapon to last
 		Arsenal.SwapMemory(CurrentWeaponIndex, Arsenal.Num() - 1);
-		// remove "current" weapon
 		Arsenal.RemoveAt(Arsenal.Num() - 1);
 		WeaponMesh->SetSkeletalMesh(Arsenal[CurrentWeaponIndex]->GetSkeletalMesh());
 		SwapEvent();
 	}
 
 	//We picked up a new weapon but havent gone over our weapon limit, just swap to it
-	else if (Arsenal.Num() > 1)
-	{
+	else if(Arsenal.Num() > 1)
+	{		
 		Arsenal[CurrentWeaponIndex]->StopAttack();
 		CurrentWeaponIndex = Arsenal.Num() - 1;
 		WeaponMesh->SetSkeletalMesh(Arsenal[CurrentWeaponIndex]->GetSkeletalMesh());
@@ -79,7 +74,7 @@ void UCombatComponent::SwapEvent()
 	//Play swapping animation
 	OnSwap.Broadcast();
 	bIsSwapping = true;
-
+	
 	//Update UI
 	Arsenal[CurrentWeaponIndex]->OnUpdateUI.ExecuteIfBound();
 
@@ -101,9 +96,7 @@ void UCombatComponent::ReceiveSwap(const int32 Direction)
 	//If we swap past the last or before the first index, loop to the other end
 	const int32 LastIndex = WeaponCount - 1;
 	int32 NewIndex = CurrentWeaponIndex + Direction;
-	// if newindex > lastindex set it to 0
 	NewIndex = NewIndex > LastIndex ? 0 : NewIndex;
-	// if newindex is less than 0 set it to lastindex
 	NewIndex = NewIndex < 0 ? LastIndex : NewIndex;
 
 	CurrentWeaponIndex = NewIndex;
@@ -128,7 +121,7 @@ void UCombatComponent::ReceiveAttack(const bool bAttackEnabled)
 	{
 		Arsenal[CurrentWeaponIndex]->StopAttack();
 	}
-
+	
 	else
 	{
 		OnAttack.Broadcast();
@@ -154,10 +147,10 @@ void UCombatComponent::ReceiveAim()
 	Arsenal[CurrentWeaponIndex]->SetAim(bIsAimed);
 
 	bIsInAnimation = true;
-
+	
 	if (bIsAimed)
-	{
-		OnAimStart.Broadcast();
+	{	
+		OnAimStart.Broadcast();	
 	}
 
 	else
@@ -178,7 +171,7 @@ void UCombatComponent::ReceiveReload()
 	{
 		return;
 	}
-
+	
 	bIsReloading = true;
 
 	//Play reload animation
@@ -201,7 +194,7 @@ void UCombatComponent::ReceiveReloadComplete(const bool bInterrupted)
 //FIX - BAD - Weapon should have each of these values
 
 float UCombatComponent::GetWeaponRecoilVelocity() const
-{
+{	
 	AGun* const WeaponAsGun = Cast<AGun>(GetHeldWeapon());
 
 	if (WeaponAsGun != nullptr)
