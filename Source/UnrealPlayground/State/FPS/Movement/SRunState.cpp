@@ -8,6 +8,21 @@ void USRunState::Initialize(UStateMachine* StateMachine, UObject* ContextObject)
 	MoveAcceleration = Movement->RunAcceleration;
 }
 
+<<<<<<< Updated upstream
+=======
+void USRunState::OnEnter()
+{
+	Super::OnEnter();
+	//Shooter->GetCombat()->SetIsInAnimation(true);
+}
+
+void USRunState::OnExit()
+{
+	Super::OnExit();
+	//Shooter->GetCombat()->SetIsInAnimation(false);
+}
+
+>>>>>>> Stashed changes
 void USRunState::Tick(const float DeltaTime)
 {
 	Super::Tick(DeltaTime);

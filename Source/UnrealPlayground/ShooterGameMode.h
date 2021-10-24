@@ -9,11 +9,14 @@ class UDelayedActionManager;
 class AShooter;
 class AAICell;
 
+/** On Pause Delegate*/
+DECLARE_MULTICAST_DELEGATE(FPauseEvent);
+
 UCLASS()
 class UNREALPLAYGROUND_API AShooterGameMode : public AGameModeBase
 {
 	GENERATED_BODY()
-	
+
 public:
 
 	AShooterGameMode();
@@ -23,20 +26,26 @@ public:
 
 	UDelayedActionManager* GetDelayedActionManager() const { return DelayedActionManager; }
 
+	// public in order to be bound to input delegate
+	UFUNCTION()
+		void PauseGame();
+
+	FPauseEvent OnPause;
+
 private:
 	UPROPERTY(Transient)
-	UDelayedActionManager* DelayedActionManager;
+		UDelayedActionManager* DelayedActionManager;
 
 	/** Collection of all the AI cells in the level. Fetched once on level load*/
 	UPROPERTY(Transient)
-	TArray<AAICell*> AICells;
-	
+		TArray<AAICell*> AICells;
+
 	UPROPERTY(Transient)
-	AShooter* Player;
+		AShooter* Player;
 
 	/** Invoked when the player dies*/
 	UFUNCTION()
-	void PlayerDeath();
+		void PlayerDeath();
 
 	//TODO parsing the actor hierarchy is and always will be a crime
 	//We will be serializing AICells and the player in builds

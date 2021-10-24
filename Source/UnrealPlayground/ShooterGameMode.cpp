@@ -53,3 +53,8 @@ void AShooterGameMode::PlayerDeath()
 {
 	//Do reset pipeline stuff here when player dies
 }
+
+void AShooterGameMode::PauseGame()
+{
+	OnPause.Broadcast();
+}
