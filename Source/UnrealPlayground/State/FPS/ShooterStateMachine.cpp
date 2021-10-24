@@ -3,7 +3,6 @@
 #include "Movement/SRunState.h"
 #include "Movement/SCrouchState.h"
 #include "Movement/SProneState.h"
-#include "Movement/SDiveState.h"
 #include "Event/SVaultState.h"
 #include "Event/SDeathState.h"
 
@@ -17,7 +16,6 @@ void UShooterStateMachine::Initialize(UObject* Context)
 	this->AddState<USProneState>(Context, "Proning");
 	this->AddState<USVaultState>(Context, "Vaulting");
 	this->AddState<USDeathState>(Context, "Death");
-	this->AddState<USDiveState>(Context, "Diving", false);
 
 	this->SetInitialState("Walking");
 	this->GetActiveState()->OnEnter();

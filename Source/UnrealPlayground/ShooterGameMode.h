@@ -9,9 +9,6 @@ class UDelayedActionManager;
 class AShooter;
 class AAICell;
 
-/** On Pause Delegate*/
-DECLARE_MULTICAST_DELEGATE(FPauseEvent);
-
 UCLASS()
 class UNREALPLAYGROUND_API AShooterGameMode : public AGameModeBase
 {
@@ -25,12 +22,6 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	UDelayedActionManager* GetDelayedActionManager() const { return DelayedActionManager; }
-
-	// public in order to be bound to input delegate
-	UFUNCTION()
-	void PauseGame();
-
-	FPauseEvent OnPause;
 
 private:
 	UPROPERTY(Transient)

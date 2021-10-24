@@ -2,12 +2,11 @@
 #include "ShooterController.h"
 #include "Player/Shooter.h"
 #include "../UnrealPlayground/Weapon/Gun.h"
-#include "../UnrealPlayground/ShooterGameMode.h"
-#include "Blueprint/UserWidget.h"
-#include "Weapon/CombatComponent.h"
+#include "Weapon/ShooterCombatComponent.h"
 
 AShooterHUD::AShooterHUD()
 {
+	PrimaryActorTick.bCanEverTick = true;
 	bShowHUD = false;
 }
 
@@ -20,50 +19,26 @@ void AShooterHUD::Initialize()
 		Shooter = Cast<AShooter>(Pawn);
 		Combat = Shooter->GetCombat();
 	}
-
-	Combat->OnArsenalAddition.AddUObject(this, &AShooterHUD::ReceiveWeapon);
-	Combat->OnArsenalRemoval.AddUObject(this, &AShooterHUD::ReleaseWeapon);
-
-	if(GetWorld()->GetAuthGameMode<AShooterGameMode>())
-		GetWorld()->GetAuthGameMode<AShooterGameMode>()->OnPause.AddUObject(this, &AShooterHUD::ShowPauseMenu);
-
-	Shooter->OnScanHit.AddDynamic(this, &AShooterHUD::ShowInteractionPrompt);
-	Shooter->OnScanMiss.AddDynamic(this, &AShooterHUD::HideInteractionPrompt);
 }
 
 void AShooterHUD::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	Bloom = Combat->GetWeaponBloom();
-}
 
-void AShooterHUD::ReceiveWeapon(AWeapon* NewWeapon)
-{
-	NewWeapon->OnUpdateUI.BindUObject(this, &AShooterHUD::InternalUpdate);
-	InternalUpdate();
-}
-
-void AShooterHUD::ReleaseWeapon(AWeapon* NewWeapon)
-{
-	NewWeapon->OnUpdateUI.Unbind();
-	InternalUpdate();
-}
-
-void AShooterHUD::InternalUpdate()
-{
-	bPlayerHasWeapon = Combat->GetHeldWeapon() != nullptr;
-	Bloom = Combat->GetWeaponBloom();
-
-	AGun* HeldAsGun = Cast<AGun>(Combat->GetHeldWeapon());
-
-	if(HeldAsGun != nullptr)
+	if (Combat == nullptr)
 	{
-		const FGunUIData Data = HeldAsGun->GetGunUI();
+		return;
+	}
+
+	bPlayerHasWeapon = Combat->GetPrimaryWeapon() != nullptr;
+	Bloom = Combat->GetWeaponBloom();
+
+	if (bPlayerHasWeapon)
+	{
+		const FWeaponUIData Data = Combat->GetPrimaryWeapon()->GetWeaponUI();
 		MaxAmmoInWeapon = Data.ClipSize;
 		AmmoInWeapon = Data.AmmoInClip;
 		ExcessAmmo = Data.ExcessAmmo;
-
-		//TODO set FWeaponUIData fields here as well
 	}
 
 	else
@@ -72,63 +47,4 @@ void AShooterHUD::InternalUpdate()
 		AmmoInWeapon = 0;
 		ExcessAmmo = 0;
 	}
-
-	OnUpdate.Broadcast();
-}
-
-void AShooterHUD::ShowPauseMenu()
-{
-	if (!bIsPaused)
-	{
-		PauseMenuWidget->SetVisibility(ESlateVisibility::Visible);
-
-		if (Shooter->GetController<APlayerController>())
-		{
-			Shooter->GetController<APlayerController>()->SetPause(true);
-			Shooter->GetController<APlayerController>()->bShowMouseCursor = true;
-		}
-
-		bIsPaused = true;
-	}
-	else
-	{
-		HidePauseMenu();
-		bIsPaused = false;
-	}
-}
-
-void AShooterHUD::HidePauseMenu()
-{
-	if (Shooter->GetController<APlayerController>())
-	{
-		Shooter->GetController<APlayerController>()->bShowMouseCursor = false;
-		Shooter->GetController<APlayerController>()->SetPause(false);
-	}
-	PauseMenuWidget->SetVisibility(ESlateVisibility::Collapsed);
-}
-
-void AShooterHUD::ShowInteractionPrompt(FHitResult Hit)
-{
-	if (Hit.GetActor()->IsA(AVaultObject::StaticClass()))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("%s"), *Hit.GetActor()->GetName());
-		Shooter->bIsLookingAtVaultObject = true;
-		if (Shooter->GetCanVault())
-		{
-			VaultPromptWidget->SetVisibility(ESlateVisibility::HitTestInvisible);
-			Shooter->GetShooterMovement()->bCanVault = true;
-		}
-	}
-	else
-	{
-		InteractionPromptWidget->SetVisibility(ESlateVisibility::HitTestInvisible);
-	}
-}
-
-void AShooterHUD::HideInteractionPrompt(FHitResult Hit)
-{
-	Shooter->bIsLookingAtVaultObject = false;
-	Shooter->GetShooterMovement()->bCanVault = false;
-	InteractionPromptWidget->SetVisibility(ESlateVisibility::Collapsed);
-	VaultPromptWidget->SetVisibility(ESlateVisibility::Collapsed);
 }

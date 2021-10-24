@@ -4,18 +4,17 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
+#include <UnrealPlayground/Player/Shooter.h>
+#include "../State/State.h"
+#include "../State/FPS/ShooterStateMachine.h"
+#include "../Player/ShooterMovementComponent.h"
+#include "../Weapon/ShooterCombatComponent.h"
 #include "ShooterAnimInstance.generated.h"
 
-class AShooter;
-class AWeapon;
-class UCameraComponent;
-class UShooterMovementComponent;
-class UCombatComponent;
-class UMeleeComponent;
-class USVaultState;
-struct FDelayedActionHandle;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FAimEvent);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FVaultEvent);
+
+class FOnMontageEndedMCDelegate;
 
 UCLASS()
 class UNREALPLAYGROUND_API UShooterAnimInstance : public UAnimInstance
@@ -23,6 +22,13 @@ class UNREALPLAYGROUND_API UShooterAnimInstance : public UAnimInstance
 	GENERATED_BODY()
 
 public:
+	UShooterAnimInstance();
+	~UShooterAnimInstance();
+
+	/** Broadcasts event for vaulting animation*/
+	UFUNCTION(BlueprintCallable, Category = "Animation")
+	void BroadcastVaultEvent();
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
 	UAnimMontage* VaultAnimMontage;
 
@@ -32,37 +38,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
 	UAnimMontage* ReloadAnimMontage;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
-	UAnimMontage* AimStartAnimMontage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
-	UAnimMontage* AimStopAnimMontage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
-	UAnimMontage* MeleeAttackMontage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
-	class UCameraAnim* CameraDeathAnimation;
-
-	//Need this to gurantee the State machine is loaded before we try and bind the event
-	//Lazy implementation
-	void BindVault();
-
-protected:
-
-	UPROPERTY(BlueprintAssignable)
-	FAimEvent OnAimStart;
-
-	UPROPERTY(BlueprintAssignable)
-	FAimEvent OnAimStop;
-
-	UFUNCTION()
-	void ReceiveNewWeaponPickup(AWeapon* NewWeapon);
-
-	UFUNCTION()
-	void ReceiveNewWeaponDrop(AWeapon* NewWeapon);
-
 private:
+
+	/**Invoked when the shooter can vault and presses space*/
+	UPROPERTY(BlueprintAssignable)
+	FVaultEvent OnVaultPress;
 
 	USkeletalMeshComponent* ShooterMesh;
 
@@ -76,9 +56,6 @@ private:
 	UFUNCTION(BlueprintCallable, Category = "Animation")
 		bool IsFalling();
 
-
-	/** Execute Montages*/
-
 	UFUNCTION(BlueprintCallable, Category = "Animation")
 		void PlayVaultMontage();
 
@@ -86,56 +63,23 @@ private:
 		void PlaySwapMontage();
 
 	UFUNCTION(BlueprintCallable, Category = "Animation")
-	void PlayReloadMontage();
+		void PlayReloadMontage();
 
-	UFUNCTION(BlueprintCallable, Category = "Animation")
-	void PlayAimStartMontage();
-
-	UFUNCTION(BlueprintCallable, Category = "Animation")
-	void PlayAimStopMontage();
-
-	UFUNCTION(BlueprintCallable, Category = "Animation")
-	void StopMontageFromAttack();
-
-	UFUNCTION(BlueprintCallable, Category = "Animation")
-	void PlayAttackMontage();
-
+	/** Called when a montage ends*/
 	UFUNCTION()
-	void MontageEnd(UAnimMontage* Montage, bool bInterupted);
+		void OnMontageEndMethod(UAnimMontage* Montage, bool bInterupted);
 
 	void NativeBeginPlay() override;
 
 protected:
 
 	/** Shooter Reference - obtained by getting owner and casting to AShooter*/
-	UPROPERTY(BlueprintReadOnly)
 	AShooter* Shooter;
 
-	UPROPERTY(BlueprintReadOnly)
 	UShooterMovementComponent* ShooterMovement;
 
+	// Combat Component for Swap
 	UPROPERTY(BlueprintReadOnly)
-	UCombatComponent* ShooterCombat;
-
-	UPROPERTY(BlueprintReadOnly)
-	UCameraComponent* ShooterCamera;
-
-	UPROPERTY(BlueprintReadOnly)
-	UMeleeComponent* ShooterMelee;
-
-	/** Returns the transform of the weapon socket by name*/
-	UFUNCTION(BlueprintCallable)
-	FTransform GetWeaponSocketTransform(FName SocketName);
-
-	UFUNCTION(BlueprintCallable)
-	void StartFOVLerp(const float TargetFOV, const float Time);
-
-	void LerpFOV(const float StartFOV, const float TargetFOV);
-
-	//Ugly
-	USVaultState* Vault;
-
-private:
-	/**Handle for aim fov lerping*/
-	FDelayedActionHandle* AimHandle;
+	UShooterCombatComponent* ShooterCombat;
+	
 };
