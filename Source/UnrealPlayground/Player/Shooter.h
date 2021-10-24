@@ -4,13 +4,14 @@
 #include "GameFramework/Pawn.h"
 #include "ShooterMovementComponent.h"
 #include "WeaponInput.h"
-#include "../Weapon/CombatComponent.h"
+#include "Animation/AnimInstance.h"
 #include "Shooter.generated.h"
 
 class UCapsuleComponent;
 class UCameraComponent;
 class UShooterStateMachine;
-class UMeleeComponent;
+class UPawnMovementComponent;
+class UShooterCombatComponent;
 class UHealthComponent;
 class UAIPerceptionStimuliSourceComponent;
 class IInteractiveObject;
@@ -19,11 +20,10 @@ class AGun;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FScanEvent, FHitResult, ScanData);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FShooterMakeNoise, FVector, Location, float, Volume);
 
-
 struct FShooterInput : public FWeaponInput
 {
+public:
 	FShooterInput() { }
-
 	/** 
 	* Runs within the shooter's Tick to handle any input states that need to be watched 
 	* @param	DeltaTime				Time slice
@@ -39,11 +39,20 @@ struct FShooterInput : public FWeaponInput
 	/** How long crouch has been held for since the last release*/
 	float CurrentCrouchHoldTime;
 
+	/** X-axis movement input*/
+	float MoveX;
+
+	/** Y-axis movement input*/
+	float MoveY;
+
+	/** X-axis look input*/
+	float LookX;
+
+	/** Y-axis look input*/
+	float LookY;
+
 	/** Whether or not the player is pressing the jump button*/
 	uint8 bIsTryingToVault : 1;
-
-	/** Whether or not the player is pressing the interact button*/
-	uint8 bIsTryingToInteract : 1;
 
 	/** Whether or not the player is pressing the crouch button*/
 	uint8 bIsHoldingCrouch : 1;
@@ -73,46 +82,39 @@ public:
 
 	friend struct FShooterInput;
 
-	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const { return WeaponMesh; }
+	USkeletalMeshComponent* GetWeaponMesh() const { return WeaponMesh; }
 
 	/** Returns the capsule component attached to this shooter*/
-	FORCEINLINE UCapsuleComponent* GetCollider() const { return Collider; }
+	UCapsuleComponent* GetCollider() const { return Collider; }
 
 	/** Returns the camera anchor component attached to this shooter*/
-	FORCEINLINE USceneComponent* GetAnchor() const { return CameraAnchor; }
+	USceneComponent* GetAnchor() const { return CameraAnchor; }
 	
 	/** Returns the combat component attached to this shooter*/
-	FORCEINLINE UCombatComponent* GetCombat() const { return Combat; }
+	UShooterCombatComponent* GetCombat() const { return Combat; }
 
 	/** Returns the camera component attached to this shooter*/
-	FORCEINLINE UCameraComponent* GetCamera() const { return Camera; }
+	UCameraComponent* GetCamera() const { return Camera; }
 
 	/** Returns the state machine attached to the shooter which drives player movement*/
-	FORCEINLINE UShooterStateMachine* GetStateMachine() const { return StateMachine; }
+	UShooterStateMachine* GetStateMachine() const { return StateMachine; }
 
-	FORCEINLINE UHealthComponent* GetHealth() const { return Health; }
-
-	/** Returns the input state. Note: contents are mutable*/
-	FORCEINLINE FShooterInput* GetInput() { return &InputState; }
+	UHealthComponent* GetHealth() const { return Health; }
 
 	/** Returns the input state. Note: contents are mutable*/
-	UFUNCTION(BlueprintCallable)
-	FORCEINLINE FWeaponInput GetInputRaw() { return FWeaponInput(InputState); }
+	FShooterInput* GetInput() { return &InputState; }
 
 	/** Returns the Skeletal Mesh component of this shooter*/
-	FORCEINLINE USkeletalMeshComponent* GetSkeletalMeshComponent() { return ShooterSkeletalMesh; }
+	USkeletalMeshComponent* GetSkeletalMeshComponent() { return ShooterSkeletalMesh; }
 
-	/** Returns the Shooter Movement component attached to this shooter*/
-	FORCEINLINE UShooterMovementComponent* GetShooterMovement() { return ShooterMovement; }
-
-	/** Returns the Melee component attached to this shooter*/
-	FORCEINLINE UMeleeComponent* GetMelee() { return Melee; }
+	/** Returns the Shooter_Movement component attached to this shooter*/
+	UShooterMovementComponent* GetShooterMovement() { return ShooterMovement; }
 
 	/** Returns the Perception Source component which enables AI to sense stimulus produced by this actor*/
-	FORCEINLINE UAIPerceptionStimuliSourceComponent* GetPerceptionSource() const { return PerceptionSource; }
+	UAIPerceptionStimuliSourceComponent* GetPerceptionSource() const { return PerceptionSource; }
 
 	/** Returns State Machine. Maybe consider moving this to shooter movement component?*/
-	FORCEINLINE UShooterStateMachine* GetStateMachine() { return StateMachine; }
+	UShooterStateMachine* GetStateMachine() { return StateMachine; }
 
 	/** Draws debug traces for a variety of position tests if enabled*/
 	UPROPERTY(Category = Pawn, EditAnywhere)
@@ -179,10 +181,7 @@ private:
 	UCameraComponent* Camera;
 
 	UPROPERTY(Category = Shooter, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	UMeleeComponent* Melee;
-
-	UPROPERTY(Category = Shooter, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	UCombatComponent* Combat;
+	UShooterCombatComponent* Combat;
 
 	UPROPERTY(Category = Shooter, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	UAIPerceptionStimuliSourceComponent* PerceptionSource;
@@ -199,12 +198,8 @@ private:
 	/**Data regarding whether or not we are looking at a weapon or interactive object*/
 	FHitResult ScanHit;
 
-	uint8 bIsScanningInteractiveObject : 1;
-
 	/** Casts a trace from the camera to see if there is an object nearby we can interact with*/	
 	void ScanInteractiveObject();
-
-	
 
 	///		 Begin Input Bindings	   ///
 	void MoveInputX(const float Value)	{ InputState.MoveX = Value; }
@@ -215,18 +210,25 @@ private:
 	void VaultRelease()					{ InputState.bIsTryingToVault = false; }
 	void CrouchPress()					{ InputState.bIsHoldingCrouch = true; }
 	void CrouchRelease()				{ InputState.bIsHoldingCrouch = false; }
-	void ShootPress()					{ Combat->ReceiveAttack(true); }
-	void ShootRelease()					{ Combat->ReceiveAttack(false); }
-	void AimPress()						{ Combat->ReceiveAim(); }
-	void AimRelease()					{  }
+	void ShootPress()					{ InputState.bIsTryingToFire = true; }
+	void ShootRelease()					{ InputState.bIsTryingToFire = false; }
+	void AimPress()						{ InputState.bIsTryingToAim = true; }
+	void AimRelease()					{ InputState.bIsTryingToAim = false; }
 	void InteractPress()				{ InputState.bIsTryingToInteract = true; }
 	void InteractRelease()				{ InputState.bIsTryingToInteract = false; }
-	void SwapPressUp()					{ Combat->ReceiveSwap(-1); }
-	void SwapPressDown()				{ Combat->ReceiveSwap(1); }
+	void SwapPressUp()					{ InputState.bIsTryingToSwapUp = true; }
+	void SwapPressDown()				{ InputState.bIsTryingToSwapDown = true; }
+	void MeleePress()					{ InputState.bIsTryingToMelee = true; }
+	void MeleeRelease()					{ InputState.bIsTryingToMelee = false; }
 	void SprintPress()					{ InputState.bIsTryingToSprint = true; }
 	void SprintRelease()				{ InputState.bIsTryingToSprint = false; }
-	void ReloadPress()					{ Combat->ReceiveReload(); }
-	void ReloadRelease()				{  }
+	void ReloadPress()					{ InputState.bIsTryingToReload = true; }
+	void ReloadRelease()				{ InputState.bIsTryingToReload = false; }
+	void ThrowPrimaryPress()			{ InputState.bIsTryingToThrowPrimary = true; }
+	void ThrowPrimaryRelease()			{ InputState.bIsTryingToThrowPrimary = false; }
+	void ThrowSecondaryPress()			{ InputState.bIsTryingToThrowSecondary = true; }
+	void ThrowSecondaryRelease()		{ InputState.bIsTryingToThrowSecondary = false; }
+
 
 	//TODO delete all of this
 #if WITH_EDITOR
