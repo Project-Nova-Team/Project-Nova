@@ -8,7 +8,6 @@ void USRunState::Initialize(UStateMachine* StateMachine, UObject* ContextObject)
 	MoveAcceleration = Movement->RunAcceleration;
 }
 
-<<<<<<< HEAD
 void USRunState::OnEnter()
 {
 	Super::OnEnter();
@@ -21,8 +20,6 @@ void USRunState::OnExit()
 	Shooter->GetCombat()->SetIsInAnimation(false);
 }
 
-=======
->>>>>>> parent of 462e351 (fixed the git reset)
 void USRunState::Tick(const float DeltaTime)
 {
 	Super::Tick(DeltaTime);

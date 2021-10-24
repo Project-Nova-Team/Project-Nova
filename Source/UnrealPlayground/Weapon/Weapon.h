@@ -71,6 +71,34 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon | Animation")
 	float ImpulseKickFactor;
 
+	/** By how much do we displace the holding actors weapon mesh when held*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon | Animation")
+	FVector WeaponMeshOffset;
+
+	/** By how much do we rotate the holding actors weapon mesh when held*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon | Animation")
+	FRotator WeaponMeshRotationOffset;
+
+	/** How much do we displace the holding actors weapon socket when held*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon | Animation")
+	FVector REffectorIK;
+
+	/** Right hand target IK position*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon | Animation")
+	FVector RTargetIK;
+
+	/** Left hand target IK position, Effector location is determiend by the actual socket*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon | Animation")
+	FVector LTargetIK;
+
+	/** How much is the right hand weapon socket rotated while this is held*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon | Animation")
+	FRotator RHandRotationIK;
+
+	/** How much to factor rotational "kick" from impulse. Lower values provide less kick*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon | Animation")
+	float ImpulseKickFactor;
+
 protected:
 	
 	virtual void BeginPlay() override;
