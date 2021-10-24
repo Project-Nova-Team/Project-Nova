@@ -125,6 +125,8 @@ void AShooter::ScanInteractiveObject()
 		//Lets us do UI things in blueprint
 		OnScanHit.Broadcast(ScanHit);
 
+		bIsScanningInteractiveObject = true;
+
 		if (InputState.bIsTryingToInteract)
 		{
 			IInteractiveObject* InteractiveObject = Cast<IInteractiveObject>(ScanHit.Actor);
@@ -135,7 +137,12 @@ void AShooter::ScanInteractiveObject()
 	}
 	else 
 	{
-		OnScanMiss.Broadcast(ScanHit);
+		if (bIsScanningInteractiveObject)
+		{
+			OnScanMiss.Broadcast(ScanHit);
+			// makes sure that OnScanMiss is not always being called
+			bIsScanningInteractiveObject = false;
+		}
 	}
 }
 
@@ -161,6 +168,9 @@ void AShooter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	InputComponent->BindAction("Sprint", IE_Released, this, &AShooter::SprintRelease);
 	InputComponent->BindAction("Reload", IE_Pressed, this, &AShooter::ReloadPress);
 	InputComponent->BindAction("Reload", IE_Released, this, &AShooter::ReloadRelease);
+	// bind pause to game mode because pausing is not a shooter behavior
+	InputComponent->BindAction("Pause", IE_Pressed, GetWorld()->GetAuthGameMode<AShooterGameMode>(), &AShooterGameMode::PauseGame)
+		.bExecuteWhenPaused = true;;
 }
 
 void AShooter::OnTriggerEnter(AActor* OverlappedActor, AActor* OtherActor)
