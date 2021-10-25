@@ -56,7 +56,7 @@ void AShooterHUD::InternalUpdate()
 
 	AGun* HeldAsGun = Cast<AGun>(Combat->GetHeldWeapon());
 
-	if(HeldAsGun != nullptr)
+	if (HeldAsGun != nullptr)
 	{
 		const FGunUIData Data = HeldAsGun->GetGunUI();
 		MaxAmmoInWeapon = Data.ClipSize;
@@ -81,30 +81,35 @@ void AShooterHUD::ShowPauseMenu()
 {
 	if (!bIsPaused)
 	{
-		PauseMenuWidget->SetVisibility(ESlateVisibility::Visible);
-
-		if (Shooter->GetController<APlayerController>())
+		if (PauseMenuWidget->Visibility != ESlateVisibility::Visible)
 		{
-			Shooter->GetController<APlayerController>()->SetPause(true);
-			Shooter->GetController<APlayerController>()->bShowMouseCursor = true;
-		}
+			PauseMenuWidget->SetVisibility(ESlateVisibility::Visible);
 
-		bIsPaused = true;
+			if (Shooter->GetController<APlayerController>())
+			{
+				Shooter->GetController<APlayerController>()->SetPause(true);
+				Shooter->GetController<APlayerController>()->bShowMouseCursor = true;
+			}
+
+			bIsPaused = true;
+		}
 	}
 	else
 	{
-		HidePauseMenu();
+		HideUI();
 		bIsPaused = false;
 	}
 }
 
-void AShooterHUD::HidePauseMenu()
+void AShooterHUD::HideUI()
 {
 	if (Shooter->GetController<APlayerController>())
 	{
 		Shooter->GetController<APlayerController>()->bShowMouseCursor = false;
 		Shooter->GetController<APlayerController>()->SetPause(false);
 	}
+
+	ExitConfirmationWidget->SetVisibility(ESlateVisibility::Collapsed);
 	PauseMenuWidget->SetVisibility(ESlateVisibility::Collapsed);
 }
 
