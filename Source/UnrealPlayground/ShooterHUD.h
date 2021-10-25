@@ -43,7 +43,7 @@ protected:
 	UFUNCTION()
 	void ShowPauseMenu();
 
-	void HidePauseMenu();
+	void HideUI();
 
 	uint8 bIsPaused : 1;
 
@@ -63,6 +63,9 @@ protected:
 
 	UPROPERTY(BlueprintReadWrite)
 	UUserWidget* PauseMenuWidget;
+
+	UPROPERTY(BlueprintReadWrite)
+	UUserWidget* ExitConfirmationWidget;
 
 	/** Max ammo that can be stored in this weapon after reloading*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HUD")
