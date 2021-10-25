@@ -117,17 +117,19 @@ void AShooter::ScanInteractiveObject()
 	
 	const FVector TraceStart = Camera->GetComponentLocation();
 	const FVector TraceEnd = TraceStart + Camera->GetForwardVector() * FMath::Min(ShooterMovement->StandingHeight * 2.f, ShooterMovement->InteractionDistance);
-	const bool bHit = GetWorld()->LineTraceSingleByChannel(ScanHit, TraceStart, TraceEnd, ECC_Camera, QueryParams);
+	const bool bHit = GetWorld()->LineTraceSingleByChannel(ScanHitResult, TraceStart, TraceEnd, ECC_Camera, QueryParams);
 
 	//We're looking at an object that is interactive
-	if(bHit && ScanHit.Actor != nullptr && ScanHit.Actor->Implements<UInteractiveObject>())
+	if(bHit && ScanHitResult.Actor != nullptr && ScanHitResult.Actor->Implements<UInteractiveObject>())
 	{	
 		//Lets us do UI things in blueprint
-		OnScanHit.Broadcast(ScanHit);
+		OnScanHit.Broadcast(ScanHitResult);
+
+		bIsScanningInteractiveObject = true;
 
 		if (InputState.bIsTryingToInteract)
 		{
-			IInteractiveObject* InteractiveObject = Cast<IInteractiveObject>(ScanHit.Actor);
+			IInteractiveObject* InteractiveObject = Cast<IInteractiveObject>(ScanHitResult.Actor);
 			InteractiveObject->InteractionEvent(this);
 
 			InputState.bIsTryingToInteract = false;
@@ -135,7 +137,11 @@ void AShooter::ScanInteractiveObject()
 	}
 	else 
 	{
-		OnScanMiss.Broadcast(ScanHit);
+		if (bIsScanningInteractiveObject)
+		{
+			OnScanMiss.Broadcast(ScanHitResult);
+			bIsScanningInteractiveObject = false;
+		}
 	}
 }
 
@@ -161,6 +167,9 @@ void AShooter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	InputComponent->BindAction("Sprint", IE_Released, this, &AShooter::SprintRelease);
 	InputComponent->BindAction("Reload", IE_Pressed, this, &AShooter::ReloadPress);
 	InputComponent->BindAction("Reload", IE_Released, this, &AShooter::ReloadRelease);
+	// bind pause to game mode because pausing is not a shooter behavior
+	InputComponent->BindAction("Pause", IE_Pressed, GetWorld()->GetAuthGameMode<AShooterGameMode>(), &AShooterGameMode::PauseGame)
+		.bExecuteWhenPaused = true;;
 }
 
 void AShooter::OnTriggerEnter(AActor* OverlappedActor, AActor* OtherActor)
@@ -177,7 +186,7 @@ void AShooter::OnTriggerExit(AActor* OverlappedActor, AActor* OtherActor)
 	{
 		bIsInsideVaultTrigger = false;
 		// force player to stop being able to scan vault object by broadcasting a miss scan. Is there a better way we could do this?
-		OnScanMiss.Broadcast(ScanHit);
+		OnScanMiss.Broadcast(ScanHitResult);
 	}
 }
 

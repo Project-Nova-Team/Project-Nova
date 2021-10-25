@@ -197,7 +197,10 @@ private:
 	FShooterInput InputState;
 
 	/**Data regarding whether or not we are looking at a weapon or interactive object*/
-	FHitResult ScanHit;
+	FHitResult ScanHitResult;
+
+	/** Set to true when player has scanned an interactive object. For ScanMiss delegate*/
+	uint8 bIsScanningInteractiveObject : 1;
 
 	/** Casts a trace from the camera to see if there is an object nearby we can interact with*/	
 	void ScanInteractiveObject();
