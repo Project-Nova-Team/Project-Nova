@@ -26,4 +26,7 @@ protected:
 	/** What type of ammo does this pickup give*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TEnumAsByte<EGunClass> GunType;
+
+	UPROPERTY(VisibleAnywhere, Category = "Mesh", meta =(AllowPrivateAccess="true"))
+	UStaticMeshComponent* Mesh;
 };
