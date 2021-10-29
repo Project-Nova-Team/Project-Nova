@@ -1,10 +1,13 @@
 #include "AmmoPickup.h"
 #include "GameFramework/Pawn.h"
 #include "../Player/Shooter.h"
+#include "Components/StaticMeshComponent.h"
 
 AAmmoPickup::AAmmoPickup()
 {
 	AmmoAmount = 10;
+	Mesh = CreateDefaultSubobject<UStaticMeshComponent>("Mesh");
+	SetRootComponent(Mesh);
 }
 
 
@@ -30,5 +33,9 @@ void AAmmoPickup::InteractionEvent(APawn* EventSender)
 		{
 			Shooter->LoadAmmoOnPickup(GunType);
 		}
+
+		Mesh->SetVisibility(false);
+		Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
 	}
 }

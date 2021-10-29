@@ -24,4 +24,7 @@ protected:
 	UPROPERTY(EditAnywhere)
 	int32 HealAmount;
 
+	UPROPERTY(VisibleAnywhere, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
+	UStaticMeshComponent* Mesh;
+
 };
