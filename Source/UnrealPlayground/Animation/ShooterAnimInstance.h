@@ -44,9 +44,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
 	class UCameraAnim* CameraDeathAnimation;
 
-	//Need this to gurantee the State machine is loaded before we try and bind the event
-	//Lazy implementation
-	void BindVault();
+	//Need this to gurantee the State machine is loaded before we try and state events
+	void BindState();
 
 protected:
 
@@ -99,7 +98,7 @@ private:
 	void PlayAimStopMontage();
 
 	UFUNCTION(BlueprintCallable, Category = "Animation")
-	void StopMontageFromAttack();
+	void StopMontage();
 
 	UFUNCTION(BlueprintCallable, Category = "Animation")
 	void PlayAttackMontage();

@@ -5,6 +5,8 @@
 #include "Weapon.h"
 #include "Gun.generated.h"
 
+enum EWeaponFireStance;
+
 UENUM()
 enum EWeaponFireType
 {
@@ -296,8 +298,8 @@ protected:
 
 private:
 
-	//Maybe this should be static so every gun can pull from a single pool?
-
 	/** Object pool of bullet actors we access when firing this weapon*/
 	TArray<ABullet*> BulletPool;
+
+	TEnumAsByte<EWeaponFireStance>* HolderStance;
 };

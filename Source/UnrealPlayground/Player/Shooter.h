@@ -16,9 +16,9 @@ class UAIPerceptionStimuliSourceComponent;
 class IInteractiveObject;
 class AGun;
 
+DECLARE_MULTICAST_DELEGATE(FStateLoadEvent);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FScanEvent, FHitResult, ScanData);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FShooterMakeNoise, FVector, Location, float, Volume);
-
 
 struct FShooterInput : public FWeaponInput
 {
@@ -129,6 +129,9 @@ public:
 	/** Invoked when the shooter shooter makes a sound*/
 	UPROPERTY(BlueprintAssignable)
 	FShooterMakeNoise OnMakeNoise;
+
+	/** Invoked when the state machine finishes initialization*/
+	FStateLoadEvent OnStateLoadComplete;
 
 	/** Set when player overlaps or unoverlaps vault trigger*/
 	UPROPERTY(BlueprintReadOnly)
