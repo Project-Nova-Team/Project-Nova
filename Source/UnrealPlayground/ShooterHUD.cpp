@@ -109,15 +109,17 @@ void AShooterHUD::HideUI()
 		Shooter->GetController<APlayerController>()->SetPause(false);
 	}
 
+	// eventually add method that checks for any open widgets and closes them
 	ExitConfirmationWidget->SetVisibility(ESlateVisibility::Collapsed);
 	PauseMenuWidget->SetVisibility(ESlateVisibility::Collapsed);
+	SettingsMenuWidget->SetVisibility(ESlateVisibility::Collapsed);
+	ControlsMenuWidget->SetVisibility(ESlateVisibility::Collapsed);
 }
 
 void AShooterHUD::ShowInteractionPrompt(FHitResult Hit)
 {
 	if (Hit.GetActor()->IsA(AVaultObject::StaticClass()))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("%s"), *Hit.GetActor()->GetName());
 		Shooter->bIsLookingAtVaultObject = true;
 		if (Shooter->GetCanVault())
 		{
