@@ -39,3 +39,20 @@ public:
 	UPROPERTY(BlueprintReadOnly)
 	float LookY;
 };
+
+USTRUCT(BlueprintType)
+struct FShooterInventory
+{
+	GENERATED_BODY()
+
+public:
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	int32 PistolAmmo;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	int32 ShotgunAmmo;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	int32 RifleAmmo;	
+};
