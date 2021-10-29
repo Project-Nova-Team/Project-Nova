@@ -144,7 +144,10 @@ void UShooterAnimInstance::MontageEnd(UAnimMontage* Montage, bool bInterupted)
 
 	else if (Montage == AimStartAnimMontage || Montage == AimStopAnimMontage || Montage == MeleeAttackMontage)
 	{
-		ShooterCombat->ReceiveAnimationComplete();
+		if (!bInterupted)
+		{
+			ShooterCombat->ReceiveAnimationComplete();
+		}	
 	}
 }
 

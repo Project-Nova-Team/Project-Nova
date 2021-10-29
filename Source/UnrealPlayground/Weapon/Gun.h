@@ -5,8 +5,6 @@
 #include "Weapon.h"
 #include "Gun.generated.h"
 
-enum EWeaponFireStance;
-
 UENUM()
 enum EWeaponFireType
 {
@@ -31,6 +29,14 @@ public:
 	uint16 ClipSize;
 };
 
+
+UENUM()
+enum EGunClass
+{
+	WC_Pistol,
+	WC_Shotgun,
+	WC_Rifle
+};
 
 class USkeletalMesh;
 class USkeletalMeshSocket;
@@ -81,13 +87,8 @@ public:
 	/** Returns the max amount of angular difference the camera can rotate from its original rotation*/
 	float GetRecoilLimit() const { return RecoilAngularLimit; }
 
-	/**
-	 * Sets the minimum bloom based a weapon stance
-	 *
-	 * @param	Stance				WeaponFireStance that determines what the base bloom value should be
-	 * @param	bIsMoving			Whether or not whoever is holding the weapon is moving, which applies the movementmultiplier to the base
-	 */
-	void SetBloomMin(const EWeaponFireStance Stance, const bool bIsMoving);
+	/** Sets the minimum bloom based a weapon stance and movement status*/
+	void SetBloomMin();
 
 	void SetWeaponSceneValues(USceneComponent* TraceOriginComponent, USkeletalMeshComponent* ProjectileOriginMesh) override;
 
@@ -96,6 +97,9 @@ public:
 	int GetAmmoCount() { return CurrentAmmo; }
 
 	int GetClipSize() { return ClipSize; }
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TEnumAsByte<EGunClass> GunClass;
 
 protected:
 	// Called when the game starts or when spawned
@@ -299,7 +303,5 @@ protected:
 private:
 
 	/** Object pool of bullet actors we access when firing this weapon*/
-	TArray<ABullet*> BulletPool;
-
-	TEnumAsByte<EWeaponFireStance>* HolderStance;
+	TArray<ABullet*> BulletPool;	
 };
