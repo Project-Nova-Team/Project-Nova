@@ -15,6 +15,7 @@ class UHealthComponent;
 class UAIPerceptionStimuliSourceComponent;
 class IInteractiveObject;
 class AGun;
+enum EGunClass;
 
 DECLARE_MULTICAST_DELEGATE(FStateLoadEvent);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FScanEvent, FHitResult, ScanData);
@@ -95,18 +96,20 @@ public:
 	/** Returns the input state. Note: contents are mutable*/
 	FORCEINLINE FShooterInput* GetInput() { return &InputState; }
 
+	FORCEINLINE FShooterInventory* GetInventory() { return &Inventory; }
+
 	/** Returns the input state. Note: contents are mutable*/
 	UFUNCTION(BlueprintCallable)
 	FORCEINLINE FWeaponInput GetInputRaw() { return FWeaponInput(InputState); }
 
 	/** Returns the Skeletal Mesh component of this shooter*/
-	FORCEINLINE USkeletalMeshComponent* GetSkeletalMeshComponent() { return ShooterSkeletalMesh; }
+	FORCEINLINE USkeletalMeshComponent* GetSkeletalMeshComponent() const { return ShooterSkeletalMesh; }
 
 	/** Returns the Shooter Movement component attached to this shooter*/
-	FORCEINLINE UShooterMovementComponent* GetShooterMovement() { return ShooterMovement; }
+	FORCEINLINE UShooterMovementComponent* GetShooterMovement() const { return ShooterMovement; }
 
 	/** Returns the Melee component attached to this shooter*/
-	FORCEINLINE UMeleeComponent* GetMelee() { return Melee; }
+	FORCEINLINE UMeleeComponent* GetMelee() const { return Melee; }
 
 	/** Returns the Perception Source component which enables AI to sense stimulus produced by this actor*/
 	FORCEINLINE UAIPerceptionStimuliSourceComponent* GetPerceptionSource() const { return PerceptionSource; }
@@ -145,12 +148,17 @@ public:
 	UFUNCTION(BlueprintCallable)
 	bool GetCanVault();
 
+	/** Moves ammo from the shooter inventory into the the approrpiate weapon, if the shooter has it*/
+	void LoadAmmoOnPickup(const EGunClass GunType);
+
 	UFUNCTION(BlueprintCallable)
 	void ShooterMakeNoise(FVector Location, float Volume);
 
 	/** Sets the death state in the state machine when the shooter dies*/
 	UFUNCTION()
 	void HandleDeath();
+
+	bool HasGunOfType(const EGunClass GunType) const;
 
 protected:
 	virtual void BeginPlay() override;
@@ -199,13 +207,17 @@ private:
 	/**Contains all relevant information of the input state*/
 	FShooterInput InputState;
 
+	/** Inventory for ammo*/
+	FShooterInventory Inventory;
+
 	/**Data regarding whether or not we are looking at a weapon or interactive object*/
 	FHitResult ScanHit;
 
 	/** Casts a trace from the camera to see if there is an object nearby we can interact with*/	
 	void ScanInteractiveObject();
 
-	
+	/** Called when a weapon is added to the combat arsenal, we immediatly put all the ammo from the inventory into the gun*/
+	void LoadAmmoOnWeaponGet(AWeapon* NewWeapon);
 
 	///		 Begin Input Bindings	   ///
 	void MoveInputX(const float Value)	{ InputState.MoveX = Value; }

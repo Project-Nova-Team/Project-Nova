@@ -11,16 +11,12 @@ AHealthPickup::AHealthPickup()
 }
 
 
-void AHealthPickup::InteractionEvent(const APawn* EventSender)
+void AHealthPickup::InteractionEvent(APawn* EventSender)
 {
 	UHealthComponent* PawnHealthComponent = EventSender->FindComponentByClass<UHealthComponent>();
 
-	if (PawnHealthComponent != nullptr)
+	if (PawnHealthComponent != nullptr && !PawnHealthComponent->bIsFullHealth)
 	{
-		// if health is not full, heal by heal amount
 		PawnHealthComponent->Heal(HealAmount);
-
-		//do idestroyable here
-		//SetInteractiveObjectHidden(true);
 	}
 }

@@ -11,10 +11,11 @@ UCombatComponent::UCombatComponent()
 	MaxWeaponCount = 4;
 }
 
-void UCombatComponent::SetUpConstruction(USceneComponent* TraceComponent, USkeletalMeshComponent* MeshComponent)
+void UCombatComponent::SetUpConstruction(USceneComponent* TraceComponent, USkeletalMeshComponent* MeshComponent, FWeaponInput* Input)
 {
 	TraceOrigin = TraceComponent;
 	WeaponMesh = MeshComponent;
+	OwnerInput = Input;
 }
 
 void UCombatComponent::BeginPlay()
@@ -38,6 +39,8 @@ void UCombatComponent::BeginPlay()
 void UCombatComponent::PickUpWeapon(AWeapon* NewWeapon)
 {
 	Arsenal.Emplace(NewWeapon);
+	NewWeapon->OwnerInput = OwnerInput;
+
 	//We are holding too many weapons, drop the currently held one
 	if (Arsenal.Num() > MaxWeaponCount)
 	{
@@ -208,6 +211,26 @@ void UCombatComponent::ReceiveReloadComplete(const bool bInterrupted)
 	}
 
 	bIsReloading = false;
+}
+
+AGun* UCombatComponent::GetGunOfType(const EGunClass GunClass) const
+{
+	if (Arsenal.Num() < 1)
+	{
+		return nullptr;
+	}
+
+	for (AWeapon* Weapon : Arsenal)
+	{
+		AGun* WeaponAsGun = Cast<AGun>(Weapon);
+
+		if (WeaponAsGun != nullptr && WeaponAsGun->GunClass == GunClass)
+		{
+			return WeaponAsGun;
+		}
+	}
+
+	return nullptr;
 }
 
 //FIX - BAD - Weapon should have each of these values

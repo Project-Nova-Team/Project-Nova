@@ -6,7 +6,8 @@
 
 class AGun;
 class AWeapon;
-enum EWeaponFireStance;
+struct FWeaponInput;
+enum EGunClass;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FAnimEvent);
 DECLARE_MULTICAST_DELEGATE_OneParam(FWeaponCollectionEvent, AWeapon*);
@@ -59,7 +60,7 @@ public:
 
 	bool IsReloadLocked() const { return (GetHeldWeapon() == nullptr) || bIsReloading || bIsInAnimation || bIsAimed; }
 
-	void SetUpConstruction(USceneComponent* TraceComponent, USkeletalMeshComponent* MeshComponent);
+	void SetUpConstruction(USceneComponent* TraceComponent, USkeletalMeshComponent* MeshComponent, FWeaponInput* Stance);
 
 	void PickUpWeapon(AWeapon* NewWeapon);
 
@@ -93,6 +94,12 @@ public:
 
 	/** Invoked when a new weapon is removed to the arensal*/
 	FWeaponCollectionEvent OnArsenalRemoval;
+	
+	/** Gets the a weapon at an index of the arsenal*/
+	AWeapon* GetWeaponAtArsenalIndex(const int Index) const { return (Arsenal.Num() > 0 && Arsenal.Num() > Index) ? Arsenal[Index] : nullptr; }
+
+	/** Gets a gun in the arsenal of the specified type*/
+	AGun* GetGunOfType(const EGunClass GunClass) const;
 
 protected:
 	void BeginPlay() override;
@@ -150,5 +157,5 @@ protected:
 	int32 CurrentWeaponIndex;
 
 private:
-	TEnumAsByte<EWeaponFireStance>* OwnerStance;
+	FWeaponInput* OwnerInput;
 };

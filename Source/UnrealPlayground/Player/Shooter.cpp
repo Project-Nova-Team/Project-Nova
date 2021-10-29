@@ -11,6 +11,7 @@
 #include "../Gameplay/VaultTrigger.h"
 #include "../Gameplay/InteractiveObject.h"
 #include "../Gameplay/MeleeComponent.h"
+#include "../Weapon/Gun.h"
 
 void FShooterInput::Tick(const float DeltaTime)
 {
@@ -74,7 +75,7 @@ AShooter::AShooter()
 	WeaponMesh->SetupAttachment(ShooterSkeletalMesh, TEXT("WeaponSocket"));
 
 	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("Combat"));
-	Combat->SetUpConstruction(Camera, WeaponMesh);
+	Combat->SetUpConstruction(Camera, WeaponMesh, &InputState);
 
 	Health = CreateDefaultSubobject<UHealthComponent>(TEXT("Health"));
 	PerceptionSource = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("Stimulus Source"));
@@ -94,6 +95,7 @@ void AShooter::BeginPlay()
 
 	InputState.Owner = this;
 
+	Combat->OnArsenalAddition.AddUObject(this, &AShooter::LoadAmmoOnWeaponGet);
 	OnActorBeginOverlap.AddDynamic(this, &AShooter::OnTriggerEnter);
 	OnActorEndOverlap.AddDynamic(this, &AShooter::OnTriggerExit);
 	Health->OnDeath.AddDynamic(this, &AShooter::HandleDeath);
@@ -204,9 +206,38 @@ void AShooter::HandleDeath()
 	StateMachine->SetState("Death");
 }
 
-
-
 bool AShooter::GetCanVault()
 {
 	return bIsInsideVaultTrigger && bIsLookingAtVaultObject;
+}
+
+void AShooter::LoadAmmoOnPickup(const EGunClass GunType)
+{
+	LoadAmmoOnWeaponGet(Combat->GetGunOfType(GunType));
+}
+
+void AShooter::LoadAmmoOnWeaponGet(AWeapon* NewWeapon)
+{
+	AGun* WeaponAsGun = Cast<AGun>(NewWeapon);
+
+	if (WeaponAsGun != nullptr)
+	{
+		switch (WeaponAsGun->GunClass)
+		{
+		case WC_Pistol:
+			WeaponAsGun->AddExcessAmmo(Inventory.PistolAmmo);
+			Inventory.PistolAmmo = 0;
+		case WC_Shotgun:
+			WeaponAsGun->AddExcessAmmo(Inventory.ShotgunAmmo);
+			Inventory.ShotgunAmmo = 0;
+		case WC_Rifle:
+			WeaponAsGun->AddExcessAmmo(Inventory.RifleAmmo);
+			Inventory.RifleAmmo = 0;
+		}
+	}
+}
+
+bool AShooter::HasGunOfType(const EGunClass GunType) const
+{
+	return Combat->GetGunOfType(GunType) != nullptr;
 }

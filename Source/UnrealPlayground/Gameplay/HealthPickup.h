@@ -17,11 +17,11 @@ public:
 	// Sets default values for this actor's properties
 	AHealthPickup();
 
-	virtual void InteractionEvent(const APawn* EventSender) override;
+	virtual void InteractionEvent(APawn* EventSender) override;
 
 protected:
 
 	UPROPERTY(EditAnywhere)
-		int HealAmount;
+	int32 HealAmount;
 
 };
