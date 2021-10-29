@@ -16,15 +16,14 @@ void UStateMachine::Tick(const float DeltaTime)
 			SetState(ActiveState->GetFlaggedKey());
 		else if (ActiveState->GetFlaggedState() != nullptr)
 			SetState(ActiveState->GetFlaggedState());
-
 	}
 }
 
-void UStateMachine::AddState(UObject* Context, const FString Key, UState& NewState, const bool bIsActive)
+void UStateMachine::AddState(UObject* Context, const FString Key, UState* NewState, const bool bIsActive)
 {
-	NewState.Initialize(this, Context);
-	NewState.SetIsActive(bIsActive);
-	States.Add(Key, &NewState);
+	NewState->Initialize(this, Context);
+	NewState->SetIsActive(bIsActive);
+	States.Add(Key, NewState);
 }
 
 void UStateMachine::RemoveState(const FString Key)
@@ -58,4 +57,20 @@ void UStateMachine::SetState(UState* NewState)
 	ActiveState->ClearTransitionFlags();
 	ActiveState = NewState;
 	ActiveState->OnEnter();
+}
+
+void UStateMachine::SetStateImmediate(const FString NewStateKey, const uint8 Weight)
+{
+	if (ActiveState->FlagTransition(NewStateKey, Weight))
+	{
+		SetState(ActiveState->GetFlaggedState());
+	}
+}
+
+void UStateMachine::SetStateImmediate(UState* NewState, const uint8 Weight)
+{
+	if (ActiveState->FlagTransition(NewState, Weight))
+	{
+		SetState(ActiveState->GetFlaggedState());
+	}
 }

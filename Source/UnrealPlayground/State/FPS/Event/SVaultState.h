@@ -1,16 +1,12 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
 #include "SEventState.h"
 #include "Components/SkeletalMeshComponent.h"
-#include "Animation/AnimInstance.h"
 #include "SVaultState.generated.h"
 
-/**
- * 
- */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FAnimVault);
+
 UCLASS()
 class UNREALPLAYGROUND_API USVaultState : public USEventState
 {
@@ -23,7 +19,7 @@ public:
 	void OnEnter() override; 
 	void OnExit() override;
 
-	void Tick(const float DeltaTime) override;
+	void ReceiveVaultAnimComplete();
 
-	void Initialize(UStateMachine* StateMachine, UObject* ContextObject) override;
+	FAnimVault OnVaultEnter;
 };

@@ -1,7 +1,7 @@
 //Copyright 2021 Brendan Lienau. All Rights Reserved.
 
 #include "SMovementState.h"
-#include "../../../Weapon/ShooterCombatComponent.h"
+#include "../../../Weapon/Gun.h"
 
 void USMovementState::Initialize(UStateMachine* StateMachine, UObject* ContextObject)
 {
@@ -47,7 +47,7 @@ void USMovementState::CheckForVault()
 {
 	if (Input->bIsTryingToVault && Movement->bIsOnGround && Shooter->GetCanVault())
 	{
-
+		// calls USVaultState.OnEnter
 		FlagTransition("Vaulting", 10);
 
 		//Movement->Velocity.Z += Movement->JumpForce;
@@ -192,7 +192,7 @@ void USMovementState::RotateCameraFromInput(const float DeltaTime)
 	if (RecoilVelocity > 0.f)
 	{	
 		float NewPitch = RelativeLook.Pitch + RecoilVelocity * DeltaTime;
-		const float AngularLimit = Shooter->GetCombat()->GetPrimaryWeapon()->GetRecoilLimit();
+		const float AngularLimit = Shooter->GetCombat()->GetWeaponRecoilLimit();
 
 		//The new recoil pitch would have us look further upwards than we allow, clamp it
 		if (NewPitch + AnchorRotation.Pitch > Movement->CameraMaxAngle)
@@ -214,7 +214,7 @@ void USMovementState::RotateCameraFromInput(const float DeltaTime)
 	//Weapon impulse ended, reset towards the anchors forward
 	else if (RelativeLook.Pitch > 0.f)
 	{
-		const float Delta = Shooter->GetCombat()->GetPrimaryWeapon()->GetRecoilRecovery() * DeltaTime;
+		const float Delta = Shooter->GetCombat()->GetWeaponRecoilRecovery() * DeltaTime;
 		float NewPitch = RelativeLook.Pitch - Delta;
 
 		//Don't rotate further down than where we started

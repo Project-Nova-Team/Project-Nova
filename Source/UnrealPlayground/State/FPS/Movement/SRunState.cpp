@@ -8,12 +8,24 @@ void USRunState::Initialize(UStateMachine* StateMachine, UObject* ContextObject)
 	MoveAcceleration = Movement->RunAcceleration;
 }
 
+void USRunState::OnEnter()
+{
+	Super::OnEnter();
+	Shooter->GetCombat()->SetIsInAnimation(true);
+}
+
+void USRunState::OnExit()
+{
+	Super::OnExit();
+	Shooter->GetCombat()->SetIsInAnimation(false);
+}
+
 void USRunState::Tick(const float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	CheckForVault();
 	CheckForWalkState();
-	CheckForDiveState();
+	//CheckForDiveState();
 }
 
 void USRunState::CheckForWalkState()
