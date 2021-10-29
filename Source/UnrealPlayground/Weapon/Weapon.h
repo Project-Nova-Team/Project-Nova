@@ -2,40 +2,24 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "DrawDebugHelpers.h"
 #include "../Gameplay/InteractiveObject.h"
 #include "Weapon.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FWeaponEvent);
+class USkeletalMesh;
+class USkeletalMeshSocket;
+class UCombatComponent;
+enum EWeaponFireStance;
 
-UENUM()
-enum EWeaponFireType 
-{
-	FT_Auto,
-	FT_Semi,
-	FT_Burst
-};
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FWeaponEvent);
+DECLARE_DELEGATE(FWeaponUIEvent);
 
 USTRUCT(BlueprintType)
 struct FWeaponUIData
 {
 	GENERATED_BODY()
-
+	
 public:
-	UPROPERTY()
-	uint16 AmmoInClip;
-
-	UPROPERTY()
-	uint16 ExcessAmmo;
-
-	UPROPERTY()
-	uint16 ClipSize;
 };
-
-class USkeletalMesh;
-class USkeletalMeshSocket;
-class ABullet;
-enum EWeaponFireStance;
 
 UCLASS()
 class UNREALPLAYGROUND_API AWeapon : public AActor, public IInteractiveObject
@@ -44,249 +28,106 @@ class UNREALPLAYGROUND_API AWeapon : public AActor, public IInteractiveObject
 	
 public:	
 	AWeapon();
-	virtual void Tick(float DeltaTime) override;
+
 	void InteractionEvent(const APawn* EventSender) override;
 
-	/** Fires the weapon in a straight line with no recoil or bloom*/
-	void FireStraight();
-
-	/** 
-	 * Fires the weapon applying recoil and bloom
-	 *
-	 * @param	bIsAimed				Whether or not whoever is holding the weapon is aiming the weapon, which determines bloom and recoil
-	 * @param	BulletRotation			Orientation the spawned actor begins in
-	 */
-	void FireWithNoise(const bool bIsAimed, FRotator BulletRotation);
-
-	/** Adds to ammo pool. Called by picking up ammo*/
-	void AddExcessAmmo(int AmmoAddAmount);
-
-	/** Reloads the weapon*/
-	void Reload();
-
-	/** 
-	 * Sets the minimum bloom based a weapon stance
-	 *
-	 * @param	Stance				WeaponFireStance that determines what the base bloom value should be
-	 * @param	bIsMoving			Whether or not whoever is holding the weapon is moving, which applies the movementmultiplier to the base
-	 */
-	void SetBloomMin(const EWeaponFireStance Stance, const bool bIsMoving);
+	/** TODO stop inlining once we get some fields in FWeaponUIData*/
+	FWeaponUIData GetWeaponUI() const { return FWeaponUIData(); }
 
 	/** Returns the mesh this weapon uses*/
-	USkeletalMesh* GetSkeletalMesh() const { return Mesh->SkeletalMesh; }
+	FORCEINLINE USkeletalMeshComponent* GetMeshComponent() const { return Mesh; }
 
-	EWeaponFireType GetWeaponType() const { return WeaponFireType; }
+	/** Returns the mesh's skeletal mesh this weapon uses*/
+	FORCEINLINE USkeletalMesh* GetSkeletalMesh() const { return Mesh->SkeletalMesh; }
 
-	/** Packages relevant information to display to the UI in blueprint*/
-	FWeaponUIData GetWeaponUI() const;
+	/** Returns the combat component this weapon is attached to, if any*/
+	FORCEINLINE UCombatComponent* GetOwningComponent() const { return OwningComponent; }
 
-	/** Returns the value that controls how quickly the camera returns to its initial position after firing*/
-	float GetRecoilRecovery() const { return RecoilRecovery; }
+	virtual bool IsReloadable() { return false; }
 
-	/** Returns the max amount of angular difference the camera can rotate from its original rotation*/
-	float GetRecoilLimit() const { return RecoilAngularLimit; }
+	UFUNCTION(BlueprintCallable)
+	virtual bool IsAimable() { return false; }
 
-	/** Reutnrs the current angular velocity of weapon impulse from firing*/
-	float GetRecoilVelocity() const { return RecoilVelocity; }
+	/** Initiates an attack. Returns true if the attack was executed successfully.*/
+	virtual void StartAttack() { }
 
-	float GetBloom() const { return CurrentBloom; }
+	/** Called by CombatComponent when attack input has been removed*/
+	virtual void StopAttack() { }
 
-	/** 
-	 * Sets the owning pawn and sets up values the weapon needs
-	 * 
-	 * @param	TraceOriginComponent	A scene component used to determine where the firing trace begins
-	 * @param	HeldWeapon				The skeletal mesh component of the owning actor
-	 * @param	BulletSocket			Socket at the barrel of the gun where bullets spawn
+	/** Sets the aim status of the weapon*/
+	virtual void SetAim(const bool bNewAim) { bIsAimed = bNewAim; }
+
+	virtual void Reload() { }
+
+	/**
+	 * Passes references of scene components to the weapon so it knows where to begin weapon fire/traces from
+	 *
+	 * @param	TraceOriginComponent				Scene component a traveling hitscan beam is fired from. Typically the camera of a player
+	 * @param	ProjectileOrigin					Scene component we use to get a socket on a gun barrel to fire a cosmetic projectile from
 	 */
-	void SetSceneValues(const USceneComponent* TraceOriginComponent, const USkeletalMeshComponent* HeldWeapon, const USkeletalMeshSocket* BulletSocket);
+	virtual void SetWeaponSceneValues(USceneComponent* TraceOriginComponent, USkeletalMeshComponent* ProjectileOrigin);
 
-	/** Field of view when zoomed in using this weapon*/
-	UPROPERTY(EditAnywhere, Category = "Weapon | Aiming")
-	float AimFOV;
+	/**
+	* Pointer to a level object that determines where the line trace begins for firing
+	* For the shooter, this is the camera component
+	*/
+	USceneComponent* TraceOrigin;
+
+	/**
+	 * Pointer to a the skeletal mesh component of the weapon's owner. This is provided
+	 * so we can access a socket on the mesh to fire a cosmetic projectile from 
+	 */
+	USkeletalMeshComponent* ProjectileOriginMesh;
+
+	/** When invoked, any HUD subscribed to this event will update values*/
+	FWeaponUIEvent OnUpdateUI;
+
+	/** Invoked when the weapon attacks. Useful for audio*/
+	UPROPERTY(BlueprintAssignable)
+	FWeaponEvent OnWeaponAttack;
+
+	/** By how much do we displace the holding actors weapon mesh when held*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon | Animation")
+	FVector WeaponMeshOffset;
+
+	/** By how much do we rotate the holding actors weapon mesh when held*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon | Animation")
+	FRotator WeaponMeshRotationOffset;
+
+	/** How much do we displace the holding actors weapon socket when held*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon | Animation")
+	FVector REffectorIK;
+
+	/** Right hand target IK position*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon | Animation")
+	FVector RTargetIK;
+
+	/** Left hand target IK position, Effector location is determiend by the actual socket*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon | Animation")
+	FVector LTargetIK;
+
+	/** How much is the right hand weapon socket rotated while this is held*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon | Animation")
+	FRotator RHandRotationIK;
+
+	/** How much to factor rotational "kick" from impulse. Lower values provide less kick*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon | Animation")
+	float ImpulseKickFactor;
 
 protected:
-	
-	virtual void BeginPlay() override;
 
 	UPROPERTY(VisibleAnywhere, Category = "Mesh")
 	USkeletalMeshComponent* Mesh;
-
-	UPROPERTY(EditAnywhere, Category = "Weapon | General")
-	TEnumAsByte<EWeaponFireType> WeaponFireType;
-
-	/** Template class of bullet actor we use for this weapon*/
-	UPROPERTY(EditAnywhere, Category = "Mesh")
-	TSubclassOf<ABullet> BulletTemplate;
-
-	/** Object pool of bullet actors we access when firing this weapon*/
-	TArray<ABullet*> BulletPool;
-
-	/** How many bullets are pooled on begin play*/
-	UPROPERTY(VisibleAnywhere, Category = "Weapon | General")
-	int16 StartingPoolSize;
-
-	/** The max range this weapon can be fired*/
-	UPROPERTY(VisibleAnywhere, Category = "Weapon | General")
-	float MaxFireRange;
-
-	/** How many units each second does the projectile cover*/
-	UPROPERTY(EditAnywhere, Category = "Weapon | General")
-	float ProjectileSpeed;
 
 	/** Force applied to weapon when dropped by a pawn*/
 	UPROPERTY(EditAnywhere, Category = "Weapon | General")
 	float ThrowForce;
 
-	/** The current amount of ammo in the clip*/
-	UPROPERTY(EditAnywhere, Category = "Weapon | Ammo")
-	uint16 CurrentAmmo;
-
-	/** The max amount of ammo this weapon can hold in a single clip*/
-	UPROPERTY(EditAnywhere, Category = "Weapon | Ammo")
-	uint16 ClipSize;
-
-	/** Current amount of excess ammo this weapon has attached*/
-	UPROPERTY(EditAnywhere, Category = "Weapon | Ammo")
-	uint16 ExccessAmmo;
-
-	/** The max amount of the shooter can hold of this weapon*/
-	UPROPERTY(EditAnywhere, Category = "Weapon | Ammo")
-	uint16 MaxHeldAmmo;
-
 	/** The amount of damage dealt by each attack withs this weapon*/
 	UPROPERTY(EditAnywhere, Category = "Weapon | Damage")
 	float BaseDamage;
 
-	/** Multiplies the base damage by this amount when striking the body*/
-	UPROPERTY(EditAnywhere, Category = "Weapon | Damage")
-	float BodyMultiplier;
+	UCombatComponent* OwningComponent;
 
-	/** Multiplies the base damage by this amount when striking the head*/
-	UPROPERTY(EditAnywhere, Category = "Weapon | Damage")
-	float HeadMultiplier;
-
-	/** Multiplies the base damage by this amount when striking a limb*/
-	UPROPERTY(EditAnywhere, Category = "Weapon | Damage")
-	float LimbMultiplier;
-
-	/** How many seconds it takes for this weapon to be ready to fire again*/
-	UPROPERTY(EditAnywhere, Category = "Weapon | Firing")
-	float FireRate;
-
-	/**
-	 * How much recoil is applied each time the weapon is fired
-	 * When held by AI this will always be zero
-	 */
-	UPROPERTY(EditAnywhere, Category = "Weapon | Firing")
-	float Recoil;
-
-	/**
-	 * This value controls how quickly impulse from weapon fire decays
-	 * AI have no recoil so this value does not matter for them
-	 */
-	UPROPERTY(EditAnywhere, Category = "Weapon | Firing")
-	float RecoilFallOff;
-
-	/**
-	 * This value controls how quickly the camera position resets after firing
-	 * AI have no recoil so this value does not matter for them
-	 */
-	UPROPERTY(EditAnywhere, Category = "Weapon | Firing")
-	float RecoilRecovery;
-
-	/**
-	 * This value controls many degrees recoil can displace us from the original look direction
-	 * AI have no recoil so this value does not matter for them
-	 */
-	UPROPERTY(EditAnywhere, Category = "Weapon | Firing")
-	float RecoilAngularLimit;
-
-	/**
-	 * How much the this weapon's recoil multiplied by when it is being aimed?
-	 * AI have no recoil so this value does not matter for them
-	 */
-	UPROPERTY(EditAnywhere, Category = "Weapon | Firing")
-	float RecoilAimFactor;
-
-	/** The max value of bloom possible*/
-	UPROPERTY(VisibleAnywhere, Category = "Weapon | Firing")
-	float BloomMax;
-
-	/** How much bloom is added to the base when the weapon is fired from the hip*/
-	UPROPERTY(EditAnywhere, Category = "Weapon | Firing")
-	float Bloom;
-
-	/** How quickly bloom decays when over the base value*/
-	UPROPERTY(EditAnywhere, Category = "Weapon | Firing")
-	float BloomFallOff;
-
-	/** The base amount of bloom this weapon has in the walking state*/
-	UPROPERTY(EditAnywhere, Category = "Weapon | Firing")
-	float BloomWalkBase;
-
-	/**  The base amount of bloom this weapon has in the crouching state*/
-	UPROPERTY(EditAnywhere, Category = "Weapon | Firing")
-	float BloomCrouchBase;
-
-	/** The base amount of bloom this weapon has in the proning state*/
-	UPROPERTY(EditAnywhere, Category = "Weapon | Firing")
-	float BloomProneBase;
-
-	/** Multiplies the bloom base by this much when moving*/
-	UPROPERTY(EditAnywhere, Category = "Weapon | Firing")
-	float BloomBaseMovementMultiplier;
-
-	/** If true, enables line traces showing fire direction*/
-	UPROPERTY(EditAnywhere, Category = "Weapon | Debug")
-	uint8 bTraceDebug : 1;
-
-//Begin Multicast Delegate Events
-
-	/** Invoked when the weapon fires*/
-	UPROPERTY(BlueprintAssignable)
-	FWeaponEvent OnWeaponFire;
-
-	/** Invoked when the weapon is prompted to reload*/
-	UPROPERTY(BlueprintAssignable)
-	FWeaponEvent OnWeaponReload;
-
-private:
-
-	ABullet* GetAvailableBullet();
-
-	/** Alters the angular velocity of camera rotation caused by weapon spread*/
-	void AddRecoilVelocity(const float Velocity);
-
-	/** Alters the amount of weapon spread applied to the weapon*/
-	void AddBloom(const float BloomAmount);
-
-	/** 
-	 * Pointer to a level object that determines where the line trace begins for firing
-	 * For the shooter, this is the camera component
-	 */
-	const USceneComponent* TraceOrigin;
-
-	/** Short hand pointer to the mesh component we are holding*/
-	const USkeletalMeshComponent* HeldWeaponMesh;
-
-	/** Short hand pointer to the socket attached to the HeldWeaponMesh at the barrel*/
-	const USkeletalMeshSocket* BulletOrigin;
-
-	/** Parameters used during line tracing*/
-	FCollisionQueryParams QueryParams;
-
-	/** Whether or not the weapon is ready to fire*/
-	uint8 bCanFire : 1;
-
-	/** Used to track if the weapon is ready to fire*/
-	float FireTimer;
-
-	/** Value used to determine how much to sway the camera by*/
-	float RecoilVelocity;
-
-	/** Current amount of bloom applied to the primary weapon (in degrees)*/
-	float CurrentBloom;
-
-	/** Current minimum amount of bloom*/
-	float BloomMin;
+	uint8 bIsAimed : 1;
 };
