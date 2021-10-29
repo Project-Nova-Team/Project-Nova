@@ -67,6 +67,12 @@ protected:
 	UPROPERTY(BlueprintReadWrite)
 	UUserWidget* ExitConfirmationWidget;
 
+	UPROPERTY(BlueprintReadWrite)
+	UUserWidget* SettingsMenuWidget;
+
+	UPROPERTY(BlueprintReadWrite)
+	UUserWidget* ControlsMenuWidget;
+
 	/** Max ammo that can be stored in this weapon after reloading*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HUD")
 	int MaxAmmoInWeapon;
