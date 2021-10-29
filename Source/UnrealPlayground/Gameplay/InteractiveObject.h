@@ -16,4 +16,5 @@ class UNREALPLAYGROUND_API IInteractiveObject
 
 public:
 	virtual void InteractionEvent(const APawn* EventSender) = 0;
+
 };
