@@ -20,7 +20,7 @@ AWeapon::AWeapon()
 	ImpulseKickFactor = .3f;
 }
 
-void AWeapon::InteractionEvent(const APawn* EventSender)
+void AWeapon::InteractionEvent(APawn* EventSender)
 {
 	//We are already being held by another combat component
 	if (OwningComponent != nullptr)
@@ -64,6 +64,7 @@ void AWeapon::SetWeaponSceneValues(USceneComponent* TraceOriginComponent, USkele
 		Mesh->AddForce(TraceOrigin->GetForwardVector().GetSafeNormal2D() * ThrowForce);
 		PrimaryActorTick.SetTickFunctionEnable(false);
 		OwningComponent = nullptr;
+		OwnerInput = nullptr;
 	}
 
 	TraceOrigin = TraceOriginComponent;
