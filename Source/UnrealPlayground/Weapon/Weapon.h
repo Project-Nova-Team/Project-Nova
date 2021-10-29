@@ -8,7 +8,7 @@
 class USkeletalMesh;
 class USkeletalMeshSocket;
 class UCombatComponent;
-enum EWeaponFireStance;
+struct FWeaponInput;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FWeaponEvent);
 DECLARE_DELEGATE(FWeaponUIEvent);
@@ -29,7 +29,7 @@ class UNREALPLAYGROUND_API AWeapon : public AActor, public IInteractiveObject
 public:	
 	AWeapon();
 
-	void InteractionEvent(const APawn* EventSender) override;
+	void InteractionEvent(APawn* EventSender) override;
 
 	/** TODO stop inlining once we get some fields in FWeaponUIData*/
 	FWeaponUIData GetWeaponUI() const { return FWeaponUIData(); }
@@ -78,6 +78,9 @@ public:
 	 * so we can access a socket on the mesh to fire a cosmetic projectile from 
 	 */
 	USkeletalMeshComponent* ProjectileOriginMesh;
+
+	/** Pointer to a stance enum that weapons use to vary things like bloom*/
+	FWeaponInput* OwnerInput;
 
 	/** When invoked, any HUD subscribed to this event will update values*/
 	FWeaponUIEvent OnUpdateUI;

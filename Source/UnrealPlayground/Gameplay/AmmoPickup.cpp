@@ -1,30 +1,41 @@
-// Fill out your copyright notice in the Description page of Project Settings.
 #include "AmmoPickup.h"
 #include "GameFramework/Pawn.h"
-#include "../Weapon/CombatComponent.h"
+#include "../Player/Shooter.h"
+#include "Components/StaticMeshComponent.h"
 
-// Sets default values
 AAmmoPickup::AAmmoPickup()
 {
 	AmmoAmount = 10;
+	Mesh = CreateDefaultSubobject<UStaticMeshComponent>("Mesh");
+	SetRootComponent(Mesh);
 }
 
-// Add ammo
-void AAmmoPickup::InteractionEvent(const APawn* EventSender)
+
+void AAmmoPickup::InteractionEvent(APawn* EventSender)
 {
-	/*UCombatComponent* PlayerCombatComponent = EventSender->FindComponentByClass<UCombatComponent>();
-
-	if (PlayerCombatComponent != nullptr)
+	AShooter* Shooter = Cast<AShooter>(EventSender);
+	
+	if (Shooter != nullptr)
 	{
-		if (PlayerCombatComponent->GetPrimaryWeapon() != nullptr)
-		{			
-			if (AmmoAmount + PlayerCombatComponent->GetPrimaryWeapon()->GetExcessAmmo() <= PlayerCombatComponent->GetPrimaryWeapon()->GetMaxHeldAmmo())
-			{
-				SetInteractiveObjectHidden(true);
-
-				// Right now we are only adding ammo to primary weapon. Let's ask design team what they want to do.
-				PlayerCombatComponent->AddAmmmoToWeapon(PlayerCombatComponent->GetPrimaryWeapon(), AmmoAmount);
-			} 
+		switch (GunType)
+		{
+		case WC_Pistol:
+			Shooter->GetInventory()->PistolAmmo += AmmoAmount;
+			break;
+		case WC_Shotgun:
+			Shooter->GetInventory()->ShotgunAmmo += AmmoAmount;
+			break;
+		case WC_Rifle:
+			Shooter->GetInventory()->RifleAmmo += AmmoAmount;
 		}
-	}*/
+
+		if (Shooter->HasGunOfType(GunType))
+		{
+			Shooter->LoadAmmoOnPickup(GunType);
+		}
+
+		Mesh->SetVisibility(false);
+		Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	}
 }
