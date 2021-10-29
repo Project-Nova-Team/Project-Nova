@@ -109,7 +109,6 @@ void USTuckState::AdjustHeight(const float StartHeight, const float TargetHeight
 		if (Handle->CurrentActionProgress >= 1.f)
 		{
 			Movement->bIsInTuckTransition = false;
-			Handle = nullptr;
 		}
 	}
 }

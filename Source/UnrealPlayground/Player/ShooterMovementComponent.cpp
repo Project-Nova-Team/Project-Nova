@@ -17,6 +17,7 @@ UShooterMovementComponent::UShooterMovementComponent()
 
 	FrictionMultiplier = 5.f;
 	FrictionTurnMultiplier = 10.f;
+	WallFrictionMultiplier = -0.25f;
 	GravityMultiplier = 2.2f;
 
 	AirControlMultiplier = 0.f;
@@ -48,6 +49,6 @@ UShooterMovementComponent::UShooterMovementComponent()
 void UShooterMovementComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
 	MaxSlopeZ = FMath::Acos(FMath::DegreesToRadians(MaxSurfaceAngle));
+	bIsOnGround = true;
 }

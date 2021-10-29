@@ -8,6 +8,7 @@
 #include "AmmoPickup.generated.h"
 
 class UShooterCombatComponent;
+class AGun;
 
 UCLASS()
 class UNREALPLAYGROUND_API AAmmoPickup : public AActor, public IInteractiveObject

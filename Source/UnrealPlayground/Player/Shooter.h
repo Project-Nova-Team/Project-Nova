@@ -4,26 +4,26 @@
 #include "GameFramework/Pawn.h"
 #include "ShooterMovementComponent.h"
 #include "WeaponInput.h"
-#include "Animation/AnimInstance.h"
+#include "../Weapon/CombatComponent.h"
 #include "Shooter.generated.h"
 
 class UCapsuleComponent;
 class UCameraComponent;
 class UShooterStateMachine;
-class UPawnMovementComponent;
-class UShooterCombatComponent;
+class UMeleeComponent;
 class UHealthComponent;
 class UAIPerceptionStimuliSourceComponent;
 class IInteractiveObject;
+class AGun;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FScanEvent, FHitResult, ScanData);
-// TAKING IN SCAN HIT HERE IS BAD!!!!!!! PLS FIX
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FVaultEvent, FHitResult, ScanData2);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FShooterMakeNoise, FVector, Location, float, Volume);
+
 
 struct FShooterInput : public FWeaponInput
 {
-public:
 	FShooterInput() { }
+
 	/** 
 	* Runs within the shooter's Tick to handle any input states that need to be watched 
 	* @param	DeltaTime				Time slice
@@ -39,20 +39,11 @@ public:
 	/** How long crouch has been held for since the last release*/
 	float CurrentCrouchHoldTime;
 
-	/** X-axis movement input*/
-	float MoveX;
-
-	/** Y-axis movement input*/
-	float MoveY;
-
-	/** X-axis look input*/
-	float LookX;
-
-	/** Y-axis look input*/
-	float LookY;
-
 	/** Whether or not the player is pressing the jump button*/
 	uint8 bIsTryingToVault : 1;
+
+	/** Whether or not the player is pressing the interact button*/
+	uint8 bIsTryingToInteract : 1;
 
 	/** Whether or not the player is pressing the crouch button*/
 	uint8 bIsHoldingCrouch : 1;
@@ -82,46 +73,65 @@ public:
 
 	friend struct FShooterInput;
 
-	USkeletalMeshComponent* GetWeaponMesh() const { return WeaponMesh; }
+	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const { return WeaponMesh; }
 
 	/** Returns the capsule component attached to this shooter*/
-	UCapsuleComponent* GetCollider() const { return Collider; }
+	FORCEINLINE UCapsuleComponent* GetCollider() const { return Collider; }
 
 	/** Returns the camera anchor component attached to this shooter*/
-	USceneComponent* GetAnchor() const { return CameraAnchor; }
+	FORCEINLINE USceneComponent* GetAnchor() const { return CameraAnchor; }
 	
 	/** Returns the combat component attached to this shooter*/
-	UShooterCombatComponent* GetCombat() const { return Combat; }
+	FORCEINLINE UCombatComponent* GetCombat() const { return Combat; }
 
 	/** Returns the camera component attached to this shooter*/
-	UCameraComponent* GetCamera() const { return Camera; }
+	FORCEINLINE UCameraComponent* GetCamera() const { return Camera; }
+
+	/** Returns the state machine attached to the shooter which drives player movement*/
+	FORCEINLINE UShooterStateMachine* GetStateMachine() const { return StateMachine; }
+
+	FORCEINLINE UHealthComponent* GetHealth() const { return Health; }
 
 	/** Returns the input state. Note: contents are mutable*/
-	FShooterInput* GetInput() { return &InputState; }
+	FORCEINLINE FShooterInput* GetInput() { return &InputState; }
 
-	UAIPerceptionStimuliSourceComponent* GetPerceptionSource() const { return PerceptionSource; }
+	/** Returns the input state. Note: contents are mutable*/
+	UFUNCTION(BlueprintCallable)
+	FORCEINLINE FWeaponInput GetInputRaw() { return FWeaponInput(InputState); }
+
+	/** Returns the Skeletal Mesh component of this shooter*/
+	FORCEINLINE USkeletalMeshComponent* GetSkeletalMeshComponent() { return ShooterSkeletalMesh; }
+
+	/** Returns the Shooter Movement component attached to this shooter*/
+	FORCEINLINE UShooterMovementComponent* GetShooterMovement() { return ShooterMovement; }
+
+	/** Returns the Melee component attached to this shooter*/
+	FORCEINLINE UMeleeComponent* GetMelee() { return Melee; }
+
+	/** Returns the Perception Source component which enables AI to sense stimulus produced by this actor*/
+	FORCEINLINE UAIPerceptionStimuliSourceComponent* GetPerceptionSource() const { return PerceptionSource; }
+
+	/** Returns State Machine. Maybe consider moving this to shooter movement component?*/
+	FORCEINLINE UShooterStateMachine* GetStateMachine() { return StateMachine; }
 
 	/** Draws debug traces for a variety of position tests if enabled*/
 	UPROPERTY(Category = Pawn, EditAnywhere)
 	uint8 bTraceDebug : 1;
 
-	/**Invoked when the shooter is looking at an object that can be interacted with (a weapon/button)*/
+	/** Invoked when the shooter is looking at an object that can be interacted with (a weapon/button)*/
 	UPROPERTY(BlueprintAssignable)
 	FScanEvent OnScanHit;
 
-	/**Invoked when the shooter is not looking at an object that can be interacted with (a weapon/button)*/
+	/** Invoked when the shooter is not looking at an object that can be interacted with (a weapon/button)*/
 	UPROPERTY(BlueprintAssignable)
 	FScanEvent OnScanMiss;
 
-	/**Invoked when the shooter can vault and presses space*/
+	/** Invoked when the shooter shooter makes a sound*/
 	UPROPERTY(BlueprintAssignable)
-	FVaultEvent OnVaultPress;
+	FShooterMakeNoise OnMakeNoise;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	UAnimMontage *VaultAnimMontage;
-
-	UPROPERTY(BlueprintReadOnly)
 	/** Set when player overlaps or unoverlaps vault trigger*/
+	UPROPERTY(BlueprintReadOnly)
 	uint8 bIsInsideVaultTrigger : 1;
 
 	/** Is player looking at a vault object?*/
@@ -132,23 +142,13 @@ public:
 	UFUNCTION(BlueprintCallable)
 	bool GetCanVault();
 
-	/** Animation Hooks**/
+	UFUNCTION(BlueprintCallable)
+	void ShooterMakeNoise(FVector Location, float Volume);
 
-	/** Returns whether this shooter is walking*/
-	UFUNCTION(BlueprintCallable, Category = "Animation")
-	bool IsWalking();
+	/** Sets the death state in the state machine when the shooter dies*/
+	UFUNCTION()
+	void HandleDeath();
 
-	/** Returns whether this shooter is falling*/
-	UFUNCTION(BlueprintCallable, Category = "Animation")
-	bool IsFalling();
-
-	/** Broadcasts event for vaulting animation*/
-	UFUNCTION(BlueprintCallable, Category = "Animation")
-	void StartVaultAnimation();
-
-	UFUNCTION(BlueprintCallable, Category = "Animation")
-	void PlayVaultMontage();
-	
 protected:
 	virtual void BeginPlay() override;
 
@@ -161,7 +161,7 @@ private:
 	void OnTriggerExit(AActor* OverlappedActor, AActor* OtherActor);
 
 	UPROPERTY(Category = Mesh, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	USkeletalMeshComponent* Arms;
+	USkeletalMeshComponent* ShooterSkeletalMesh;
 
 	UPROPERTY(Category = Mesh, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	USkeletalMeshComponent* WeaponMesh;
@@ -179,7 +179,10 @@ private:
 	UCameraComponent* Camera;
 
 	UPROPERTY(Category = Shooter, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	UShooterCombatComponent* Combat;
+	UMeleeComponent* Melee;
+
+	UPROPERTY(Category = Shooter, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UCombatComponent* Combat;
 
 	UPROPERTY(Category = Shooter, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	UAIPerceptionStimuliSourceComponent* PerceptionSource;
@@ -187,7 +190,7 @@ private:
 	UPROPERTY(Category = Shooter, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	UHealthComponent* Health;
 
-	UPROPERTY()
+	UPROPERTY(Transient)
 	UShooterStateMachine* StateMachine;
 	
 	/**Contains all relevant information of the input state*/
@@ -199,6 +202,8 @@ private:
 	/** Casts a trace from the camera to see if there is an object nearby we can interact with*/	
 	void ScanInteractiveObject();
 
+	
+
 	///		 Begin Input Bindings	   ///
 	void MoveInputX(const float Value)	{ InputState.MoveX = Value; }
 	void MoveInputY(const float Value)	{ InputState.MoveY = Value; }
@@ -208,22 +213,27 @@ private:
 	void VaultRelease()					{ InputState.bIsTryingToVault = false; }
 	void CrouchPress()					{ InputState.bIsHoldingCrouch = true; }
 	void CrouchRelease()				{ InputState.bIsHoldingCrouch = false; }
-	void ShootPress()					{ InputState.bIsTryingToFire = true; }
-	void ShootRelease()					{ InputState.bIsTryingToFire = false; }
-	void AimPress()						{ InputState.bIsTryingToAim = true; }
-	void AimRelease()					{ InputState.bIsTryingToAim = false; }
+	void ShootPress()					{ Combat->ReceiveAttack(true); }
+	void ShootRelease()					{ Combat->ReceiveAttack(false); }
+	void AimPress()						{ Combat->ReceiveAim(); }
+	void AimRelease()					{  }
 	void InteractPress()				{ InputState.bIsTryingToInteract = true; }
 	void InteractRelease()				{ InputState.bIsTryingToInteract = false; }
-	void SwapPress()					{ InputState.bIsTryingToSwap = true; }
-	//void SwapRelease()					{ InputState.bIsTryingToSwap = false; }
-	void MeleePress()					{ InputState.bIsTryingToMelee = true; }
-	void MeleeRelease()					{ InputState.bIsTryingToMelee = false; }
+	void SwapPressUp()					{ Combat->ReceiveSwap(-1); }
+	void SwapPressDown()				{ Combat->ReceiveSwap(1); }
 	void SprintPress()					{ InputState.bIsTryingToSprint = true; }
 	void SprintRelease()				{ InputState.bIsTryingToSprint = false; }
-	void ReloadPress()					{ InputState.bIsTryingToReload = true; }
-	void ReloadRelease()				{ InputState.bIsTryingToReload = false; }
-	void ThrowPrimaryPress()			{ InputState.bIsTryingToThrowPrimary = true; }
-	void ThrowPrimaryRelease()			{ InputState.bIsTryingToThrowPrimary = false; }
-	void ThrowSecondaryPress()			{ InputState.bIsTryingToThrowSecondary = true; }
-	void ThrowSecondaryRelease()		{ InputState.bIsTryingToThrowSecondary = false; }
+	void ReloadPress()					{ Combat->ReceiveReload(); }
+	void ReloadRelease()				{  }
+
+	//TODO delete all of this
+#if WITH_EDITOR
+	UPROPERTY(EditAnywhere, Category = "SOUND TEST")
+	float NoiseAmount;
+
+	float NoiseIntensity;
+
+	void MakeSound(const float Volume);
+	
+#endif
 };
