@@ -2,7 +2,7 @@
 #include "Bullet.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Engine/SkeletalMeshSocket.h"
-
+#include "../Player/WeaponInput.h"
 
 FGunUIData AGun::GetGunUI() const
 {
@@ -52,15 +52,15 @@ AGun::AGun()
 	BloomCrouchBase = 5.f;
 	BloomProneBase = 2.5f;
 	BloomBaseMovementMultiplier = 3.f;
-
-	PrimaryActorTick.SetTickFunctionEnable(false);
 }
 
-// Called when the game starts or when spawned
+
 void AGun::BeginPlay()
 {
 	Super::BeginPlay();
 	BloomMin = BloomWalkBase;
+
+	PrimaryActorTick.SetTickFunctionEnable(false);
 
 	/** Generate initial object pool*/
 	for (int i = 0; i < StartingPoolSize; i++)
@@ -75,6 +75,8 @@ void AGun::BeginPlay()
 void AGun::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	SetBloomMin();
 
 	if (!bCanFire)
 	{
@@ -141,6 +143,8 @@ void AGun::FireStraight()
 		StopAttack();
 		return;
 	}
+
+	SetBloomMin();
 
 	CurrentAmmo--;
 	bCanFire = false;
@@ -293,13 +297,11 @@ void AGun::AddImpulseVelocity(const float Velocity)
 	ImpulseVelocity = FMath::Clamp(ImpulseVelocity, 0.f, ImpulseVelocityMax);
 }
 
-void AGun::SetBloomMin(const EWeaponFireStance Stance, const bool bIsMoving)
+void AGun::SetBloomMin()
 {
-	//TODO get this working agian. Fire stance was a hacky solution
+	float Base = 0.f;
 
-	/*float Base = 0.f;
-
-	switch (Stance)
+	switch (OwnerInput->Stance)
 	{
 	case WFS_Standing:
 		Base = BloomWalkBase;
@@ -312,8 +314,8 @@ void AGun::SetBloomMin(const EWeaponFireStance Stance, const bool bIsMoving)
 		break;
 	}
 
-	const float Multiplier = bIsMoving ? BloomBaseMovementMultiplier : 1.f;
-	BloomMin = Base * Multiplier;*/
+	const float Multiplier = OwnerInput->bIsMoving ? BloomBaseMovementMultiplier : 1.f;
+	BloomMin = Base * Multiplier;
 }
 
 void AGun::SetWeaponSceneValues(USceneComponent* TraceOriginComponent, USkeletalMeshComponent* ProjectileOrigin)
