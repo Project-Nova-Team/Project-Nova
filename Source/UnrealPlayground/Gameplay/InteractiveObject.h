@@ -15,6 +15,6 @@ class UNREALPLAYGROUND_API IInteractiveObject
 	GENERATED_BODY()
 
 public:
-	virtual void InteractionEvent(const APawn* EventSender) = 0;
+	virtual void InteractionEvent(APawn* EventSender) = 0;
 
 };
