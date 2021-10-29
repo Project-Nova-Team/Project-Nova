@@ -19,8 +19,8 @@ void USWalkState::Tick(const float DeltaTime)
 
 void USWalkState::CheckForRunState()
 {
-	//Not holding sprint button or not on ground
-	if (!Input->bIsTryingToSprint || !Movement->bIsOnGround)
+	//Not holding sprint button or not on ground. Or we are aiming
+	if (!Input->bIsTryingToSprint || !Movement->bIsOnGround || Shooter->GetCombat()->GetIsAimed())
 	{
 		return;
 	}

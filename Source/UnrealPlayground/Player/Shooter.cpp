@@ -12,9 +12,6 @@
 #include "../Gameplay/InteractiveObject.h"
 #include "../Gameplay/MeleeComponent.h"
 
-//Lazy
-#include "../Animation/ShooterAnimInstance.h"
-
 void FShooterInput::Tick(const float DeltaTime)
 {
 	bIsTryingToCrouch = false;
@@ -93,7 +90,7 @@ void AShooter::BeginPlay()
 
 	StateMachine = NewObject<UShooterStateMachine>();
 	StateMachine->Initialize(this);
-	Cast<UShooterAnimInstance>(ShooterSkeletalMesh->GetAnimInstance())->BindVault(); //laaazy
+	OnStateLoadComplete.Broadcast();
 
 	InputState.Owner = this;
 

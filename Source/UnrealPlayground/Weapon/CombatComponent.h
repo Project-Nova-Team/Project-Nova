@@ -6,6 +6,7 @@
 
 class AGun;
 class AWeapon;
+enum EWeaponFireStance;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FAnimEvent);
 DECLARE_MULTICAST_DELEGATE_OneParam(FWeaponCollectionEvent, AWeapon*);
@@ -30,7 +31,7 @@ public:
 	/** Returns the max degrees of recoil offset from a gun*/
 	float GetWeaponRecoilLimit() const;
 
-	void SetIsInAnimation(const bool Value) { bIsInAnimation = Value; }
+	void SetIsInAnimation(const bool Value);
 
 	/** 
 	 * An anim instance should call this function with the status of a reload montage
@@ -48,7 +49,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	FORCEINLINE AWeapon* GetHeldWeapon() const { return (Arsenal.Num() > 0) ? Arsenal[CurrentWeaponIndex] : nullptr; }
 
-	bool GetIsAimed() const { return bIsAimed; }
+	FORCEINLINE bool GetIsAimed() const { return bIsAimed; }
 
 	bool IsActionLocked() const { return (GetHeldWeapon() == nullptr) || bIsReloading || bIsInAnimation || bIsSwapping; }
 
@@ -85,7 +86,7 @@ public:
 
 	FAnimEvent OnSwap;
 
-	FAnimEvent OnAttack;
+	FAnimEvent OnAnimCancel;
 
 	/** Invoked when a new weapon is added to the arensal*/
 	FWeaponCollectionEvent OnArsenalAddition;
@@ -147,4 +148,7 @@ protected:
 
 	/** Current index of the Arsenal array. The weapon at this index is the currently held weapon*/
 	int32 CurrentWeaponIndex;
+
+private:
+	TEnumAsByte<EWeaponFireStance>* OwnerStance;
 };

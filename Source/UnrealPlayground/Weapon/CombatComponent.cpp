@@ -83,6 +83,25 @@ void UCombatComponent::SwapEvent()
 	WeaponMesh->SetRelativeRotation(Arsenal[CurrentWeaponIndex]->WeaponMeshRotationOffset);
 }
 
+void UCombatComponent::SetIsInAnimation(const bool Value)
+{
+	if (Value)
+	{
+		if (GetHeldWeapon() != nullptr)
+		{
+			GetHeldWeapon()->StopAttack();
+		}
+		
+		//We were previously playing an animation, we need to cancel it
+		if (bIsInAnimation)
+		{
+			OnAnimCancel.Broadcast();
+		}
+	}
+
+	bIsInAnimation = Value;
+}
+
 void UCombatComponent::ReceiveSwap(const int32 Direction)
 {
 	const int32 WeaponCount = Arsenal.Num();
@@ -124,14 +143,14 @@ void UCombatComponent::ReceiveAttack(const bool bAttackEnabled)
 	
 	else
 	{
-		OnAttack.Broadcast();
-		Arsenal[CurrentWeaponIndex]->StartAttack();
-
 		//lazy
-		if (Arsenal[CurrentWeaponIndex]->GetClass() == AMeleeWeapon::StaticClass())
+		if (Arsenal[CurrentWeaponIndex]->IsA(AMeleeWeapon::StaticClass()))
 		{
-			bIsInAnimation = true;
+			bIsInAnimation = true; // dont use setter here because it would immediatly stop the attk
 		}
+
+		OnAnimCancel.Broadcast();
+		Arsenal[CurrentWeaponIndex]->StartAttack();		
 	}
 }
 

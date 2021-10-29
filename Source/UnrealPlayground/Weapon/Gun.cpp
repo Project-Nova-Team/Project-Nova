@@ -2,7 +2,7 @@
 #include "Bullet.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Engine/SkeletalMeshSocket.h"
-
+#include "../Player/WeaponInput.h"
 
 FGunUIData AGun::GetGunUI() const
 {
@@ -141,6 +141,8 @@ void AGun::FireStraight()
 		StopAttack();
 		return;
 	}
+
+	SetBloomMin();
 
 	CurrentAmmo--;
 	bCanFire = false;
@@ -295,9 +297,7 @@ void AGun::AddImpulseVelocity(const float Velocity)
 
 void AGun::SetBloomMin(const EWeaponFireStance Stance, const bool bIsMoving)
 {
-	//TODO get this working agian. Fire stance was a hacky solution
-
-	/*float Base = 0.f;
+	float Base = 0.f;
 
 	switch (Stance)
 	{
@@ -313,7 +313,7 @@ void AGun::SetBloomMin(const EWeaponFireStance Stance, const bool bIsMoving)
 	}
 
 	const float Multiplier = bIsMoving ? BloomBaseMovementMultiplier : 1.f;
-	BloomMin = Base * Multiplier;*/
+	BloomMin = Base * Multiplier;
 }
 
 void AGun::SetWeaponSceneValues(USceneComponent* TraceOriginComponent, USkeletalMeshComponent* ProjectileOrigin)
