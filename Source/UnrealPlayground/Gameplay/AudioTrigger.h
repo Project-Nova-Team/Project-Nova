@@ -8,6 +8,7 @@
 
 class UAudioComponent;
 class USoundCue;
+class UGameplayStatistics;
 
 UCLASS()
 class UNREALPLAYGROUND_API AAudioTrigger : public AActor
@@ -21,10 +22,6 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
 
 private:
 	/** Used to play audio. Set in bp*/
@@ -44,7 +41,4 @@ private:
 	// Overlap
 	UFUNCTION()
 	void BeginOverlap(AActor* OverlappedActor, AActor* OtherActor);
-
-	UFUNCTION()
-	void EndOverlap(AActor* OverlappedActor, AActor* OtherActor);
 };
