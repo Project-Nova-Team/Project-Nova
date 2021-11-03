@@ -7,14 +7,28 @@
 ABarkTrigger::ABarkTrigger()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
 
+}
+
+void ABarkTrigger::BeginPlay()
+{
+	Super::BeginPlay();
+
+	// bind delegates
+	OnActorBeginOverlap.AddDynamic(this, &ABarkTrigger::BeginOverlap);
+	OnActorEndOverlap.AddDynamic(this, &ABarkTrigger::EndOverlap);
+}
+
+void ABarkTrigger::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
 }
 
 void ABarkTrigger::ShowUIPrompt()
 {
-	// default for now
-	ShowBarkEvent.Broadcast("Press", "To Jump");
+	// this is being listened for by barktrigger blueprint
+	ShowBarkEvent.Broadcast(PrefixText, SuffixText, KeyText);
 }
 
 void ABarkTrigger::HideUIPrompt()
@@ -22,13 +36,15 @@ void ABarkTrigger::HideUIPrompt()
 	HideBarkEvent.Broadcast();
 }
 
-void ABarkTrigger::EnterOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void ABarkTrigger::BeginOverlap(AActor* OverlappedActor, AActor* OtherActor)
 {
-	ShowUIPrompt();
+	if(OtherActor == TargetActor)
+		ShowUIPrompt();
 }
 
-void ABarkTrigger::ExitOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+void ABarkTrigger::EndOverlap(AActor* OverlappedActor, AActor* OtherActor)
 {
-	HideUIPrompt();
+	if (OtherActor == TargetActor)
+		HideUIPrompt();
 }
 

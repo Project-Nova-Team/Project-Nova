@@ -4,9 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include <Runtime/Engine/Classes/Components/BoxComponent.h>
 #include "BarkTrigger.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FShowBarkEvent, FString, PrefixText, FString, SuffixText);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FShowBarkEvent, FString, PrefixText, FString, SuffixText, FString, KeyText);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FHideBarkEvent);
 
@@ -21,29 +22,44 @@ public:
 	// Sets default values for this actor's properties
 	ABarkTrigger();
 
+	virtual void BeginPlay() override;
+
+	void Tick(float DeltaTime) override;
+
+	/** The actor that will activate this trigger.Set this to shooter. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	AActor* TargetActor;
+
+	/** Used For the first text in a Bark UI display. I.E. 'Press' */
+	UPROPERTY(EditAnywhere)
+	FString PrefixText;
+
+	/** Used for the key name in a Bark UI display. I.E. 'C'*/
+	UPROPERTY(EditAnywhere)
+	FString KeyText;
+
+	/** Used For the last text in a Bark UI display.I.E. 'To Crouch' */
+	UPROPERTY(EditAnywhere)
+	FString SuffixText;
+
 private:
+
 	void ShowUIPrompt();
 
 	void HideUIPrompt();
 
 	// Overlap
 	UFUNCTION()
-	void EnterOverlap(UPrimitiveComponent* OverlappedComponent,
-	AActor* OtherActor,
-	UPrimitiveComponent* OtherComp,
-	int32 OtherBodyIndex,
-	bool bFromSweep,
-	const FHitResult& SweepResult);
+	void BeginOverlap(AActor* OverlappedActor, AActor* OtherActor);
 
 	UFUNCTION()
-	void ExitOverlap(UPrimitiveComponent* OverlappedComponent,
-	AActor* OtherActor,
-	UPrimitiveComponent* OtherComp,
-	int32 OtherBodyIndex);
+	void EndOverlap(AActor* OverlappedActor, AActor* OtherActor);
 
+	// show delegate
 	UPROPERTY(BlueprintAssignable)
 	FShowBarkEvent ShowBarkEvent;
 
+	// hide ui delegate
 	UPROPERTY(BlueprintAssignable)
 	FHideBarkEvent HideBarkEvent;
 };
