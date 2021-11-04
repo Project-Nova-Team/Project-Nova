@@ -58,3 +58,9 @@ void UHealthComponent::Heal(const float HealAmount)
 	}
 }
 
+void UHealthComponent::Revive()
+{
+	Heal(MaxHealth);
+	bIsInvincible = false;
+}
+
