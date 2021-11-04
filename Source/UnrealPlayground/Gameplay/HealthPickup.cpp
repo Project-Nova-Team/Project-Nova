@@ -19,7 +19,6 @@ void AHealthPickup::InteractionEvent(APawn* EventSender)
 	if (PawnHealthComponent != nullptr && !PawnHealthComponent->bIsFullHealth)
 	{
 		PawnHealthComponent->Heal(HealAmount);
-		Mesh->SetVisibility(false);
-		Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		RemoveSelf(this);
 	}
 }

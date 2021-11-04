@@ -17,6 +17,20 @@ void AAudioTrigger::BeginPlay()
 	Super::BeginPlay();
 	// bind delegates
 	OnActorBeginOverlap.AddDynamic(this, &AAudioTrigger::BeginOverlap);
+
+	BoxTrigger = Cast<UBoxComponent>(GetComponentByClass(UBoxComponent::StaticClass()));
+
+	AudioComponent = Cast<UAudioComponent>(GetComponentByClass(UAudioComponent::StaticClass()));
+}
+
+void AAudioTrigger::RemoveSelf(AActor* Actor)
+{
+	BoxTrigger->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+}
+
+void AAudioTrigger::RestoreSelf(AActor* Actor)
+{
+	BoxTrigger->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 }
 
 void AAudioTrigger::SetComponents(UAudioComponent* Component)
@@ -28,5 +42,8 @@ void AAudioTrigger::BeginOverlap(AActor* OverlappedActor, AActor* OtherActor)
 {
 	if (OtherActor == TargetActor)
 		UGameplayStatics::PlaySoundAtLocation(this, AudioComponent->Sound, AudioComponent->GetComponentLocation());
+
+	if (bDisappears)
+		RemoveSelf(this);
 }
 
