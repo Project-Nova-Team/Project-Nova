@@ -43,7 +43,7 @@ void ABullet::Tick(float DeltaTime)
 
 	FHitResult Hit;
 	
-	GetWorld()->LineTraceSingleByChannel(Hit, CurrentTraceLocation, TraceEnd, ECC_Visibility, QueryParams);
+	GetWorld()->LineTraceSingleByChannel(Hit, CurrentTraceLocation, TraceEnd, ECC_Pawn, QueryParams);
 	
 	if (Hit.bBlockingHit)
 	{

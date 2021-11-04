@@ -1,121 +1,132 @@
-// Fill out your copyright notice in the Description page of Project Settings.
 #include "Door.h"
 #include "Components/StaticMeshComponent.h"
+#include "Engine/StaticMesh.h"
+#include "GameFramework/Pawn.h"
+#include "../ShooterGameMode.h"
+#include "../Utility/DelayedActionManager.h"
+#include "Navigation/NavLinkProxy.h"
+#include "NavLinkCustomComponent.h"
 
-
-// Sets default values
 ADoor::ADoor()
 {
-	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
+
+	Frame = CreateDefaultSubobject<UStaticMeshComponent>("Frame");
+	SetRootComponent(Frame);
+
+	LeftSide = CreateDefaultSubobject<UStaticMeshComponent>("Left Door");
+	LeftSide->AttachToComponent(Frame, FAttachmentTransformRules::KeepRelativeTransform);
+
+	RightSide = CreateDefaultSubobject<UStaticMeshComponent>("Right Door");
+	RightSide->AttachToComponent(Frame, FAttachmentTransformRules::KeepRelativeTransform);
+
+	Trigger = CreateDefaultSubobject<UBoxComponent>("Door Trigger");
+	Trigger->AttachToComponent(Frame, FAttachmentTransformRules::KeepRelativeTransform);
+	Trigger->SetCollisionProfileName("OverlapOnlyPawn");
+
+	DoorTransitionTime = 0.5f;
+	DoorOpenDistance = 100.f;
 }
 
-// Called when the game starts or when spawned
 void ADoor::BeginPlay()
 {
 	Super::BeginPlay();
-	Trigger->OnComponentBeginOverlap.AddDynamic(this, &ADoor::EnterOverlap);
-	Trigger->OnComponentEndOverlap.AddDynamic(this, &ADoor::ExitOverlap);
 
-	DoorMoveDuration = .7f;
-}
+	//Intentionally avoiding a null check. We need blueprint to force this components existence
+	NavLink = Cast<ANavLinkProxy>(FindComponentByClass<UChildActorComponent>()->GetChildActor());
 
-// Called every frame
-void ADoor::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-	OpenDoor(DeltaTime);
-}
-
-void ADoor::SetComponents(UStaticMeshComponent* LeftDoor, UStaticMeshComponent* RightDoor, UBoxComponent* BoxTrigger)
-{
-	LeftDoorObject = LeftDoor;
-	RightDoorObject = RightDoor;
-	Trigger = BoxTrigger;
-
-	LeftDoorStartingLocation = LeftDoorObject->GetRelativeLocation();
-	RightDoorStartingLocation = RightDoorObject->GetRelativeLocation();
-
-	LeftDoorEndLocation = LeftDoorStartingLocation - FVector(50, LeftDoorStartingLocation.Y, LeftDoorStartingLocation.Z);
-	RightDoorEndLocation = RightDoorStartingLocation + FVector(50, RightDoorStartingLocation.Y, RightDoorStartingLocation.Z);
-
-	LeftDoorCurrentPosition = LeftDoorObject->GetRelativeLocation();
-	RightDoorCurrentPosition = RightDoorObject->GetRelativeLocation();
-}
-
-void ADoor::OpenDoor(float DeltaTime)
-{
-	const float Alpha = FMath::Clamp(TimeTracker / DoorMoveDuration, 0.f, 1.f);
-	TimeTracker += DeltaTime;
-	// player is in trigger
-	if (bOpen)
+	if (bStartLocked)
 	{
-		// if door has not finished opening
-		if (!Finished)
-		{
-			// if door open duration is less than the timer that started at the beginning
-			// of this method,
-			if (TimeTracker < DoorMoveDuration)
-			{
-				// Lerp from the position saved when player entered trigger to end pos
-				LeftDoorObject->SetRelativeLocation(FMath::Lerp(LeftDoorCurrentPosition, LeftDoorEndLocation, Alpha));
-				RightDoorObject->SetRelativeLocation(FMath::Lerp(RightDoorCurrentPosition, RightDoorEndLocation, Alpha));
-			}
-			//snap into place when door gets close to end (achillies and the tortoise paradox)
-			else
-			{
-				LeftDoorObject->SetRelativeLocation(LeftDoorEndLocation);
-				RightDoorObject->SetRelativeLocation(RightDoorEndLocation);
-			}
-		}
+		SetIsLocked(true);
+		OnDoorLockStatusChange.Broadcast(true);
 	}
-	// player is out of trigger
+
+	OnActorBeginOverlap.AddDynamic(this, &ADoor::ActorStartOverlap);
+	OnActorEndOverlap.AddDynamic(this, &ADoor::ActorEndOverlap);
+}
+
+void ADoor::SetIsLocked(const bool Value)
+{
+	if (Value != bIsLocked)
+	{
+		bIsLocked = Value;
+		OnDoorLockStatusChange.Broadcast(Value);
+		MaybeChangeDoorState();
+		NavLink->GetSmartLinkComp()->SetEnabled(!Value);
+
+		//TODO test with better nav area class if getting caught happens 
+		/*if (Value)
+		{
+			NavLink->GetSmartLinkComp()->ClearNavigationObstacle();
+		}
+		
+		else
+		{
+			NavLink->GetSmartLinkComp()->AddNavigationObstacle(UNavArea::StaticClass(), FVector(100, 100, 100));
+		}*/
+	}
+}
+
+void ADoor::ActorStartOverlap(AActor* OverlappedActor, AActor* OtherActor)
+{
+	if (OtherActor->IsA(APawn::StaticClass()))
+	{
+		CurrentPawnCount++;
+		MaybeChangeDoorState();
+	}
+}
+
+void ADoor::ActorEndOverlap(AActor* OverlappedActor, AActor* OtherActor)
+{
+	if (OtherActor->IsA(APawn::StaticClass()))
+	{
+		CurrentPawnCount--;
+		MaybeChangeDoorState();
+	}
+}
+
+void ADoor::MaybeChangeDoorState()
+{
+	if (ShouldOpen())
+	{
+		State = EDS_Changing;
+		Handle = GetWorld()->GetAuthGameMode<AShooterGameMode>()->GetDelayedActionManager()->StartOverTimeAction(
+			this, &ADoor::OverTimeTransition, DoorTransitionTime, EDS_Open);
+	}
+
+	else if (ShouldClose())
+	{
+		State = EDS_Changing;
+		Handle = GetWorld()->GetAuthGameMode<AShooterGameMode>()->GetDelayedActionManager()->StartOverTimeAction(
+			this, &ADoor::OverTimeTransition, DoorTransitionTime, EDS_Closed);
+	}
+}
+
+void ADoor::OverTimeTransition(const EDoorState TargetState)
+{
+	//Doors are always side by side so the side we choose doesn't really matter since we'll just flip the axis for each side anyways
+	FVector AnyAxis;
+	float Offset;
+
+	if (TargetState == EDS_Open)
+	{
+		AnyAxis = -RightSide->GetRightVector();
+		Offset = FMath::Lerp(0.f, DoorOpenDistance, Handle->CurrentActionProgress);
+	}
+
 	else
 	{
-		// If door wasn't finished opening/closing
-		if (!Finished)
-		{
-			// if door open duration is less than the timer that started at the beginning
-			// of this method,
-			if (TimeTracker < DoorMoveDuration)
-			{
-				// move doors from current pos to start pos
-				LeftDoorObject->SetRelativeLocation(FMath::Lerp(LeftDoorCurrentPosition, LeftDoorStartingLocation, Alpha));
-				RightDoorObject->SetRelativeLocation(FMath::Lerp(RightDoorCurrentPosition, RightDoorStartingLocation, Alpha));
-			}
-			//snap into place when door gets close to end (achillies and the tortoise paradox)
-			else
-			{
-				LeftDoorObject->SetRelativeLocation(LeftDoorStartingLocation);
-				RightDoorObject->SetRelativeLocation(RightDoorStartingLocation);
-			}
-		}
+		AnyAxis = -RightSide->GetRightVector();
+		Offset = FMath::Lerp(DoorOpenDistance, 0.f, Handle->CurrentActionProgress);
+	}
 
-		// if doors have reached their endpoint finished is true.
-		if (Alpha == 1.f)
-		{
-			Finished = true;
-		}
+	LeftSide->SetRelativeLocation(-AnyAxis * Offset);
+	RightSide->SetRelativeLocation(AnyAxis * Offset);
+
+	//We've finished, transitioning. Decide if we should start closing or opening again because something might have occured during the transition
+	if (Handle->CurrentActionProgress >= 1.f)
+	{
+		State = TargetState;
+		MaybeChangeDoorState();
 	}
 }
-
-
-void ADoor::EnterOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	bOpen = true;
-	Finished = false;
-	LeftDoorCurrentPosition = LeftDoorObject->GetRelativeLocation();
-	RightDoorCurrentPosition = RightDoorObject->GetRelativeLocation();
-	TimeTracker = 0;
-}
-
-void ADoor::ExitOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
-{
-	bOpen = false;
-	Finished = false;
-	LeftDoorCurrentPosition = LeftDoorObject->GetRelativeLocation();
-	RightDoorCurrentPosition = RightDoorObject->GetRelativeLocation();
-	TimeTracker = 0;
-}
-
