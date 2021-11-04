@@ -18,6 +18,7 @@ public:
 	UFUNCTION()
 	void Heal(const float HealAmount);
 
+	void Revive();
 
 	/** Whether or not the current health is equal to the max health*/
 	UPROPERTY(BlueprintReadOnly, Category = "Health")

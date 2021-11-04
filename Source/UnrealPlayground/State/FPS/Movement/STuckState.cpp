@@ -131,9 +131,9 @@ bool USTuckState::CheckIfStandUpIsValid(const float NewColliderHalfHeight) const
 
 #if WITH_EDITOR
 	if (Shooter->bTraceDebug)
-		DrawDebugCapsule(Shooter->GetWorld(), SweepPosition, NewColliderHalfHeight, SweepRadius, FQuat::Identity, FColor::Green, false, 0.016f);
+		DrawDebugCapsule(Shooter->GetWorld(), SweepPosition, NewColliderHalfHeight, SweepRadius, FQuat::Identity, FColor::Green, false, 5.f);
 #endif
 
 	//Perform the sweep
-	return !Shooter->GetWorld()->SweepSingleByChannel(Hit, SweepPosition, SweepPosition, FQuat::Identity, ECC_Visibility, Capsule);
+	return !Shooter->GetWorld()->SweepSingleByChannel(Hit, SweepPosition, SweepPosition, FQuat::Identity, ECC_Pawn, Capsule, Params);
 }
