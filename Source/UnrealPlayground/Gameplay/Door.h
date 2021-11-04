@@ -1,14 +1,24 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include <Runtime/Engine/Classes/Components/BoxComponent.h>
-#include "Kismet/KismetMathLibrary.h"
+#include "Components/BoxComponent.h"
 #include "Door.generated.h"
 
 class UStaticMeshComponent;
+class UChildActorComponent;
+class ANavLinkProxy;
+struct FDelayedActionHandle;
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FDoorLockEvent, bool, bJustLocked);
+
+UENUM()
+enum EDoorState
+{
+	EDS_Closed,
+	EDS_Open,
+	EDS_Changing
+};
 
 UCLASS()
 class UNREALPLAYGROUND_API ADoor : public AActor
@@ -16,66 +26,83 @@ class UNREALPLAYGROUND_API ADoor : public AActor
 	GENERATED_BODY()
 	
 public:	
-	// Sets default values for this actor's properties
 	ADoor();
 
+	/** Sets the lock status of this door*/
+	void SetIsLocked(const bool Value);
+
+	/** Should this door be opening*/
+	FORCEINLINE bool ShouldOpen() const { return CurrentPawnCount > 0 && !bIsLocked && State == EDS_Closed; }
+
+	/** Should this door be shutting. This catches the interesting edge case where a door gets locked while open*/
+	FORCEINLINE bool ShouldClose() const { return State == EDS_Open && (CurrentPawnCount == 0 || bIsLocked); }
+
 protected:
-	// Called when the game starts or when spawned
+
 	virtual void BeginPlay() override;
 
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
+	UStaticMeshComponent* LeftSide;
 
-	/** The duration at which the door opens/Closes. ~1.0 for slow-ish, .5 for very fast.*/
-	UPROPERTY(EditAnywhere)
-		float DoorMoveDuration;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
+	UStaticMeshComponent* RightSide;
 
-private:
-	UFUNCTION(BlueprintCallable)
-	void SetComponents(UStaticMeshComponent* LeftDoor, UStaticMeshComponent* RightDoor, UBoxComponent* BoxTrigger);
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
+	UStaticMeshComponent* Frame;
 
-	void OpenDoor(float DeltaTime);
-
-	FVector LeftDoorStartingLocation;
-
-	FVector RightDoorStartingLocation;
-
-	FVector LeftDoorEndLocation;
-
-	FVector RightDoorEndLocation;
-
-	// Overlap
-	UFUNCTION()
-	void EnterOverlap(UPrimitiveComponent* OverlappedComponent,
-	AActor* OtherActor,
-	UPrimitiveComponent* OtherComp,
-	int32 OtherBodyIndex,
-	bool bFromSweep,
-	const FHitResult& SweepResult);
-
-	UFUNCTION()
-	void ExitOverlap(UPrimitiveComponent* OverlappedComponent,
-	AActor* OtherActor,
-	UPrimitiveComponent* OtherComp,
-	int32 OtherBodyIndex);
-
-	UPROPERTY()
-	UStaticMeshComponent* LeftDoorObject;
-	UPROPERTY()
-	UStaticMeshComponent* RightDoorObject;
-	UPROPERTY()
+	/** The door will open when a pawn enters this region and close when all pawns have left it*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
 	UBoxComponent* Trigger;
 
-	// used as timer for lerp
-	float TimeTracker;
+	/** C++ doesnt seem to play nice with child actor components... use this so AI can walk through doors*/
+	UPROPERTY(BlueprintReadOnly, Category = "Nav Link", meta = (AllowPrivateAccess = "true"))
+	ANavLinkProxy* NavLink;
 
-	//If true, the door is opening, if false, it is closing
-	uint8 bOpen : 1;
+	/** Whether or not the door is currently locked*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Door")
+	uint8 bIsLocked : 1;
 
-	uint8 Finished : 1;
+	/** Whether or not the door should start lockedd*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door")
+	uint8 bStartLocked : 1;
 
-	FVector LeftDoorCurrentPosition;
+	/** How many seconds does the door take to open/close all the way*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door")
+	float DoorTransitionTime;
 
-	FVector RightDoorCurrentPosition;
+	/** How many units does either door side slide away from the origin*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door")
+	float DoorOpenDistance;
+
+	/** Invoked by ActorBeginOverlap*/
+	UFUNCTION()
+	virtual void ActorStartOverlap(AActor* OverlappedActor, AActor* OtherActor);
+
+	/** Invoked by ActorEndOverlap*/
+	UFUNCTION()
+	virtual void ActorEndOverlap(AActor* OverlappedActor, AActor* OtherActor);
+
+	/** Close or open the door if the conditions are met*/
+	virtual void MaybeChangeDoorState();
+
+	/** This function is run by the delayed action manager to lerp the door positions over time*/
+	void OverTimeTransition(const EDoorState TargetState);
+
+	/** 
+	 * Invoked when SetIsLocked changes lock status (providing the new lock state)
+	 * This lets us tell blueprint subclass to update an emissive material
+	 */
+	UPROPERTY(BlueprintAssignable)
+	FDoorLockEvent OnDoorLockStatusChange;
+
+private:
+
+	/** How many pawns are currently overlapped with this actor*/
+	int32 CurrentPawnCount;
+
+	/** Live state of this door*/
+	TEnumAsByte<EDoorState> State;
+
+	/** Delayed action handle for ease of LERP*/
+	FDelayedActionHandle* Handle;
 };
