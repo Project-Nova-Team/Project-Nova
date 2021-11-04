@@ -27,6 +27,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TEnumAsByte<EGunClass> GunType;
 
-	UPROPERTY(VisibleAnywhere, Category = "Mesh", meta =(AllowPrivateAccess="true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Mesh", meta =(AllowPrivateAccess="true"))
 	UStaticMeshComponent* Mesh;
 };
