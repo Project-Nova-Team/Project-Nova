@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Removable.h"
+#include <Runtime/Engine/Classes/Components/BoxComponent.h>
 #include "AudioTrigger.generated.h"
 
 class UAudioComponent;
@@ -11,7 +13,7 @@ class USoundCue;
 class UGameplayStatistics;
 
 UCLASS()
-class UNREALPLAYGROUND_API AAudioTrigger : public AActor
+class UNREALPLAYGROUND_API AAudioTrigger : public AActor, public IRemovable
 {
 	GENERATED_BODY()
 	
@@ -24,12 +26,19 @@ protected:
 	virtual void BeginPlay() override;
 
 private:
+
+	UBoxComponent* BoxTrigger;
+
+	virtual void RemoveSelf(AActor* Actor) override;
+
+	virtual void RestoreSelf(AActor* Actor) override;
+
 	/** Used to play audio. Set in bp*/
 	UAudioComponent* AudioComponent;
 
-	/** Stop Audio when player leaves trigger*/
+	/** Set true if this object should be disabled after player leaves the trigger.*/
 	UPROPERTY(EditAnywhere)
-	uint8 bStopAudioOnTriggerExit : 1;
+	uint8 bDisappears : 1;
 
 	/** The actor that will activate this trigger.Set this to shooter. */
 	UPROPERTY(EditAnywhere)
