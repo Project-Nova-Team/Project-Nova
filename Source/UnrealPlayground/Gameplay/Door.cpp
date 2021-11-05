@@ -105,23 +105,21 @@ void ADoor::MaybeChangeDoorState()
 void ADoor::OverTimeTransition(const EDoorState TargetState)
 {
 	//Doors are always side by side so the side we choose doesn't really matter since we'll just flip the axis for each side anyways
-	FVector AnyAxis;
+	const FVector Right = FVector::RightVector;
 	float Offset;
 
 	if (TargetState == EDS_Open)
-	{
-		AnyAxis = -RightSide->GetRightVector();
+	{		
 		Offset = FMath::Lerp(0.f, DoorOpenDistance, Handle->CurrentActionProgress);
 	}
 
 	else
 	{
-		AnyAxis = -RightSide->GetRightVector();
 		Offset = FMath::Lerp(DoorOpenDistance, 0.f, Handle->CurrentActionProgress);
 	}
 
-	LeftSide->SetRelativeLocation(-AnyAxis * Offset);
-	RightSide->SetRelativeLocation(AnyAxis * Offset);
+	LeftSide->SetRelativeLocation(Right * Offset);
+	RightSide->SetRelativeLocation(-Right * Offset);
 
 	//We've finished, transitioning. Decide if we should start closing or opening again because something might have occured during the transition
 	if (Handle->CurrentActionProgress >= 1.f)
