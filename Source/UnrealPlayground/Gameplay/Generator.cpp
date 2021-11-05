@@ -14,4 +14,3 @@ void AGenerator::InteractionEvent(APawn* EventSender)
 {
 	//invoke event here
 }
-

@@ -13,6 +13,7 @@ class USplineComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAIEvent, bool, bStarted);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FAISoundEvent, FVector, Location, float, Strength);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FSoundCueEvent);
 
 UCLASS()
 class UNREALPLAYGROUND_API AAIBaseController : public AAIController
@@ -53,6 +54,9 @@ public:
 	/** Invoked when this AI hears a valid sound*/
 	FAISoundEvent OnHeardSound;
 
+	UPROPERTY(BlueprintAssignable)
+	FSoundCueEvent OnSpotTarget;
+
 	bool IsAggressive() const { return bAggressive; }
 
 	bool IsInvestigating() const { return bInvestigating; }
@@ -79,9 +83,10 @@ public:
 	void SetCell(AAICell* NewCell) { Cell = NewCell; }
 
 	UFUNCTION(BlueprintCallable)
-	AAICell* GetCell() const { return Cell; }
+	FORCEINLINE AAICell* GetCell() const { return Cell; }
 
-	AAIBase* GetAIOwner() { return AIOwner; }
+	UFUNCTION(BlueprintCallable)
+	FORCEINLINE AAIBase* GetAIOwner() { return AIOwner; }
 
 	AActor* GetTarget() const { return Target; }
 

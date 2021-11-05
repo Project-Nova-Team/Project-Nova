@@ -15,12 +15,16 @@ class UNREALPLAYGROUND_API AAIBase : public ACharacter
 public:
 	AAIBase();
 
+	UFUNCTION(BlueprintCallable)
 	FORCEINLINE UHealthComponent* GetHealth() const { return Health; }
 
+	UFUNCTION(BlueprintCallable)
 	FORCEINLINE UMeleeComponent* GetMelee() const { return MeleeComponent; }
 
+	UFUNCTION(BlueprintCallable)
 	FORCEINLINE AActor* GetPlayer() const { return Player; }
 
+	UFUNCTION(BlueprintCallable)
 	FORCEINLINE AActor* GetPatrolActor() const{ return PatrolActor; }
 
 	void SetPlayer(AActor* Value) { Player = Value; }

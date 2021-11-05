@@ -15,8 +15,8 @@ void UAIAttackState::OnEnter()
 	AI->SetMoveLocation(AI->GetTarget()->GetActorLocation());
 	AI->SetLastAggressionTime(AI->GetWorld()->GetTimeSeconds());
 	AI->SetAggression(true);
-
 	AI->GetAIOwner()->GetCharacterMovement()->MaxWalkSpeed = AI->GetAIOwner()->AttackMoveSpeed;
+	AI->OnSpotTarget.Broadcast();
 }
 
 void UAIAttackState::OnExit()
