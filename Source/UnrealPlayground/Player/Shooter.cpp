@@ -123,7 +123,7 @@ void AShooter::ScanInteractiveObject()
 	if(bHit && ScanHitResult.Actor != nullptr && ScanHitResult.Actor->Implements<UInteractiveObject>())
 	{	
 		//HACK THIS
-		if (ScanHitResult.Actor->IsA(AHealthPickup::StaticClass() && Health->bIsFullHealth))
+		if (ScanHitResult.Actor->IsA(AHealthPickup::StaticClass()) && Health->bIsFullHealth)
 		{
 			return;
 		}
