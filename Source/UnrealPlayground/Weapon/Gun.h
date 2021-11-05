@@ -252,8 +252,8 @@ protected:
 	float ProjectileSpeed;
 
 	/** The current amount of ammo in the clip*/
-	UPROPERTY(EditAnywhere, Category = "Weapon | Ammo")
-	uint16 CurrentAmmo;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon | Ammo")
+	int32 CurrentAmmo;
 
 	/** The max amount of ammo this weapon can hold in a single clip*/
 	UPROPERTY(EditAnywhere, Category = "Weapon | Ammo")
