@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
 #include "EngineUtils.h"
+#include "GameFramework/PlayerController.h"
 #include "ShooterGameMode.generated.h"
 
 class UDelayedActionManager;
@@ -28,7 +29,7 @@ public:
 
 	// public in order to be bound to input delegate
 	UFUNCTION()
-		void PauseGame();
+	void PauseGame();
 
 	FPauseEvent OnPause;
 
