@@ -248,7 +248,7 @@ private:
 	void ReloadRelease()				{  }
 
 	//TODO delete all of this
-#if WITH_EDITOR
+//#if WITH_EDITOR
 	UPROPERTY(EditAnywhere, Category = "SOUND TEST")
 	float NoiseAmount;
 
@@ -256,5 +256,5 @@ private:
 
 	void MakeSound(const float Volume);
 	
-#endif
+//#endif
 };

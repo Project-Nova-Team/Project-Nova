@@ -50,7 +50,7 @@ private:
 
 	//TODO parsing the actor hierarchy is and always will be a crime
 	//We will be serializing AICells and the player in builds
-#if WITH_EDITOR
+//#if WITH_EDITOR
 	template<class ActorClass>
 	ActorClass* FindActor(UWorld* World)
 	{
@@ -65,5 +65,5 @@ private:
 			Out.Add(*It);
 		}
 	}
-#endif
+//#endif
 };
