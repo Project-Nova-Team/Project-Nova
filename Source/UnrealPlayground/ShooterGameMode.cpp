@@ -52,6 +52,7 @@ void AShooterGameMode::Tick(float DeltaTime)
 void AShooterGameMode::PlayerDeath()
 {
 	//Do reset pipeline stuff here when player dies
+	Cast<AShooterHUD>(Cast<APlayerController>(Player->GetController())->MyHUD)->ShowDeathScreen();
 }
 
 void AShooterGameMode::PauseGame()

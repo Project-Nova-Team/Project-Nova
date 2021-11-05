@@ -25,6 +25,9 @@ public:
 
 	void Tick(float DeltaTime) override;
 
+	UFUNCTION(BlueprintCallable)
+	void ShowDeathScreen();
+
 protected:
 
 	/** Invoked when a UI update is requested*/
@@ -63,6 +66,9 @@ protected:
 
 	UPROPERTY(BlueprintReadWrite)
 	UUserWidget* PauseMenuWidget;
+
+	UPROPERTY(BlueprintReadWrite)
+	UUserWidget* DeathScreenWidget;
 
 	UPROPERTY(BlueprintReadWrite)
 	UUserWidget* ExitConfirmationWidget;
