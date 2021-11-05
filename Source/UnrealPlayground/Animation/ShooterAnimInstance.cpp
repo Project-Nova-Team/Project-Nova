@@ -1,6 +1,7 @@
 #include "ShooterAnimInstance.h"
 #include "Animation/AnimMontage.h"
 #include "../State/FPS/Event/SVaultState.h"
+#include "../State/FPS/Movement/STuckState.h"
 #include "../State/FPS/ShooterStateMachine.h"
 #include "../Player/ShooterMovementComponent.h"
 #include "../Weapon/CombatComponent.h"
@@ -63,6 +64,11 @@ void UShooterAnimInstance::ReceiveNewWeaponDrop(AWeapon* NewWeapon)
 	{
 		NewWeapon->OnWeaponAttack.RemoveDynamic(this, &UShooterAnimInstance::PlayAttackMontage);
 	}
+}
+
+bool UShooterAnimInstance::IsTucked()
+{
+	return Shooter->GetStateMachine()->GetActiveState()->IsA(USTuckState::StaticClass());
 }
 
 bool UShooterAnimInstance::IsWalking()

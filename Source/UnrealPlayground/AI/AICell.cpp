@@ -24,8 +24,8 @@ void AAICell::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	GEngine->AddOnScreenDebugMessage(50, 1.f, FColor::Red, FString::FromInt(AgressorCount));
-	GEngine->AddOnScreenDebugMessage(51, 1.f, FColor::Blue, FString::FromInt(InvestigationCount));
+	//GEngine->AddOnScreenDebugMessage(50, 1.f, FColor::Red, FString::FromInt(AgressorCount));
+	//GEngine->AddOnScreenDebugMessage(51, 1.f, FColor::Blue, FString::FromInt(InvestigationCount));
 }
 
 void AAICell::SetAIUnits()

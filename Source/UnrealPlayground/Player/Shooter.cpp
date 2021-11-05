@@ -12,6 +12,7 @@
 #include "../Gameplay/InteractiveObject.h"
 #include "../Gameplay/MeleeComponent.h"
 #include "../Weapon/Gun.h"
+#include "../Gameplay/HealthPickup.h"
 
 void FShooterInput::Tick(const float DeltaTime)
 {
@@ -121,6 +122,12 @@ void AShooter::ScanInteractiveObject()
 	//We're looking at an object that is interactive
 	if(bHit && ScanHitResult.Actor != nullptr && ScanHitResult.Actor->Implements<UInteractiveObject>())
 	{	
+		//HACK THIS
+		if (ScanHitResult.Actor->IsA(AHealthPickup::StaticClass()) && Health->bIsFullHealth)
+		{
+			return;
+		}
+
 		//Lets us do UI things in blueprint
 		OnScanHit.Broadcast(ScanHitResult);
 

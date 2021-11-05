@@ -6,7 +6,7 @@ void USDeathState::OnEnter()
 {
 	//Just play a death animation
 	APlayerCameraManager* const CameraManager = Cast<APlayerController>(Shooter->GetController())->PlayerCameraManager;
-	const UShooterAnimInstance* const AnimationInstance = Cast<UShooterAnimInstance>(Shooter->GetSkeletalMeshComponent()->GetAnimInstance());
+	UShooterAnimInstance* const AnimationInstance = Cast<UShooterAnimInstance>(Shooter->GetSkeletalMeshComponent()->GetAnimInstance());
 	UCameraAnim* const Animation = AnimationInstance->CameraDeathAnimation;
 
 	CameraManager->PlayCameraAnim(Animation);
