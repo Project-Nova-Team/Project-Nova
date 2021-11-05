@@ -16,5 +16,6 @@ public:
 
 	void Initialize(UStateMachine* StateMachine, UObject* ContextObject) override;
 	void OnEnter() override;
+	void OnExit() override;
 	void Tick(const float DeltaTime) override;
 };

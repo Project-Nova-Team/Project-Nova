@@ -3,6 +3,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "../Gameplay/MeleeComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 AAIBase::AAIBase()
 {
@@ -12,6 +13,15 @@ AAIBase::AAIBase()
 	MeleeComponent->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform);
 	
 	Health = CreateDefaultSubobject<UHealthComponent>(TEXT("Health"));
+
+	AttackMoveSpeed = 375;
+	
+}
+
+void AAIBase::BeginPlay()
+{
+	Super::BeginPlay();
+	DefaultMoveSpeed = GetCharacterMovement()->MaxWalkSpeed;
 }
 
 void AAIBase::SetLifeStatus(const bool bIsAlive)
