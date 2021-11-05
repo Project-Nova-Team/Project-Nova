@@ -101,6 +101,14 @@ void AShooterHUD::ShowPauseMenu()
 	}
 }
 
+void AShooterHUD::ShowDeathScreen()
+{
+	DeathScreenWidget->SetVisibility(ESlateVisibility::Visible);
+	Shooter->GetController<APlayerController>()->SetPause(true);
+	Shooter->GetController<APlayerController>()->bShowMouseCursor = true;
+
+}
+
 void AShooterHUD::HideUI()
 {
 	if (Shooter->GetController<APlayerController>())

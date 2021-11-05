@@ -7,7 +7,7 @@
 ABarkTrigger::ABarkTrigger()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
 }
 
@@ -18,11 +18,8 @@ void ABarkTrigger::BeginPlay()
 	// bind delegates
 	OnActorBeginOverlap.AddDynamic(this, &ABarkTrigger::BeginOverlap);
 	OnActorEndOverlap.AddDynamic(this, &ABarkTrigger::EndOverlap);
-}
 
-void ABarkTrigger::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
+	BoxTrigger = Cast<UBoxComponent>(GetComponentByClass(UBoxComponent::StaticClass()));
 }
 
 void ABarkTrigger::ShowUIPrompt()
@@ -34,6 +31,12 @@ void ABarkTrigger::ShowUIPrompt()
 void ABarkTrigger::HideUIPrompt()
 {
 	HideBarkEvent.Broadcast();
+
+	// disable overlap
+	if (bDisappears)
+	{
+		RemoveSelf(this);
+	}
 }
 
 void ABarkTrigger::BeginOverlap(AActor* OverlappedActor, AActor* OtherActor)
@@ -46,5 +49,15 @@ void ABarkTrigger::EndOverlap(AActor* OverlappedActor, AActor* OtherActor)
 {
 	if (OtherActor == TargetActor)
 		HideUIPrompt();
+}
+
+void ABarkTrigger::RemoveSelf(AActor* Actor)
+{
+	BoxTrigger->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+}
+
+void ABarkTrigger::RestoreSelf(AActor* Actor)
+{
+	BoxTrigger->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 }
 
