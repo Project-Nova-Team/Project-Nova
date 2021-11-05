@@ -67,6 +67,9 @@ private:
 
 	/** Animation Hooks**/
 
+	UFUNCTION(BlueprintCallable, Category = "Animation")
+	bool IsTucked();
+
 	/** Returns whether this shooter is walking*/
 	UFUNCTION(BlueprintCallable, Category = "Animation")
 	bool IsWalking();

@@ -216,6 +216,9 @@ private:
 	/** Set to true when player has scanned an interactive object. For ScanMiss delegate*/
 	uint8 bIsScanningInteractiveObject : 1;
 
+	/** Set to true when player has scanned an interactive object. For ScanMiss delegate*/
+	uint8 bIsScanningNonInteractiveObject : 1;
+
 	/** Casts a trace from the camera to see if there is an object nearby we can interact with*/	
 	void ScanInteractiveObject();
 
@@ -245,7 +248,7 @@ private:
 	void ReloadRelease()				{  }
 
 	//TODO delete all of this
-#if WITH_EDITOR
+//#if WITH_EDITOR
 	UPROPERTY(EditAnywhere, Category = "SOUND TEST")
 	float NoiseAmount;
 
@@ -253,5 +256,5 @@ private:
 
 	void MakeSound(const float Volume);
 	
-#endif
+//#endif
 };

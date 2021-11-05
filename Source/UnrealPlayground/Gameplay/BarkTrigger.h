@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Removable.h"
 #include <Runtime/Engine/Classes/Components/BoxComponent.h>
 #include "BarkTrigger.generated.h"
 
@@ -14,7 +15,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FHideBarkEvent);
 class UUserWidget;
 
 UCLASS()
-class UNREALPLAYGROUND_API ABarkTrigger : public AActor
+class UNREALPLAYGROUND_API ABarkTrigger : public AActor, public IRemovable
 {
 	GENERATED_BODY()
 
@@ -24,25 +25,29 @@ public:
 
 	virtual void BeginPlay() override;
 
-	void Tick(float DeltaTime) override;
+private:
+
+	/** Set true if this object should be disabled after player leaves the trigger.*/
+	UPROPERTY(EditAnywhere)
+		uint8 bDisappears : 1;
 
 	/** The actor that will activate this trigger.Set this to shooter. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	AActor* TargetActor;
+	UPROPERTY(EditAnywhere)
+		AActor* TargetActor;
 
 	/** Used For the first text in a Bark UI display. I.E. 'Press' */
 	UPROPERTY(EditAnywhere)
-	FString PrefixText;
+		FString PrefixText;
 
 	/** Used for the key name in a Bark UI display. I.E. 'C'*/
 	UPROPERTY(EditAnywhere)
-	FString KeyText;
+		FString KeyText;
 
 	/** Used For the last text in a Bark UI display.I.E. 'To Crouch' */
 	UPROPERTY(EditAnywhere)
-	FString SuffixText;
+		FString SuffixText;
 
-private:
+	UBoxComponent* BoxTrigger;
 
 	void ShowUIPrompt();
 
@@ -54,6 +59,10 @@ private:
 
 	UFUNCTION()
 	void EndOverlap(AActor* OverlappedActor, AActor* OtherActor);
+
+	virtual void RemoveSelf(AActor* Actor) override;
+
+	virtual void RestoreSelf(AActor* Actor) override;
 
 	// show delegate
 	UPROPERTY(BlueprintAssignable)
