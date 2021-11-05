@@ -28,6 +28,10 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FHealthEvent OnDeath;
 
+	/** Event that is fired when taking valid damage that doesn't kill the owner*/
+	UPROPERTY(BlueprintAssignable)
+	FHealthEvent OnDamaged;
+
 protected:
 	virtual void BeginPlay() override;
 

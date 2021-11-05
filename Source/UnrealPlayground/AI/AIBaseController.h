@@ -81,6 +81,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	AAICell* GetCell() const { return Cell; }
 
+	AAIBase* GetAIOwner() { return AIOwner; }
+
 	AActor* GetTarget() const { return Target; }
 
 	void SetTarget(AActor* NewTarget) { Target = NewTarget; }

@@ -31,7 +31,15 @@ public:
 	 */
 	void SetLifeStatus(const bool bIsAlive);
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	float AttackMoveSpeed;
+
+	float DefaultMoveSpeed;
+
 protected:	
+
+	void BeginPlay() override;
+
 	UPROPERTY(Category = Combat, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	UMeleeComponent* MeleeComponent;
 
