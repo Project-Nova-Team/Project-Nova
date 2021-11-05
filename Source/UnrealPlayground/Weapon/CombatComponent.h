@@ -79,14 +79,19 @@ public:
 	/** Reloads the weapon*/
 	void ReceiveReload();
 
+	UPROPERTY(BlueprintAssignable)
 	FAnimEvent OnAimStart;
 
+	UPROPERTY(BlueprintAssignable)
 	FAnimEvent OnAimStop;
 
+	UPROPERTY(BlueprintAssignable)
 	FAnimEvent OnReload;
 
+	UPROPERTY(BlueprintAssignable)
 	FAnimEvent OnSwap;
 
+	UPROPERTY(BlueprintAssignable)
 	FAnimEvent OnAnimCancel;
 
 	/** Invoked when a new weapon is added to the arensal*/
