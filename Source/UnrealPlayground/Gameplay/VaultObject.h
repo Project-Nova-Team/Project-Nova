@@ -17,5 +17,5 @@ public:
 	AVaultObject();
 
 private:
-	virtual void InteractionEvent(const APawn* EventSender) override;
+	virtual void InteractionEvent(APawn* EventSender) override;
 };

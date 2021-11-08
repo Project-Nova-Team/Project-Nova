@@ -44,9 +44,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
 	class UCameraAnim* CameraDeathAnimation;
 
-	//Need this to gurantee the State machine is loaded before we try and bind the event
-	//Lazy implementation
-	void BindVault();
+	//Need this to gurantee the State machine is loaded before we try and state events
+	void BindState();
 
 protected:
 
@@ -67,6 +66,9 @@ private:
 	USkeletalMeshComponent* ShooterMesh;
 
 	/** Animation Hooks**/
+
+	UFUNCTION(BlueprintCallable, Category = "Animation")
+	bool IsTucked();
 
 	/** Returns whether this shooter is walking*/
 	UFUNCTION(BlueprintCallable, Category = "Animation")
@@ -99,7 +101,7 @@ private:
 	void PlayAimStopMontage();
 
 	UFUNCTION(BlueprintCallable, Category = "Animation")
-	void StopMontageFromAttack();
+	void StopMontage();
 
 	UFUNCTION(BlueprintCallable, Category = "Animation")
 	void PlayAttackMontage();

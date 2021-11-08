@@ -1,26 +1,24 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "HealthPickup.h"
 #include "GameFramework/Pawn.h"
 #include "./HealthComponent.h"
+#include "Components/StaticMeshComponent.h"
 
 // Sets default values
 AHealthPickup::AHealthPickup()
 {
 	HealAmount = 25;
+	Mesh = CreateDefaultSubobject<UStaticMeshComponent>("Mesh");
+	SetRootComponent(Mesh);
 }
 
 
-void AHealthPickup::InteractionEvent(const APawn* EventSender)
+void AHealthPickup::InteractionEvent(APawn* EventSender)
 {
 	UHealthComponent* PawnHealthComponent = EventSender->FindComponentByClass<UHealthComponent>();
 
-	if (PawnHealthComponent != nullptr)
+	if (PawnHealthComponent != nullptr && !PawnHealthComponent->bIsFullHealth)
 	{
-		// if health is not full, heal by heal amount
 		PawnHealthComponent->Heal(HealAmount);
-
-		//do idestroyable here
-		//SetInteractiveObjectHidden(true);
+		RemoveSelf(this);
 	}
 }

@@ -4,7 +4,6 @@
 #include "SEventState.h"
 #include "SDeathState.generated.h"
 
-
 UCLASS()
 class UNREALPLAYGROUND_API USDeathState : public USEventState
 {

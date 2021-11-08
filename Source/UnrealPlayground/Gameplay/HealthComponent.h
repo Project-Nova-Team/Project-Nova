@@ -18,6 +18,7 @@ public:
 	UFUNCTION()
 	void Heal(const float HealAmount);
 
+	void Revive();
 
 	/** Whether or not the current health is equal to the max health*/
 	UPROPERTY(BlueprintReadOnly, Category = "Health")
@@ -26,6 +27,10 @@ public:
 	/** Event that is fired when taking damage that would leave us below 0 health*/
 	UPROPERTY(BlueprintAssignable)
 	FHealthEvent OnDeath;
+
+	/** Event that is fired when taking valid damage that doesn't kill the owner*/
+	UPROPERTY(BlueprintAssignable)
+	FHealthEvent OnDamaged;
 
 protected:
 	virtual void BeginPlay() override;

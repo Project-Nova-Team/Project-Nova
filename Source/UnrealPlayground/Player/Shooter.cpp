@@ -11,9 +11,8 @@
 #include "../Gameplay/VaultTrigger.h"
 #include "../Gameplay/InteractiveObject.h"
 #include "../Gameplay/MeleeComponent.h"
-
-//Lazy
-#include "../Animation/ShooterAnimInstance.h"
+#include "../Weapon/Gun.h"
+#include "../Gameplay/HealthPickup.h"
 
 void FShooterInput::Tick(const float DeltaTime)
 {
@@ -77,7 +76,7 @@ AShooter::AShooter()
 	WeaponMesh->SetupAttachment(ShooterSkeletalMesh, TEXT("WeaponSocket"));
 
 	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("Combat"));
-	Combat->SetUpConstruction(Camera, WeaponMesh);
+	Combat->SetUpConstruction(Camera, WeaponMesh, &InputState);
 
 	Health = CreateDefaultSubobject<UHealthComponent>(TEXT("Health"));
 	PerceptionSource = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("Stimulus Source"));
@@ -93,10 +92,11 @@ void AShooter::BeginPlay()
 
 	StateMachine = NewObject<UShooterStateMachine>();
 	StateMachine->Initialize(this);
-	Cast<UShooterAnimInstance>(ShooterSkeletalMesh->GetAnimInstance())->BindVault(); //laaazy
+	OnStateLoadComplete.Broadcast();
 
 	InputState.Owner = this;
 
+	Combat->OnArsenalAddition.AddUObject(this, &AShooter::LoadAmmoOnWeaponGet);
 	OnActorBeginOverlap.AddDynamic(this, &AShooter::OnTriggerEnter);
 	OnActorEndOverlap.AddDynamic(this, &AShooter::OnTriggerExit);
 	Health->OnDeath.AddDynamic(this, &AShooter::HandleDeath);
@@ -117,17 +117,25 @@ void AShooter::ScanInteractiveObject()
 	
 	const FVector TraceStart = Camera->GetComponentLocation();
 	const FVector TraceEnd = TraceStart + Camera->GetForwardVector() * FMath::Min(ShooterMovement->StandingHeight * 2.f, ShooterMovement->InteractionDistance);
-	const bool bHit = GetWorld()->LineTraceSingleByChannel(ScanHit, TraceStart, TraceEnd, ECC_Camera, QueryParams);
+	const bool bHit = GetWorld()->LineTraceSingleByChannel(ScanHitResult, TraceStart, TraceEnd, ECC_Camera, QueryParams);
 
 	//We're looking at an object that is interactive
-	if(bHit && ScanHit.Actor != nullptr && ScanHit.Actor->Implements<UInteractiveObject>())
+	if(bHit && ScanHitResult.Actor != nullptr && ScanHitResult.Actor->Implements<UInteractiveObject>())
 	{	
+		//HACK THIS
+		if (ScanHitResult.Actor->IsA(AHealthPickup::StaticClass()) && Health->bIsFullHealth)
+		{
+			return;
+		}
+
 		//Lets us do UI things in blueprint
-		OnScanHit.Broadcast(ScanHit);
+		OnScanHit.Broadcast(ScanHitResult);
+
+		bIsScanningInteractiveObject = true;
 
 		if (InputState.bIsTryingToInteract)
 		{
-			IInteractiveObject* InteractiveObject = Cast<IInteractiveObject>(ScanHit.Actor);
+			IInteractiveObject* InteractiveObject = Cast<IInteractiveObject>(ScanHitResult.Actor);
 			InteractiveObject->InteractionEvent(this);
 
 			InputState.bIsTryingToInteract = false;
@@ -135,7 +143,11 @@ void AShooter::ScanInteractiveObject()
 	}
 	else 
 	{
-		OnScanMiss.Broadcast(ScanHit);
+		if (bIsScanningInteractiveObject)
+		{
+			OnScanMiss.Broadcast(ScanHitResult);
+			bIsScanningInteractiveObject = false;
+		}
 	}
 }
 
@@ -161,6 +173,9 @@ void AShooter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	InputComponent->BindAction("Sprint", IE_Released, this, &AShooter::SprintRelease);
 	InputComponent->BindAction("Reload", IE_Pressed, this, &AShooter::ReloadPress);
 	InputComponent->BindAction("Reload", IE_Released, this, &AShooter::ReloadRelease);
+	// bind pause to game mode because pausing is not a shooter behavior
+	InputComponent->BindAction("Pause", IE_Pressed, GetWorld()->GetAuthGameMode<AShooterGameMode>(), &AShooterGameMode::PauseGame)
+		.bExecuteWhenPaused = true;;
 }
 
 void AShooter::OnTriggerEnter(AActor* OverlappedActor, AActor* OtherActor)
@@ -177,7 +192,7 @@ void AShooter::OnTriggerExit(AActor* OverlappedActor, AActor* OtherActor)
 	{
 		bIsInsideVaultTrigger = false;
 		// force player to stop being able to scan vault object by broadcasting a miss scan. Is there a better way we could do this?
-		OnScanMiss.Broadcast(ScanHit);
+		OnScanMiss.Broadcast(ScanHitResult);
 	}
 }
 
@@ -207,9 +222,38 @@ void AShooter::HandleDeath()
 	StateMachine->SetState("Death");
 }
 
-
-
 bool AShooter::GetCanVault()
 {
 	return bIsInsideVaultTrigger && bIsLookingAtVaultObject;
+}
+
+void AShooter::LoadAmmoOnPickup(const EGunClass GunType)
+{
+	LoadAmmoOnWeaponGet(Combat->GetGunOfType(GunType));
+}
+
+void AShooter::LoadAmmoOnWeaponGet(AWeapon* NewWeapon)
+{
+	AGun* WeaponAsGun = Cast<AGun>(NewWeapon);
+
+	if (WeaponAsGun != nullptr)
+	{
+		switch (WeaponAsGun->GunClass)
+		{
+		case WC_Pistol:
+			WeaponAsGun->AddExcessAmmo(Inventory.PistolAmmo);
+			Inventory.PistolAmmo = 0;
+		case WC_Shotgun:
+			WeaponAsGun->AddExcessAmmo(Inventory.ShotgunAmmo);
+			Inventory.ShotgunAmmo = 0;
+		case WC_Rifle:
+			WeaponAsGun->AddExcessAmmo(Inventory.RifleAmmo);
+			Inventory.RifleAmmo = 0;
+		}
+	}
+}
+
+bool AShooter::HasGunOfType(const EGunClass GunType) const
+{
+	return Combat->GetGunOfType(GunType) != nullptr;
 }
