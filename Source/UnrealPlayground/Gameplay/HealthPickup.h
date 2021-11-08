@@ -2,6 +2,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Removable.h"
 #include "GameFramework/Actor.h"
 #include "InteractiveObject.h"
 #include "HealthPickup.generated.h"
@@ -9,7 +10,7 @@
 class UHealthComponent;
 
 UCLASS()
-class UNREALPLAYGROUND_API AHealthPickup : public AActor, public IInteractiveObject
+class UNREALPLAYGROUND_API AHealthPickup : public AActor, public IInteractiveObject, public IRemovable
 {
 	GENERATED_BODY()
 	
@@ -17,11 +18,13 @@ public:
 	// Sets default values for this actor's properties
 	AHealthPickup();
 
-	virtual void InteractionEvent(const APawn* EventSender) override;
+	virtual void InteractionEvent(APawn* EventSender) override;
 
 protected:
 
 	UPROPERTY(EditAnywhere)
-		int HealAmount;
+	int32 HealAmount;
 
+	UPROPERTY(VisibleAnywhere, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
+	UStaticMeshComponent* Mesh;
 };

@@ -6,6 +6,6 @@ AVaultObject::AVaultObject()
 
 }
 
-void AVaultObject::InteractionEvent(const APawn* EventSender)
+void AVaultObject::InteractionEvent(APawn* EventSender)
 {
 }

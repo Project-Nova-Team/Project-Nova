@@ -30,6 +30,14 @@ public:
 };
 
 
+UENUM()
+enum EGunClass
+{
+	WC_Pistol,
+	WC_Shotgun,
+	WC_Rifle
+};
+
 class USkeletalMesh;
 class USkeletalMeshSocket;
 class ABullet;
@@ -79,13 +87,8 @@ public:
 	/** Returns the max amount of angular difference the camera can rotate from its original rotation*/
 	float GetRecoilLimit() const { return RecoilAngularLimit; }
 
-	/**
-	 * Sets the minimum bloom based a weapon stance
-	 *
-	 * @param	Stance				WeaponFireStance that determines what the base bloom value should be
-	 * @param	bIsMoving			Whether or not whoever is holding the weapon is moving, which applies the movementmultiplier to the base
-	 */
-	void SetBloomMin(const EWeaponFireStance Stance, const bool bIsMoving);
+	/** Sets the minimum bloom based a weapon stance and movement status*/
+	void SetBloomMin();
 
 	void SetWeaponSceneValues(USceneComponent* TraceOriginComponent, USkeletalMeshComponent* ProjectileOriginMesh) override;
 
@@ -94,6 +97,9 @@ public:
 	int GetAmmoCount() { return CurrentAmmo; }
 
 	int GetClipSize() { return ClipSize; }
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TEnumAsByte<EGunClass> GunClass;
 
 protected:
 	// Called when the game starts or when spawned
@@ -246,8 +252,8 @@ protected:
 	float ProjectileSpeed;
 
 	/** The current amount of ammo in the clip*/
-	UPROPERTY(EditAnywhere, Category = "Weapon | Ammo")
-	uint16 CurrentAmmo;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon | Ammo")
+	int32 CurrentAmmo;
 
 	/** The max amount of ammo this weapon can hold in a single clip*/
 	UPROPERTY(EditAnywhere, Category = "Weapon | Ammo")
@@ -296,8 +302,6 @@ protected:
 
 private:
 
-	//Maybe this should be static so every gun can pull from a single pool?
-
 	/** Object pool of bullet actors we access when firing this weapon*/
-	TArray<ABullet*> BulletPool;
+	TArray<ABullet*> BulletPool;	
 };

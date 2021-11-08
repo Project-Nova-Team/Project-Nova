@@ -11,10 +11,11 @@ UCombatComponent::UCombatComponent()
 	MaxWeaponCount = 4;
 }
 
-void UCombatComponent::SetUpConstruction(USceneComponent* TraceComponent, USkeletalMeshComponent* MeshComponent)
+void UCombatComponent::SetUpConstruction(USceneComponent* TraceComponent, USkeletalMeshComponent* MeshComponent, FWeaponInput* Input)
 {
 	TraceOrigin = TraceComponent;
 	WeaponMesh = MeshComponent;
+	OwnerInput = Input;
 }
 
 void UCombatComponent::BeginPlay()
@@ -38,6 +39,8 @@ void UCombatComponent::BeginPlay()
 void UCombatComponent::PickUpWeapon(AWeapon* NewWeapon)
 {
 	Arsenal.Emplace(NewWeapon);
+	NewWeapon->OwnerInput = OwnerInput;
+
 	//We are holding too many weapons, drop the currently held one
 	if (Arsenal.Num() > MaxWeaponCount)
 	{
@@ -83,6 +86,25 @@ void UCombatComponent::SwapEvent()
 	WeaponMesh->SetRelativeRotation(Arsenal[CurrentWeaponIndex]->WeaponMeshRotationOffset);
 }
 
+void UCombatComponent::SetIsInAnimation(const bool Value)
+{
+	if (Value)
+	{
+		if (GetHeldWeapon() != nullptr)
+		{
+			GetHeldWeapon()->StopAttack();
+		}
+		
+		//We were previously playing an animation, we need to cancel it
+		if (bIsInAnimation)
+		{
+			OnAnimCancel.Broadcast();
+		}
+	}
+
+	bIsInAnimation = Value;
+}
+
 void UCombatComponent::ReceiveSwap(const int32 Direction)
 {
 	const int32 WeaponCount = Arsenal.Num();
@@ -124,14 +146,14 @@ void UCombatComponent::ReceiveAttack(const bool bAttackEnabled)
 	
 	else
 	{
-		OnAttack.Broadcast();
-		Arsenal[CurrentWeaponIndex]->StartAttack();
-
 		//lazy
-		if (Arsenal[CurrentWeaponIndex]->GetClass() == AMeleeWeapon::StaticClass())
+		if (Arsenal[CurrentWeaponIndex]->IsA(AMeleeWeapon::StaticClass()))
 		{
-			bIsInAnimation = true;
+			bIsInAnimation = true; // dont use setter here because it would immediatly stop the attk
 		}
+
+		OnAnimCancel.Broadcast();
+		Arsenal[CurrentWeaponIndex]->StartAttack();		
 	}
 }
 
@@ -189,6 +211,26 @@ void UCombatComponent::ReceiveReloadComplete(const bool bInterrupted)
 	}
 
 	bIsReloading = false;
+}
+
+AGun* UCombatComponent::GetGunOfType(const EGunClass GunClass) const
+{
+	if (Arsenal.Num() < 1)
+	{
+		return nullptr;
+	}
+
+	for (AWeapon* Weapon : Arsenal)
+	{
+		AGun* WeaponAsGun = Cast<AGun>(Weapon);
+
+		if (WeaponAsGun != nullptr && WeaponAsGun->GunClass == GunClass)
+		{
+			return WeaponAsGun;
+		}
+	}
+
+	return nullptr;
 }
 
 //FIX - BAD - Weapon should have each of these values

@@ -1,6 +1,7 @@
 #include "ShooterAnimInstance.h"
 #include "Animation/AnimMontage.h"
 #include "../State/FPS/Event/SVaultState.h"
+#include "../State/FPS/Movement/STuckState.h"
 #include "../State/FPS/ShooterStateMachine.h"
 #include "../Player/ShooterMovementComponent.h"
 #include "../Weapon/CombatComponent.h"
@@ -27,18 +28,20 @@ void UShooterAnimInstance::NativeBeginPlay()
 	ShooterCamera = Shooter->GetCamera();
 	ShooterMelee = Shooter->GetMelee();
 
+	Shooter->OnStateLoadComplete.AddUObject(this, &UShooterAnimInstance::BindState);
+
 	ShooterCombat->OnAimStart.AddDynamic(this, &UShooterAnimInstance::PlayAimStartMontage);
 	ShooterCombat->OnAimStop.AddDynamic(this, &UShooterAnimInstance::PlayAimStopMontage);
 	ShooterCombat->OnReload.AddDynamic(this, &UShooterAnimInstance::PlayReloadMontage);
 	ShooterCombat->OnSwap.AddDynamic(this, &UShooterAnimInstance::PlaySwapMontage);
-	ShooterCombat->OnAttack.AddDynamic(this, &UShooterAnimInstance::StopMontageFromAttack);
+	ShooterCombat->OnAnimCancel.AddDynamic(this, &UShooterAnimInstance::StopMontage);
 	ShooterCombat->OnArsenalAddition.AddUObject(this, &UShooterAnimInstance::ReceiveNewWeaponPickup);
 	ShooterCombat->OnArsenalRemoval.AddUObject(this, &UShooterAnimInstance::ReceiveNewWeaponDrop);
 
 	OnMontageEnded.AddDynamic(this, &UShooterAnimInstance::MontageEnd);
 }
 
-void UShooterAnimInstance::BindVault()
+void UShooterAnimInstance::BindState()
 {
 	//This feels hacky, but might be the proper way to do it..
 	//Sound/Animation have this problem of needing to be everywhere 
@@ -61,6 +64,11 @@ void UShooterAnimInstance::ReceiveNewWeaponDrop(AWeapon* NewWeapon)
 	{
 		NewWeapon->OnWeaponAttack.RemoveDynamic(this, &UShooterAnimInstance::PlayAttackMontage);
 	}
+}
+
+bool UShooterAnimInstance::IsTucked()
+{
+	return Shooter->GetStateMachine()->GetActiveState()->IsA(USTuckState::StaticClass());
 }
 
 bool UShooterAnimInstance::IsWalking()
@@ -105,9 +113,9 @@ void UShooterAnimInstance::PlayReloadMontage()
 	Montage_Play(ReloadAnimMontage, 1.0f);
 }
 
-void UShooterAnimInstance::StopMontageFromAttack()
+void UShooterAnimInstance::StopMontage()
 {
-	StopAllMontages(0);
+	StopAllMontages(0.1); //hack magic numba
 }
 
 void UShooterAnimInstance::PlayAttackMontage()
@@ -142,7 +150,10 @@ void UShooterAnimInstance::MontageEnd(UAnimMontage* Montage, bool bInterupted)
 
 	else if (Montage == AimStartAnimMontage || Montage == AimStopAnimMontage || Montage == MeleeAttackMontage)
 	{
-		ShooterCombat->ReceiveAnimationComplete();
+		if (!bInterupted)
+		{
+			ShooterCombat->ReceiveAnimationComplete();
+		}	
 	}
 }
 
