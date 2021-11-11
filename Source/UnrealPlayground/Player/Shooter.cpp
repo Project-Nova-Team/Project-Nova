@@ -28,7 +28,7 @@ void FShooterInput::HandleCrouchInputStates(const float DeltaTime)
 	{
 		CurrentCrouchHoldTime += DeltaTime;
 		if (CurrentCrouchHoldTime >= Owner->ShooterMovement->ProneInputTime)
-		{		
+		{
 			CurrentCrouchHoldTime = 0;
 			bIsHoldingCrouch = false;
 			bIsTryingToProne = true;
@@ -114,24 +114,29 @@ void AShooter::ScanInteractiveObject()
 {
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(this);
-	
+
 	const FVector TraceStart = Camera->GetComponentLocation();
 	const FVector TraceEnd = TraceStart + Camera->GetForwardVector() * FMath::Min(ShooterMovement->StandingHeight * 2.f, ShooterMovement->InteractionDistance);
 	const bool bHit = GetWorld()->LineTraceSingleByChannel(ScanHitResult, TraceStart, TraceEnd, ECC_Camera, QueryParams);
 
 	//We're looking at an object that is interactive
-	if(bHit && ScanHitResult.Actor != nullptr && ScanHitResult.Actor->Implements<UInteractiveObject>())
-	{	
+	if (bHit && ScanHitResult.Actor != nullptr && ScanHitResult.Actor->Implements<UInteractiveObject>())
+	{
 		//HACK THIS
 		if (ScanHitResult.Actor->IsA(AHealthPickup::StaticClass()) && Health->bIsFullHealth)
 		{
 			return;
 		}
 
-		//Lets us do UI things in blueprint
-		OnScanHit.Broadcast(ScanHitResult);
+		IInteractiveObject* InteractiveObjec = Cast<IInteractiveObject>(ScanHitResult.Actor);
 
-		bIsScanningInteractiveObject = true;
+		if (InteractiveObjec->bCanInteract)
+		{
+			//Lets us do UI things in blueprint
+			OnScanHit.Broadcast(ScanHitResult);
+
+			bIsScanningInteractiveObject = true;
+		}
 
 		if (InputState.bIsTryingToInteract)
 		{
@@ -139,10 +144,12 @@ void AShooter::ScanInteractiveObject()
 			InteractiveObject->InteractionEvent(this);
 
 			InputState.bIsTryingToInteract = false;
-		}	
+		}
 	}
-	else 
+	else
 	{
+		/* Check if shooter was previously scanning an interactive object first.
+		Otherwise OnScanMiss will always fire. */
 		if (bIsScanningInteractiveObject)
 		{
 			OnScanMiss.Broadcast(ScanHitResult);
@@ -212,7 +219,7 @@ void AShooter::MakeSound(const float Volume)
 	const bool bHit = GetWorld()->LineTraceSingleByChannel(SoundHit, TraceStart, TraceEnd, ECC_Camera, QueryParams);
 
 	if (bHit)
-	{	
+	{
 		ShooterMakeNoise(SoundHit.ImpactPoint, Volume);
 	}
 }
