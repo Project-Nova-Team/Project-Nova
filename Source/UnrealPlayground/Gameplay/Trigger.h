@@ -2,12 +2,12 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Removable.h"
 #include "Trigger.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FTriggerEvent);
 
 class UBoxComponent;
+class UBillboardComponent;
 
 UCLASS()
 class UNREALPLAYGROUND_API ATrigger : public AActor
@@ -46,6 +46,12 @@ protected:
 	/** Collision volume that acts as the trigger region*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collider")
 	UBoxComponent* TriggerVolume;
+
+#if WITH_EDITORONLY_DATA
+	/** Simple editor sprite to help designers see trigger locations*/
+	UPROPERTY()
+	UBillboardComponent* SpriteComponent;
+#endif
 
 	/** Called when the trigger is activated*/
 	virtual void ExecuteTrigger(APawn* Sender);
