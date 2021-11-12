@@ -7,7 +7,7 @@
 #include "../Weapon/CombatComponent.h"
 #include "../Player/Shooter.h"
 #include "../Weapon/MeleeWeapon.h"
-#include "Camera/CameraComponent.h"
+#include "../Player/FirstPersonCameraComponent.h"
 
 
 void UShooterAnimInstance::NativeBeginPlay()
@@ -25,7 +25,7 @@ void UShooterAnimInstance::NativeBeginPlay()
 	ShooterMovement = Shooter->GetShooterMovement();
 	ShooterMesh = Shooter->GetSkeletalMeshComponent();
 	ShooterCombat = Shooter->GetCombat();
-	ShooterCamera = Shooter->GetCamera();
+	ShooterCamera = Shooter->GetCameraCast();
 	ShooterMelee = Shooter->GetMelee();
 
 	Shooter->OnStateLoadComplete.AddUObject(this, &UShooterAnimInstance::BindState);
@@ -71,7 +71,7 @@ bool UShooterAnimInstance::IsTucked()
 	return Shooter->GetStateMachine()->GetActiveState()->IsA(USTuckState::StaticClass());
 }
 
-bool UShooterAnimInstance::IsWalking()
+bool UShooterAnimInstance::IsMovingOnGround()
 {
 	return ShooterMovement->bIsOnGround && !ShooterMovement->InputVelocity.IsNearlyZero();
 }

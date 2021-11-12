@@ -2,7 +2,6 @@
 #include "Components/InputComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
-#include "Camera/CameraComponent.h"
 #include "../Utility/DelayedActionManager.h"
 #include "../ShooterGameMode.h"
 #include "../State/FPS/ShooterStateMachine.h"
@@ -55,7 +54,7 @@ AShooter::AShooter()
 
 	Collider = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Collider"));
 	CameraAnchor = CreateDefaultSubobject<USceneComponent>(TEXT("Anchor"));
-	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
+	Camera = CreateDefaultSubobject<UFirstPersonCameraComponent>(TEXT("Camera"));
 	ShooterMovement = CreateDefaultSubobject<UShooterMovementComponent>(TEXT("Movement"));
 	Melee = CreateDefaultSubobject<UMeleeComponent>(TEXT("Melee"));
 
