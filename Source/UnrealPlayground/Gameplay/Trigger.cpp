@@ -1,5 +1,7 @@
 #include "Trigger.h"
 #include "Components/BoxComponent.h"
+#include "Components/BillboardComponent.h"
+#include "UObject/ConstructorHelpers.h"
 
 ATrigger::ATrigger()
 {
@@ -9,6 +11,37 @@ ATrigger::ATrigger()
 
 	bStartActive = true;
 	bIsActive = true;
+
+
+	//Yoinked from source
+#if WITH_EDITORONLY_DATA
+	SpriteComponent = CreateEditorOnlyDefaultSubobject<UBillboardComponent>(TEXT("Sprite"));
+	SpriteComponent->AttachToComponent(TriggerVolume, FAttachmentTransformRules::KeepRelativeTransform);
+	if (SpriteComponent)
+	{
+		// Structure to hold one-time initialization
+		struct FConstructorStatics
+		{
+			ConstructorHelpers::FObjectFinderOptional<UTexture2D> TriggerTextureObject;
+			FName ID_Triggers;
+			FText NAME_Triggers;
+			FConstructorStatics()
+				: TriggerTextureObject(TEXT("/Engine/EditorResources/S_Trigger"))
+				, ID_Triggers(TEXT("Triggers"))
+				, NAME_Triggers(NSLOCTEXT("SpriteCategory", "Triggers", "Triggers"))
+			{
+			}
+		};
+		static FConstructorStatics ConstructorStatics;
+
+		SpriteComponent->Sprite = ConstructorStatics.TriggerTextureObject.Get();
+		SpriteComponent->SetRelativeScale3D(FVector(0.5f, 0.5f, 0.5f));
+		SpriteComponent->bHiddenInGame = false;
+		SpriteComponent->SpriteInfo.Category = ConstructorStatics.ID_Triggers;
+		SpriteComponent->SpriteInfo.DisplayName = ConstructorStatics.NAME_Triggers;
+		SpriteComponent->bIsScreenSizeScaled = true;
+	}
+#endif
 }
 
 void ATrigger::BeginPlay()
