@@ -15,6 +15,10 @@ class UNREALPLAYGROUND_API IInteractiveObject
 	GENERATED_BODY()
 
 public:
+
+	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "OnInteract"))
+	void BlueprintInteract(APawn* EventSender);
+
 	uint8 bCanOnlyBeInteractedWithOnce : 1;
 
 	virtual void InteractionEvent(APawn* EventSender) = 0;
