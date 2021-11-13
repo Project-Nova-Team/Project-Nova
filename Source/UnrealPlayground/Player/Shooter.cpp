@@ -127,24 +127,22 @@ void AShooter::ScanInteractiveObject()
 			return;
 		}
 
-		IInteractiveObject* InteractiveObjec = Cast<IInteractiveObject>(ScanHitResult.Actor);
+		IInteractiveObject* InteractiveObject = Cast<IInteractiveObject>(ScanHitResult.Actor);
 
-		if (InteractiveObjec->bCanInteract)
+		if (InteractiveObject->CanInteract())
 		{
 			//Lets us do UI things in blueprint
 			OnScanHit.Broadcast(ScanHitResult);
-
 			bIsScanningInteractiveObject = true;
-		}
 
-		if (InputState.bIsTryingToInteract)
-		{
-			IInteractiveObject* InteractiveObject = Cast<IInteractiveObject>(ScanHitResult.Actor);
-			InteractiveObject->InteractionEvent(this);
-
-			InputState.bIsTryingToInteract = false;
-		}
+			if (InputState.bIsTryingToInteract)
+			{
+				InteractiveObject->InteractionEvent(this);
+				InputState.bIsTryingToInteract = false;
+			}
+		}	
 	}
+
 	else
 	{
 		/* Check if shooter was previously scanning an interactive object first.

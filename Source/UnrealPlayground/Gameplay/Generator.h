@@ -7,7 +7,7 @@
 
 class AGeneratorPiece;
 
-DECLARE_MULTICAST_DELEGATE(FGeneratorInteractedEvent);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FGeneratorPieceRepair, int32, RepairedPieceCount);
 
 UCLASS()
 class UNREALPLAYGROUND_API AGenerator : public AActor, public IInteractiveObject
@@ -21,23 +21,26 @@ public:
 
 protected:
 
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	bool CanInteract() const override { return RepairedPieces == Pieces.Num() && !bHasBeenActivated; }
 
 	UPROPERTY(VisibleANywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
 	UStaticMeshComponent* Mesh;
 
-	// How many times the player has fixed a broken piece
-	int HitCount;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)	
+	TArray<AGeneratorPiece*> Pieces;
 
-	// Increases hit count. 3 == fixed
-	void IterateHitCount();
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<UTexture2D*> ScreenTextures;
 
-	void CheckIfFixed();
+	UPROPERTY(BlueprintAssignable)
+	FGeneratorPieceRepair OnPieceRepaired;
 
-	UPROPERTY(EditAnywhere)	
-	TArray<AGeneratorPiece*> BrokenPieces;
+	UFUNCTION()
+	void ReceivePieceRepaired();
 
-	// delegate
-	FGeneratorInteractedEvent OnGeneratorInteracted;
+	int32 RepairedPieces;
+
+	uint8 bHasBeenActivated : 1;
 };
