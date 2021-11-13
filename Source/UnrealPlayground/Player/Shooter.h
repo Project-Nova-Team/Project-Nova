@@ -4,11 +4,11 @@
 #include "GameFramework/Pawn.h"
 #include "ShooterMovementComponent.h"
 #include "WeaponInput.h"
+#include "FirstPersonCameraComponent.h"
 #include "../Weapon/CombatComponent.h"
 #include "Shooter.generated.h"
 
 class UCapsuleComponent;
-class UCameraComponent;
 class UShooterStateMachine;
 class UMeleeComponent;
 class UHealthComponent;
@@ -87,6 +87,9 @@ public:
 
 	/** Returns the camera component attached to this shooter*/
 	FORCEINLINE UCameraComponent* GetCamera() const { return Camera; }
+
+	/** Returns the camera component as the first person camera - need this because of bad open-close violation*/
+	FORCEINLINE UFirstPersonCameraComponent* GetCameraCast() const { return Camera; }
 
 	/** Returns the state machine attached to the shooter which drives player movement*/
 	FORCEINLINE UShooterStateMachine* GetStateMachine() const { return StateMachine; }
@@ -187,7 +190,7 @@ private:
 	USceneComponent* CameraAnchor;
 
 	UPROPERTY(Category = Shooter, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	UCameraComponent* Camera;
+	UFirstPersonCameraComponent* Camera;
 
 	UPROPERTY(Category = Shooter, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	UMeleeComponent* Melee;
