@@ -1,28 +1,30 @@
 #include "GeneratorPiece.h"
 #include "HealthComponent.h"
+#include "Components/StaticMeshComponent.h"
+#include "../Player/Shooter.h"
 
-
-// Sets default values
 AGeneratorPiece::AGeneratorPiece()
 {
-	Health = CreateDefaultSubobject<UHealthComponent>("Health");
+	Mesh = CreateDefaultSubobject<UStaticMeshComponent>("Mesh");
+	SetRootComponent(Mesh);
+	Mesh->SetCollisionProfileName("Pawn");
 }
 
-// Called when the game starts or when spawned
 void AGeneratorPiece::BeginPlay()
 {
 	Super::BeginPlay();
-
-	Health->OnDeath.AddDynamic(this, &AGeneratorPiece::BroadcastDisable);
+	OnActorBeginOverlap.AddDynamic(this, &AGeneratorPiece::OnOverlap);
 }
 
-void AGeneratorPiece::BroadcastDisable()
+void AGeneratorPiece::OnOverlap(AActor* OvelappedActor, AActor* OtherActor)
 {
-	OnGeneratorPieceHit.Broadcast();
-
-	/* HIDE piece once hit. If we want to change this in the future 
-	possibly to set a new mesh we can. If we no longer need to hide,
-	make sure to remove implementation of IRemovable*/
-	RemoveSelf(this);
+	//Introducing this hard dependency because realistically nothing else is ever going to repair the generator
+	//This can be better adapted by first correcting the crappy melee component to be attached to a weapon instead of a pawn
+	//This would make the depedency tied to a weapon class instead which is far more appropriate
+	if (!bIsRepaired && OtherActor->IsA(AShooter::StaticClass()))
+	{
+		bIsRepaired = true;
+		OnGeneratorPieceRepair.Broadcast();
+		Mesh->SetStaticMesh(FixedMesh);
+	}
 }
-
