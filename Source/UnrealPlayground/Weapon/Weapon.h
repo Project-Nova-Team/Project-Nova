@@ -8,6 +8,7 @@
 class USkeletalMesh;
 class USkeletalMeshSocket;
 class UCombatComponent;
+class USoundBase;
 struct FWeaponInput;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FWeaponEvent);
@@ -129,6 +130,14 @@ protected:
 	/** The amount of damage dealt by each attack withs this weapon*/
 	UPROPERTY(EditAnywhere, Category = "Weapon | Damage")
 	float BaseDamage;
+
+	/** Sound this object plays when reloaded*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon | Audio")
+	USoundBase* SFXReload;
+
+	/** Sound this object makes when switched to*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon | Audio")
+	USoundBase* SFXSwap;
 
 	UCombatComponent* OwningComponent;
 
