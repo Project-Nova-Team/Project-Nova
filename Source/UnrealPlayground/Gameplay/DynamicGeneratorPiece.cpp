@@ -39,3 +39,9 @@ void ADynamicGeneratorPiece::StopFlicker()
 	Handle->GetAction()->StopAction();
 	Handle = nullptr; // dont want a stale reference
 }
+
+void ADynamicGeneratorPiece::BreakPiece()
+{
+	Super::BreakPiece();
+	Delay->StartDelayedAction(this, &ADynamicGeneratorPiece::Flicker, PulseRest);
+}

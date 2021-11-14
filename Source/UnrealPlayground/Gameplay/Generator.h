@@ -19,14 +19,19 @@ public:
 
 	void InteractionEvent(APawn* EventSender) override;
 
+	FInteractionPrompt& GetInteractionPrompt() override { return Prompt; }
+
 protected:
 
 	virtual void BeginPlay() override;
 
 	bool CanInteract() const override { return RepairedPieces == Pieces.Num() && !bHasBeenActivated; }
 
-	UPROPERTY(VisibleANywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
 	UStaticMeshComponent* Mesh;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
+	FInteractionPrompt Prompt;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)	
 	TArray<AGeneratorPiece*> Pieces;
@@ -39,6 +44,9 @@ protected:
 
 	UFUNCTION()
 	void ReceivePieceRepaired();
+
+	UFUNCTION(BlueprintCallable)
+	void BreakGenerator();
 
 	int32 RepairedPieces;
 

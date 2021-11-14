@@ -52,6 +52,8 @@ AGun::AGun()
 	BloomCrouchBase = 5.f;
 	BloomProneBase = 2.5f;
 	BloomBaseMovementMultiplier = 3.f;
+
+	ProjectilePredictionDot = .98f;
 }
 
 
@@ -166,7 +168,11 @@ void AGun::FireStraight()
 	const bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_Pawn, QueryParams);
 	const FVector ProjectileEndGuess = bHit ? Hit.ImpactPoint : TraceEnd;
 
-	const FVector ProjectileDirection = (ProjectileEndGuess - ProjectileStart).GetSafeNormal();
+	FVector ProjectileDirection = (ProjectileEndGuess - ProjectileStart).GetSafeNormal();
+	if ((ProjectileDirection | TraceDirection) < ProjectilePredictionDot)
+	{
+		ProjectileDirection = TraceDirection;
+	}
 	const FQuat ProjectileRotation = ProjectileDirection.ToOrientationQuat();
 
 	//Get a bullet from the pool and send it off
@@ -224,7 +230,14 @@ void AGun::FireWithNoise()
 	const bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_Pawn, QueryParams);
 	const FVector ProjectileEndGuess = bHit ? Hit.ImpactPoint : TraceEnd;
 
-	const FVector ProjectileDirection = (ProjectileEndGuess - ProjectileStart).GetSafeNormal();
+	FVector ProjectileDirection = (ProjectileEndGuess - ProjectileStart).GetSafeNormal();
+
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::SanitizeFloat(ProjectileDirection | TraceDirection, 3));
+
+	if ((ProjectileDirection | TraceDirection) < ProjectilePredictionDot)
+	{
+		ProjectileDirection = TraceDirection;
+	}
 	const FQuat ProjectileRotation = ProjectileDirection.ToOrientationQuat();
 
 	//Get a bullet from the pool and send it off

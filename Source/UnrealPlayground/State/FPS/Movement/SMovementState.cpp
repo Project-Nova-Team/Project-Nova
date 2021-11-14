@@ -45,7 +45,7 @@ FVector USMovementState::ConvertInputRelativeToCamera() const
 
 void USMovementState::CheckForVault()
 {
-	if (Input->bIsTryingToVault && Movement->bIsOnGround && Shooter->GetCanVault())
+	if (Input->bIsTryingToVault && Movement->bIsOnGround && Shooter->CanVault())
 	{
 		// calls USVaultState.OnEnter
 		FlagTransition("Vaulting", 10);

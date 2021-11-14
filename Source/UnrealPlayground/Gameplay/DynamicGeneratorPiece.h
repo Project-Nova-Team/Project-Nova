@@ -25,6 +25,8 @@ class UNREALPLAYGROUND_API ADynamicGeneratorPiece : public AGeneratorPiece
 public:
 	ADynamicGeneratorPiece();
 
+	void BreakPiece() override;
+
 protected:
 
 	/** Event responsible for switching between two textures*/
