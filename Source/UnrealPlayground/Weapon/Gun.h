@@ -251,6 +251,10 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Weapon | Firing")
 	float ProjectileSpeed;
 
+	/** Don't change this*/
+	UPROPERTY(EditAnywhere, Category = "Weapon | Firing")
+	float ProjectilePredictionDot;
+
 	/** The current amount of ammo in the clip*/
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon | Ammo")
 	int32 CurrentAmmo;

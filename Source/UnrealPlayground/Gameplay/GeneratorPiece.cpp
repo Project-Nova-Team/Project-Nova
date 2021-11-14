@@ -13,6 +13,7 @@ AGeneratorPiece::AGeneratorPiece()
 void AGeneratorPiece::BeginPlay()
 {
 	Super::BeginPlay();
+	BrokenMesh = Mesh->GetStaticMesh();
 	OnActorBeginOverlap.AddDynamic(this, &AGeneratorPiece::OnOverlap);
 }
 
@@ -26,5 +27,14 @@ void AGeneratorPiece::OnOverlap(AActor* OvelappedActor, AActor* OtherActor)
 		bIsRepaired = true;
 		OnGeneratorPieceRepair.Broadcast();
 		Mesh->SetStaticMesh(FixedMesh);
+	}
+}
+
+void AGeneratorPiece::BreakPiece()
+{
+	if (bIsRepaired)
+	{
+		bIsRepaired = false;
+		Mesh->SetStaticMesh(BrokenMesh);
 	}
 }

@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -20,6 +18,8 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FGeneratorPieceHitEvent OnGeneratorPieceRepair;
 
+	virtual void BreakPiece();
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -31,6 +31,9 @@ protected:
 	UPROPERTY(Category = Mesh, EditAnywhere, BlueprintReadWrite)
 	UStaticMesh* FixedMesh;
 
+	/** No need to serialize can just fetch at begin play*/
+	UStaticMesh* BrokenMesh;
+
 	UFUNCTION()
-	void OnOverlap(AActor* OvelappedActor, AActor* OtherActor);
+	virtual void OnOverlap(AActor* OvelappedActor, AActor* OtherActor);
 };

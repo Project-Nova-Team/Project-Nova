@@ -59,7 +59,11 @@ void AShotgun::FireWithNoise()
 		const bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_Pawn, QueryParams);
 		const FVector ProjectileEndGuess = bHit ? Hit.ImpactPoint : TraceEnd;
 
-		const FVector ProjectileDirection = (ProjectileEndGuess - ProjectileStart).GetSafeNormal();
+		FVector ProjectileDirection = (ProjectileEndGuess - ProjectileStart).GetSafeNormal();
+		if ((ProjectileDirection | TraceDirection) < ProjectilePredictionDot)
+		{
+			ProjectileDirection = TraceDirection;
+		}
 		const FQuat ProjectileRotation = ProjectileDirection.ToOrientationQuat();
 
 		//Get a bullet from the pool and send it off

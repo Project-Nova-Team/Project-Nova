@@ -18,6 +18,8 @@ public:
 
 	virtual void InteractionEvent(APawn* EventSender) override;
 
+	FInteractionPrompt& GetInteractionPrompt() override { return Prompt; }
+
 protected:
 
 	/** How much ammo does the player get when getting this pickup*/
@@ -30,4 +32,7 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Mesh", meta =(AllowPrivateAccess="true"))
 	UStaticMeshComponent* Mesh;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
+	FInteractionPrompt Prompt;
 };

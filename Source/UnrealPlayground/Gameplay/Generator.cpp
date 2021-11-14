@@ -33,3 +33,15 @@ void AGenerator::ReceivePieceRepaired()
 	RepairedPieces++;
 	OnPieceRepaired.Broadcast(RepairedPieces);
 }
+
+void AGenerator::BreakGenerator()
+{
+	for (AGeneratorPiece* Piece : Pieces)
+	{
+		Piece->BreakPiece();
+	}
+
+	RepairedPieces = 0;
+	OnPieceRepaired.Broadcast(RepairedPieces);
+	bHasBeenActivated = false;
+}
