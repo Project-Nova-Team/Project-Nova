@@ -118,6 +118,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon | Animation")
 	float ImpulseKickFactor;
 
+	FInteractionPrompt& GetInteractionPrompt() override { return Prompt; }
+
 protected:
 
 	UPROPERTY(VisibleAnywhere, Category = "Mesh")
@@ -138,6 +140,9 @@ protected:
 	/** Sound this object makes when switched to*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon | Audio")
 	USoundBase* SFXSwap;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
+	FInteractionPrompt Prompt;
 
 	UCombatComponent* OwningComponent;
 

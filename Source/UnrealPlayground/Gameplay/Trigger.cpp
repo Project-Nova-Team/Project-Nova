@@ -62,6 +62,10 @@ void ATrigger::BeginPlay()
 	
 	OnActorBeginOverlap.AddDynamic(this, &ATrigger::BeginOverlap);
 	OnActorEndOverlap.AddDynamic(this, &ATrigger::EndOverlap);
+
+#if WITH_EDITORONLY_DATA
+	SpriteComponent->SetHiddenInGame(true);
+#endif
 }
 
 void ATrigger::BeginOverlap(AActor* OverlappedActor, AActor* OtherActor)
@@ -77,14 +81,14 @@ void ATrigger::EndOverlap(AActor* OverlappedActor, AActor* OtherActor)
 {
 	if (TriggerWhiteList.Contains(OtherActor->GetClass()))
 	{
-		OnTriggerExited.Broadcast();
+		OnTriggerExited.Broadcast(Cast<APawn>(OtherActor));
 	}
 }
 
 void ATrigger::ExecuteTrigger(APawn* Sender)
 {
 	//Invokes blueprint logic event
-	OnTriggerActivated.Broadcast();
+	OnTriggerActivated.Broadcast(Sender);
 
 	//Child classes fill out logic here
 	if (!bTriggerMoreThanOnce)

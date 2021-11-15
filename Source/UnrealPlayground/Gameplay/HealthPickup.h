@@ -20,6 +20,8 @@ public:
 
 	virtual void InteractionEvent(APawn* EventSender) override;
 
+	FInteractionPrompt& GetInteractionPrompt() override { return Prompt; }
+
 protected:
 
 	UPROPERTY(EditAnywhere)
@@ -27,4 +29,7 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
 	UStaticMeshComponent* Mesh;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
+	FInteractionPrompt Prompt;
 };

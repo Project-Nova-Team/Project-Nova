@@ -6,6 +6,7 @@
 #include "WeaponInput.h"
 #include "FirstPersonCameraComponent.h"
 #include "../Weapon/CombatComponent.h"
+#include "../Gameplay/InteractiveObject.h"
 #include "Shooter.generated.h"
 
 class UCapsuleComponent;
@@ -13,12 +14,11 @@ class UShooterStateMachine;
 class UMeleeComponent;
 class UHealthComponent;
 class UAIPerceptionStimuliSourceComponent;
-class IInteractiveObject;
 class AGun;
 enum EGunClass;
 
 DECLARE_MULTICAST_DELEGATE(FStateLoadEvent);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FScanEvent, FHitResult, ScanData);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FScanEvent, const FInteractionPrompt&, PromptData);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FShooterMakeNoise, FVector, Location, float, Volume);
 
 struct FShooterInput : public FWeaponInput
@@ -149,7 +149,7 @@ public:
 
 	/** Returns whether player is in vault trigger and is looking at vault object*/
 	UFUNCTION(BlueprintCallable)
-	bool GetCanVault();
+	bool CanVault();
 
 	/** Moves ammo from the shooter inventory into the the approrpiate weapon, if the shooter has it*/
 	void LoadAmmoOnPickup(const EGunClass GunType);
@@ -163,16 +163,14 @@ public:
 
 	bool HasGunOfType(const EGunClass GunType) const;
 
+	/** Is the shooter currently in a UI prompt event*/
+	UPROPERTY(BlueprintReadWrite)
+	uint8 bIsPrompted : 1;
+
 protected:
 	virtual void BeginPlay() override;
 
 private:
-
-	UFUNCTION()
-	void OnTriggerEnter(AActor* OverlappedActor, AActor* OtherActor);
-
-	UFUNCTION()
-	void OnTriggerExit(AActor* OverlappedActor, AActor* OtherActor);
 
 	UPROPERTY(Category = Mesh, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	USkeletalMeshComponent* ShooterSkeletalMesh;
@@ -212,15 +210,6 @@ private:
 
 	/** Inventory for ammo*/
 	FShooterInventory Inventory;
-
-	/**Data regarding whether or not we are looking at a weapon or interactive object*/
-	FHitResult ScanHitResult;
-
-	/** Set to true when player has scanned an interactive object. For ScanMiss delegate*/
-	uint8 bIsScanningInteractiveObject : 1;
-
-	/** Set to true when player has scanned an interactive object. For ScanMiss delegate*/
-	uint8 bIsScanningNonInteractiveObject : 1;
 
 	/** Casts a trace from the camera to see if there is an object nearby we can interact with*/	
 	void ScanInteractiveObject();
