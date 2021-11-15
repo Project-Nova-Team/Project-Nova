@@ -5,6 +5,8 @@
 AGenerator::AGenerator()
 {
 	PrimaryActorTick.bCanEverTick = false;
+	Pieces.Reserve(3);
+	ScreenTextures.Reserve(5);
 
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>("Mesh");
 	SetRootComponent(Mesh);
@@ -14,32 +16,32 @@ void AGenerator::BeginPlay()
 {
 	Super::BeginPlay();
 
-	for (int i = 0; i < BrokenPieces.Num(); i++)
+	for (AGeneratorPiece* Piece : Pieces)
 	{
-		BrokenPieces[i]->OnGeneratorPieceHit.AddUObject(this, &AGenerator::IterateHitCount);
+		Piece->OnGeneratorPieceRepair.AddDynamic(this, &AGenerator::ReceivePieceRepaired);
 	}
 }
 
 void AGenerator::InteractionEvent(APawn* EventSender)
 {
-	if (bCanInteract)
-	{
-		OnGeneratorInteracted.Broadcast();// Only necessary if we create a use for this
-
-		IInteractiveObject::Execute_BlueprintInteract(this,EventSender);
-	}
+	bHasBeenActivated = true;
+	IInteractiveObject::Execute_BlueprintInteract(this,EventSender);
 }
 
-void AGenerator::IterateHitCount()
+void AGenerator::ReceivePieceRepaired()
 {
-	HitCount++;
-	CheckIfFixed();
+	RepairedPieces++;
+	OnPieceRepaired.Broadcast(RepairedPieces);
 }
 
-void AGenerator::CheckIfFixed()
+void AGenerator::BreakGenerator()
 {
-	if (HitCount == 3)
+	for (AGeneratorPiece* Piece : Pieces)
 	{
-		bCanInteract = true;
+		Piece->BreakPiece();
 	}
+
+	RepairedPieces = 0;
+	OnPieceRepaired.Broadcast(RepairedPieces);
+	bHasBeenActivated = false;
 }

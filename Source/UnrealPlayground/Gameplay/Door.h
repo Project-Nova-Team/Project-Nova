@@ -29,6 +29,7 @@ public:
 	ADoor();
 
 	/** Sets the lock status of this door*/
+	UFUNCTION(BlueprintCallable)
 	void SetIsLocked(const bool Value);
 
 	/** Should this door be opening*/
