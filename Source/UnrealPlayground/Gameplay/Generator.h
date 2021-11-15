@@ -21,11 +21,11 @@ public:
 
 	FInteractionPrompt& GetInteractionPrompt() override { return Prompt; }
 
+	bool CanInteract() const override { return RepairedPieces == Pieces.Num() && !bHasBeenActivated; }
+
 protected:
 
 	virtual void BeginPlay() override;
-
-	bool CanInteract() const override { return RepairedPieces == Pieces.Num() && !bHasBeenActivated; }
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
 	UStaticMeshComponent* Mesh;
