@@ -163,6 +163,10 @@ public:
 
 	bool HasGunOfType(const EGunClass GunType) const;
 
+	/** Is the shooter currently in a UI prompt event*/
+	UPROPERTY(BlueprintReadWrite)
+	uint8 bIsPrompted : 1;
+
 protected:
 	virtual void BeginPlay() override;
 

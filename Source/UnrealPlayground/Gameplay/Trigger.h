@@ -4,7 +4,7 @@
 #include "GameFramework/Actor.h"
 #include "Trigger.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FTriggerEvent);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTriggerEvent, APawn*, Sender);
 
 class UBoxComponent;
 class UBillboardComponent;
@@ -17,6 +17,7 @@ class UNREALPLAYGROUND_API ATrigger : public AActor
 public:	
 	ATrigger();
 
+	UFUNCTION(BlueprintCallable)
 	virtual void SetActive(const bool Value);
 
 	UPROPERTY(BlueprintAssignable)
@@ -32,7 +33,7 @@ protected:
 	uint8 bIsActive : 1;
 
 	/** If true, this trigger will start as active*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Trigger")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trigger")
 	uint8 bStartActive : 1;
 
 	/** If true, this trigger will activate everytime it is entered*/
@@ -57,7 +58,11 @@ protected:
 	virtual void ExecuteTrigger(APawn* Sender);
 
 	virtual void BeginPlay() override;
+
+	UFUNCTION()
 	virtual void BeginOverlap(AActor* OverlappedActor, AActor* OtherActor);
+
+	UFUNCTION()
 	virtual void EndOverlap(AActor* OverlappedActor, AActor* OtherActor);
 
 };

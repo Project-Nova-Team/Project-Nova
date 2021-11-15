@@ -55,11 +55,11 @@ protected:
 	uint8 bIsPaused : 1;
 
 	/** Called when shooter looks at something interactable*/
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 	void ShowInteractionPrompt(const FInteractionPrompt& Prompt);
 
 	/** Called when shooter is not looking at something interactable*/
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 	void HideInteractionPrompt(const FInteractionPrompt& Prompt);
 
 	UPROPERTY(BlueprintReadWrite)
