@@ -139,7 +139,7 @@ void AShooter::ScanInteractiveObject()
 		}	
 	}
 
-	else
+	else if(!bIsPrompted)
 	{
 		FInteractionPrompt Empty;
 		OnScanMiss.Broadcast(Empty);

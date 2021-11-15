@@ -5,8 +5,8 @@
 
 APromptTrigger::APromptTrigger()
 {
-	PrefixText = "Press";
-	SuffixText = "to crouch";
+	PrefixText = "Press ";
+	SuffixText = " to Crouch";
 	InputAction = TEXT("Crouch");
 }
 
@@ -15,7 +15,7 @@ void APromptTrigger::EndOverlap(AActor* OverlappedActor, AActor* OtherActor)
 	//The object that exited the trigger was capable of triggering it in the firstplace
 	if (TriggerWhiteList.Contains(OtherActor->GetClass()))
 	{
-		OnTriggerExited.Broadcast();
+		OnTriggerExited.Broadcast(Cast<APawn>(OtherActor));
 
 		//We exited the trigger marked as prompt. Hide the UI widget but don't disable the trigger
 		if (PromptSatisfier == Prompt_Input && StagedPawn != nullptr)
@@ -28,19 +28,12 @@ void APromptTrigger::EndOverlap(AActor* OverlappedActor, AActor* OtherActor)
 		{
 			SetActive(false);
 		}
-
-		//We exited the trigger in duration exit, turn off after a delay
-		else if (PromptSatisfier == Prompt_DurationExit && !bTriggerMoreThanOnce)
-		{
-			GetWorld()->GetAuthGameMode<AShooterGameMode>()->GetDelayedActionManager()->
-				StartDelayedAction(this, &APromptTrigger::SetActive, Duration, false);
-		}
 	}
 }
 
 void APromptTrigger::ExecuteTrigger(APawn* Sender)
 {
-	OnTriggerActivated.Broadcast();
+	OnTriggerActivated.Broadcast(Sender);
 
 	if (PromptSatisfier == Prompt_Duration)
 	{

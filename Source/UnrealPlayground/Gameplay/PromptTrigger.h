@@ -9,8 +9,7 @@ enum EPromptSatisfier
 {
 	Prompt_Exit,
 	Prompt_Input,
-	Prompt_Duration,
-	Prompt_DurationExit
+	Prompt_Duration
 };
 
 /** Trigger that displays UI prompt on screen. Note the white list should ONLY contain pawns that are controlled by a player controller!!*/
