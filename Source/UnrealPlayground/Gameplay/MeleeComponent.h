@@ -40,5 +40,6 @@ private:
 	
 	UFUNCTION()
 	/** Event function bound to OnComponentBeginOverlap, deals damage to the actor hit if it exists in ClassWhiteList*/
-	void HitActor(AActor* OverlappedActor, AActor* OtherActor);
+	void HitActor(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, 
+		int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 };

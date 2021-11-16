@@ -1,30 +1,37 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ // Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Removable.h"
+#include "Components/StaticMeshComponent.h"
+#include "Engine/StaticMesh.h"
+#include "MeleeComponent.h"
+#include "Components/StaticMeshComponent.h"
+#include "InteractiveObject.h"
+#include "GameFramework/HUD.h"
+#include <Runtime/Engine/Classes/Kismet/GameplayStatics.h>
+#include "Components/BoxComponent.h"
+#include "../ShooterHUD.h"
 #include "GeneratorPiece.generated.h"
 
 DECLARE_MULTICAST_DELEGATE(FGeneratorPieceHitEvent);
 
-class UHealthComponent;
-
 UCLASS()
-class UNREALPLAYGROUND_API AGeneratorPiece : public AActor, public IRemovable
+class UNREALPLAYGROUND_API AGeneratorPiece : public AActor, public IInteractiveObject
 {
 	GENERATED_BODY()
 	
 public:	
-	// Sets default values for this actor's properties
-	AGeneratorPiece();
-
 	/** Set to true once player hits piece and it becomes fixed.*/
 	uint8 bIsFixed : 1;
 
 	// delegate
 	FGeneratorPieceHitEvent OnGeneratorPieceHit;
+
+	void InteractionEvent(APawn* EventSender) override;
+
+	UStaticMeshComponent* GetMeshComponent() { return MeshComponent; };
 
 protected:
 	// Called when the game starts or when spawned
@@ -32,10 +39,19 @@ protected:
 
 private:
 
-	UFUNCTION()
-	void BroadcastDisable();
+	UPROPERTY(EditAnywhere, Category = "Mesh")
+	UStaticMesh* FixedMesh;
 
-	UPROPERTY(Category = Health, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	class UHealthComponent* Health;
+	UBoxComponent* Trigger;
+
+	UStaticMeshComponent* MeshComponent;
+
+	UFUNCTION()
+	void BeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+		int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	void ShowHighlightedOutline();
+
+	void SwapMeshToFixed();
 
 };
