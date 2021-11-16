@@ -23,6 +23,5 @@ public:
 
 	virtual void InteractionEvent(APawn* EventSender) = 0;
 
-	uint8 bCanInteract : 1;
-
+	uint8 bIsInteractable = true;
 };

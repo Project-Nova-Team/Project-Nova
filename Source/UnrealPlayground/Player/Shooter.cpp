@@ -12,6 +12,7 @@
 #include "../Gameplay/InteractiveObject.h"
 #include "../Gameplay/MeleeComponent.h"
 #include "../Weapon/Gun.h"
+#include "../Gameplay/GeneratorPiece.h"
 #include "../Gameplay/HealthPickup.h"
 
 void FShooterInput::Tick(const float DeltaTime)
@@ -128,9 +129,19 @@ void AShooter::ScanInteractiveObject()
 			return;
 		}
 
-		IInteractiveObject* InteractiveObjec = Cast<IInteractiveObject>(ScanHitResult.Actor);
+		IInteractiveObject* InteractiveObject = Cast<IInteractiveObject>(ScanHitResult.Actor);
 
-		if (InteractiveObjec->bCanInteract)
+		// Hacky
+		if (ScanHitResult.Actor->IsA(AGeneratorPiece::StaticClass()))
+		{
+			if (!bIsScanningGeneratorPiece)
+			{
+				InteractiveObject->InteractionEvent(this);
+				bIsScanningGeneratorPiece = true;
+			}
+		}
+
+		if (InteractiveObject->bIsInteractable)
 		{
 			//Lets us do UI things in blueprint
 			OnScanHit.Broadcast(ScanHitResult);
@@ -140,7 +151,6 @@ void AShooter::ScanInteractiveObject()
 
 		if (InputState.bIsTryingToInteract)
 		{
-			IInteractiveObject* InteractiveObject = Cast<IInteractiveObject>(ScanHitResult.Actor);
 			InteractiveObject->InteractionEvent(this);
 
 			InputState.bIsTryingToInteract = false;
@@ -148,11 +158,19 @@ void AShooter::ScanInteractiveObject()
 	}
 	else
 	{
+		if (bIsScanningGeneratorPiece)
+		{
+			// this is null somehow
+			IInteractiveObject::Execute_BlueprintInteract(ScanHitResult.Actor.Get(), this);
+			bIsScanningGeneratorPiece = false;
+		}
+
 		/* Check if shooter was previously scanning an interactive object first.
 		Otherwise OnScanMiss will always fire. */
 		if (bIsScanningInteractiveObject)
 		{
 			OnScanMiss.Broadcast(ScanHitResult);
+
 			bIsScanningInteractiveObject = false;
 		}
 	}

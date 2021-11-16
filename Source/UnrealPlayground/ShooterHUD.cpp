@@ -2,6 +2,7 @@
 #include "ShooterController.h"
 #include "Player/Shooter.h"
 #include "../UnrealPlayground/Weapon/Gun.h"
+#include "Gameplay/GeneratorPiece.h"
 #include "../UnrealPlayground/ShooterGameMode.h"
 #include "Blueprint/UserWidget.h"
 #include "Weapon/CombatComponent.h"

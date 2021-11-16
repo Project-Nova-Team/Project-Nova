@@ -219,6 +219,8 @@ private:
 	/** Set to true when player has scanned an interactive object. For ScanMiss delegate*/
 	uint8 bIsScanningNonInteractiveObject : 1;
 
+	uint8 bIsScanningGeneratorPiece : 1;
+
 	/** Casts a trace from the camera to see if there is an object nearby we can interact with*/	
 	void ScanInteractiveObject();
 

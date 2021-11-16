@@ -1,11 +1,12 @@
 #include "GeneratorPiece.h"
-#include "HealthComponent.h"
 
-
-// Sets default values
-AGeneratorPiece::AGeneratorPiece()
+void AGeneratorPiece::InteractionEvent(APawn* EventSender)
 {
-	Health = CreateDefaultSubobject<UHealthComponent>("Health");
+	// Don't need this. These if statements were used for testing
+	if (MeshComponent->CustomDepthStencilValue == 0)
+		ShowHighlightedOutline();
+	else
+		MeshComponent->SetCustomDepthStencilValue(0);
 }
 
 // Called when the game starts or when spawned
@@ -13,16 +14,34 @@ void AGeneratorPiece::BeginPlay()
 {
 	Super::BeginPlay();
 
-	Health->OnDeath.AddDynamic(this, &AGeneratorPiece::BroadcastDisable);
+	Trigger = Cast<UBoxComponent>(GetComponentByClass(UBoxComponent::StaticClass()));
+
+	MeshComponent = Cast<UStaticMeshComponent>(GetComponentByClass(UStaticMeshComponent::StaticClass()));
+
+	Trigger->OnComponentBeginOverlap.AddDynamic(this, &AGeneratorPiece::BeginOverlap);
+
+	bIsInteractable = false;
 }
 
-void AGeneratorPiece::BroadcastDisable()
+void AGeneratorPiece::BeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+	int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	OnGeneratorPieceHit.Broadcast();
+	if (OtherComp->IsA(UMeleeComponent::StaticClass()))
+	{
+		OnGeneratorPieceHit.Broadcast();
 
-	/* HIDE piece once hit. If we want to change this in the future 
-	possibly to set a new mesh we can. If we no longer need to hide,
-	make sure to remove implementation of IRemovable*/
-	RemoveSelf(this);
+		SwapMeshToFixed();
+	}
 }
 
+
+void AGeneratorPiece::SwapMeshToFixed()
+{
+	// Doesn't inherit scale and rotation properties of original mesh. May need to fine tune each mesh to make sure it looks right
+	Cast<UStaticMeshComponent>(GetComponentByClass(UStaticMeshComponent::StaticClass()))->SetStaticMesh(FixedMesh);
+}
+
+void AGeneratorPiece::ShowHighlightedOutline()
+{
+	MeshComponent->SetCustomDepthStencilValue(2);
+}
