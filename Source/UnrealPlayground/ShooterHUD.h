@@ -7,6 +7,8 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FUpdateHUD);
 
+DECLARE_MULTICAST_DELEGATE(FOnScanGeneratorPiece)
+
 class AShooter;
 class UCombatComponent;
 class AWeapon;
@@ -27,6 +29,8 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void ShowDeathScreen();
+
+	FOnScanGeneratorPiece OnScanGeneratorPiece;
 
 protected:
 
