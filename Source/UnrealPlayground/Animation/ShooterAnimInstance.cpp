@@ -1,12 +1,13 @@
 #include "ShooterAnimInstance.h"
 #include "Animation/AnimMontage.h"
 #include "../State/FPS/Event/SVaultState.h"
+#include "../State/FPS/Movement/STuckState.h"
 #include "../State/FPS/ShooterStateMachine.h"
 #include "../Player/ShooterMovementComponent.h"
 #include "../Weapon/CombatComponent.h"
 #include "../Player/Shooter.h"
 #include "../Weapon/MeleeWeapon.h"
-#include "Camera/CameraComponent.h"
+#include "../Player/FirstPersonCameraComponent.h"
 
 
 void UShooterAnimInstance::NativeBeginPlay()
@@ -24,7 +25,7 @@ void UShooterAnimInstance::NativeBeginPlay()
 	ShooterMovement = Shooter->GetShooterMovement();
 	ShooterMesh = Shooter->GetSkeletalMeshComponent();
 	ShooterCombat = Shooter->GetCombat();
-	ShooterCamera = Shooter->GetCamera();
+	ShooterCamera = Shooter->GetCameraCast();
 	ShooterMelee = Shooter->GetMelee();
 
 	Shooter->OnStateLoadComplete.AddUObject(this, &UShooterAnimInstance::BindState);
@@ -65,7 +66,12 @@ void UShooterAnimInstance::ReceiveNewWeaponDrop(AWeapon* NewWeapon)
 	}
 }
 
-bool UShooterAnimInstance::IsWalking()
+bool UShooterAnimInstance::IsTucked()
+{
+	return Shooter->GetStateMachine()->GetActiveState()->IsA(USTuckState::StaticClass());
+}
+
+bool UShooterAnimInstance::IsMovingOnGround()
 {
 	return ShooterMovement->bIsOnGround && !ShooterMovement->InputVelocity.IsNearlyZero();
 }

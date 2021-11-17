@@ -7,7 +7,7 @@
 
 AVent::AVent()
 {
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 	Frame = CreateDefaultSubobject<UStaticMeshComponent>("Frame");
 	SetRootComponent(Frame);
 

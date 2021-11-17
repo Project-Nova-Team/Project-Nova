@@ -8,7 +8,7 @@
 
 class AShooter;
 class AWeapon;
-class UCameraComponent;
+class UFirstPersonCameraComponent;
 class UShooterMovementComponent;
 class UCombatComponent;
 class UMeleeComponent;
@@ -67,9 +67,14 @@ private:
 
 	/** Animation Hooks**/
 
+	//UFUNCTION(BlueprintCallable, Category = "Animation")
+
+	UFUNCTION(BlueprintCallable, Category = "Animation")
+	bool IsTucked();
+
 	/** Returns whether this shooter is walking*/
 	UFUNCTION(BlueprintCallable, Category = "Animation")
-	bool IsWalking();
+	bool IsMovingOnGround();
 
 	/** Returns whether this shooter is falling*/
 	UFUNCTION(BlueprintCallable, Category = "Animation")
@@ -121,7 +126,7 @@ protected:
 	UCombatComponent* ShooterCombat;
 
 	UPROPERTY(BlueprintReadOnly)
-	UCameraComponent* ShooterCamera;
+	UFirstPersonCameraComponent* ShooterCamera;
 
 	UPROPERTY(BlueprintReadOnly)
 	UMeleeComponent* ShooterMelee;

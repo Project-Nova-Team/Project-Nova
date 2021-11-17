@@ -8,6 +8,11 @@ UHealthComponent::UHealthComponent()
 	StartingHealth = MaxHealth;
 }
 
+void UHealthComponent::SetStartingHealth(int Amount)
+{
+	StartingHealth = Amount;
+}
+
 void UHealthComponent::BeginPlay()
 {
 	Super::BeginPlay();
@@ -39,6 +44,11 @@ void UHealthComponent::TakeDamage(AActor* DamagedActor, float Damage, const clas
 		Health = 0;
 		OnDeath.Broadcast();
 		bIsInvincible = true;
+	}
+
+	else
+	{
+		OnDamaged.Broadcast();
 	}
 }
 

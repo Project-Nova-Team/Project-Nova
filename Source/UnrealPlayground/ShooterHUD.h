@@ -7,6 +7,8 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FUpdateHUD);
 
+DECLARE_MULTICAST_DELEGATE(FOnScanGeneratorPiece)
+
 class AShooter;
 class UCombatComponent;
 class AWeapon;
@@ -25,11 +27,20 @@ public:
 
 	void Tick(float DeltaTime) override;
 
+	UFUNCTION(BlueprintCallable)
+	void ShowDeathScreen();
+
+	FOnScanGeneratorPiece OnScanGeneratorPiece;
+
 protected:
 
 	/** Invoked when a UI update is requested*/
 	UPROPERTY(BlueprintAssignable)
 	FUpdateHUD OnUpdate;
+
+	/** Invoked when we need to push new data to the interaction prompt*/
+	UPROPERTY(BlueprintAssignable)
+	FUpdateHUD OnInteractionPromptChange;
 
 	/** Invoked when the combat component adds a new weapon to the arsenal*/
 	void ReceiveWeapon(AWeapon* NewWeapon);
@@ -48,21 +59,21 @@ protected:
 	uint8 bIsPaused : 1;
 
 	/** Called when shooter looks at something interactable*/
-	UFUNCTION()
-	void ShowInteractionPrompt(FHitResult Hit);
+	UFUNCTION(BlueprintCallable)
+	void ShowInteractionPrompt(const FInteractionPrompt& Prompt);
 
 	/** Called when shooter is not looking at something interactable*/
-	UFUNCTION()
-	void HideInteractionPrompt(FHitResult Hit);
+	UFUNCTION(BlueprintCallable)
+	void HideInteractionPrompt(const FInteractionPrompt& Prompt);
 
 	UPROPERTY(BlueprintReadWrite)
 	UUserWidget* InteractionPromptWidget;
 
 	UPROPERTY(BlueprintReadWrite)
-	UUserWidget* VaultPromptWidget;
+	UUserWidget* PauseMenuWidget;
 
 	UPROPERTY(BlueprintReadWrite)
-	UUserWidget* PauseMenuWidget;
+	UUserWidget* DeathScreenWidget;
 
 	UPROPERTY(BlueprintReadWrite)
 	UUserWidget* ExitConfirmationWidget;
@@ -90,13 +101,19 @@ protected:
 	float Bloom;
 
 	UPROPERTY(BlueprintReadOnly)
-	uint8 bPlayerHasWeapon : 1;
+	uint8 bPlayerHasGun : 1;
 
 	UPROPERTY(BlueprintReadOnly)
 	AShooter* Shooter;
+
+	/** Prompt data for the last interactive object that was scanned*/
+	UPROPERTY(BlueprintReadOnly)
+	FInteractionPrompt LastScan;
 
 private:
 
 	/** Combat component attached to player*/
 	UCombatComponent* Combat;
+
+	uint8 bInteractionPromptActive : 1;
 };

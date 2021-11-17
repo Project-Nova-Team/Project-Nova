@@ -2,6 +2,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Removable.h"
 #include "GameFramework/Actor.h"
 #include "InteractiveObject.h"
 #include "HealthPickup.generated.h"
@@ -9,7 +10,7 @@
 class UHealthComponent;
 
 UCLASS()
-class UNREALPLAYGROUND_API AHealthPickup : public AActor, public IInteractiveObject
+class UNREALPLAYGROUND_API AHealthPickup : public AActor, public IInteractiveObject, public IRemovable
 {
 	GENERATED_BODY()
 	
@@ -19,6 +20,8 @@ public:
 
 	virtual void InteractionEvent(APawn* EventSender) override;
 
+	FInteractionPrompt& GetInteractionPrompt() override { return Prompt; }
+
 protected:
 
 	UPROPERTY(EditAnywhere)
@@ -27,4 +30,6 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
 	UStaticMeshComponent* Mesh;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
+	FInteractionPrompt Prompt;
 };
