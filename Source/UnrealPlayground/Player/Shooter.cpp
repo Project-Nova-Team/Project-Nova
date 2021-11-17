@@ -2,16 +2,14 @@
 #include "Components/InputComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
-#include "Camera/CameraComponent.h"
 #include "../Utility/DelayedActionManager.h"
 #include "../ShooterGameMode.h"
 #include "../State/FPS/ShooterStateMachine.h"
 #include "../Gameplay/HealthComponent.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
-#include "../Gameplay/VaultTrigger.h"
-#include "../Gameplay/InteractiveObject.h"
 #include "../Gameplay/MeleeComponent.h"
 #include "../Weapon/Gun.h"
+#include "../Gameplay/HealthPickup.h"
 
 void FShooterInput::Tick(const float DeltaTime)
 {
@@ -27,7 +25,7 @@ void FShooterInput::HandleCrouchInputStates(const float DeltaTime)
 	{
 		CurrentCrouchHoldTime += DeltaTime;
 		if (CurrentCrouchHoldTime >= Owner->ShooterMovement->ProneInputTime)
-		{		
+		{
 			CurrentCrouchHoldTime = 0;
 			bIsHoldingCrouch = false;
 			bIsTryingToProne = true;
@@ -54,7 +52,7 @@ AShooter::AShooter()
 
 	Collider = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Collider"));
 	CameraAnchor = CreateDefaultSubobject<USceneComponent>(TEXT("Anchor"));
-	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
+	Camera = CreateDefaultSubobject<UFirstPersonCameraComponent>(TEXT("Camera"));
 	ShooterMovement = CreateDefaultSubobject<UShooterMovementComponent>(TEXT("Movement"));
 	Melee = CreateDefaultSubobject<UMeleeComponent>(TEXT("Melee"));
 
@@ -96,8 +94,6 @@ void AShooter::BeginPlay()
 	InputState.Owner = this;
 
 	Combat->OnArsenalAddition.AddUObject(this, &AShooter::LoadAmmoOnWeaponGet);
-	OnActorBeginOverlap.AddDynamic(this, &AShooter::OnTriggerEnter);
-	OnActorEndOverlap.AddDynamic(this, &AShooter::OnTriggerExit);
 	Health->OnDeath.AddDynamic(this, &AShooter::HandleDeath);
 }
 
@@ -111,36 +107,42 @@ void AShooter::Tick(float DeltaTime)
 
 void AShooter::ScanInteractiveObject()
 {
+	FHitResult Hit;
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(this);
-	
+
 	const FVector TraceStart = Camera->GetComponentLocation();
 	const FVector TraceEnd = TraceStart + Camera->GetForwardVector() * FMath::Min(ShooterMovement->StandingHeight * 2.f, ShooterMovement->InteractionDistance);
-	const bool bHit = GetWorld()->LineTraceSingleByChannel(ScanHitResult, TraceStart, TraceEnd, ECC_Camera, QueryParams);
+	const bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_Camera, QueryParams);
 
 	//We're looking at an object that is interactive
-	if(bHit && ScanHitResult.Actor != nullptr && ScanHitResult.Actor->Implements<UInteractiveObject>())
-	{	
-		//Lets us do UI things in blueprint
-		OnScanHit.Broadcast(ScanHitResult);
-
-		bIsScanningInteractiveObject = true;
-
-		if (InputState.bIsTryingToInteract)
+	if (bHit && Hit.Actor != nullptr && Hit.Actor->Implements<UInteractiveObject>())
+	{
+		//HACK THIS
+		if (Hit.Actor->IsA(AHealthPickup::StaticClass()) && Health->bIsFullHealth)
 		{
-			IInteractiveObject* InteractiveObject = Cast<IInteractiveObject>(ScanHitResult.Actor);
-			InteractiveObject->InteractionEvent(this);
+			return;
+		}
 
-			InputState.bIsTryingToInteract = false;
+		IInteractiveObject* InteractiveObject = Cast<IInteractiveObject>(Hit.Actor);
+
+		if (InteractiveObject->CanInteract())
+		{
+			//Lets us do UI things in blueprint
+			OnScanHit.Broadcast(InteractiveObject->GetInteractionPrompt());
+
+			if (InputState.bIsTryingToInteract)
+			{
+				InteractiveObject->InteractionEvent(this);
+				InputState.bIsTryingToInteract = false;
+			}
 		}	
 	}
-	else 
+
+	else if(!bIsPrompted)
 	{
-		if (bIsScanningInteractiveObject)
-		{
-			OnScanMiss.Broadcast(ScanHitResult);
-			bIsScanningInteractiveObject = false;
-		}
+		FInteractionPrompt Empty;
+		OnScanMiss.Broadcast(Empty);
 	}
 }
 
@@ -171,24 +173,6 @@ void AShooter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 		.bExecuteWhenPaused = true;;
 }
 
-void AShooter::OnTriggerEnter(AActor* OverlappedActor, AActor* OtherActor)
-{
-	if (OtherActor->IsA(AVaultTrigger::StaticClass()))
-	{
-		bIsInsideVaultTrigger = true;
-	}
-}
-
-void AShooter::OnTriggerExit(AActor* OverlappedActor, AActor* OtherActor)
-{
-	if (OtherActor->IsA(AVaultTrigger::StaticClass()))
-	{
-		bIsInsideVaultTrigger = false;
-		// force player to stop being able to scan vault object by broadcasting a miss scan. Is there a better way we could do this?
-		OnScanMiss.Broadcast(ScanHitResult);
-	}
-}
-
 void AShooter::ShooterMakeNoise(FVector Location, float Volume)
 {
 	OnMakeNoise.Broadcast(Location, Volume);
@@ -205,7 +189,7 @@ void AShooter::MakeSound(const float Volume)
 	const bool bHit = GetWorld()->LineTraceSingleByChannel(SoundHit, TraceStart, TraceEnd, ECC_Camera, QueryParams);
 
 	if (bHit)
-	{	
+	{
 		ShooterMakeNoise(SoundHit.ImpactPoint, Volume);
 	}
 }
@@ -215,7 +199,7 @@ void AShooter::HandleDeath()
 	StateMachine->SetState("Death");
 }
 
-bool AShooter::GetCanVault()
+bool AShooter::CanVault()
 {
 	return bIsInsideVaultTrigger && bIsLookingAtVaultObject;
 }

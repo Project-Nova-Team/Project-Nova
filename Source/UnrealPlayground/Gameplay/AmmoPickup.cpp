@@ -34,8 +34,6 @@ void AAmmoPickup::InteractionEvent(APawn* EventSender)
 			Shooter->LoadAmmoOnPickup(GunType);
 		}
 
-		Mesh->SetVisibility(false);
-		Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
+		RemoveSelf(this);
 	}
 }

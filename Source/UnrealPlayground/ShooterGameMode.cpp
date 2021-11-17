@@ -23,7 +23,7 @@ void AShooterGameMode::InitGame(const FString& MapName, const FString& Options, 
 	DelayedActionManager->Initialize();
 
 	//TODO - I HATE using this function EVER. Ensure serialization in final builds/levels
-#if WITH_EDITOR
+//#if WITH_EDITOR
 	if (Player == nullptr)
 	{
 		Player = FindActor<AShooter>(GetWorld());
@@ -33,7 +33,7 @@ void AShooterGameMode::InitGame(const FString& MapName, const FString& Options, 
 	{
 		FindAllActors<AAICell>(GetWorld(), AICells);
 	}
-#endif
+//#endif
 
 	for (AAICell* Cell : AICells)
 	{
@@ -52,6 +52,7 @@ void AShooterGameMode::Tick(float DeltaTime)
 void AShooterGameMode::PlayerDeath()
 {
 	//Do reset pipeline stuff here when player dies
+	Cast<AShooterHUD>(Cast<APlayerController>(Player->GetController())->MyHUD)->ShowDeathScreen();
 }
 
 void AShooterGameMode::PauseGame()

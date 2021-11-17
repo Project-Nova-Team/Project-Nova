@@ -3,30 +3,14 @@
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundCue.h"
 
-// Sets default values
 AAudioTrigger::AAudioTrigger()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = false;
-
+	AudioComponent = CreateDefaultSubobject<UAudioComponent>("Audio");
+	AudioComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 }
 
-// Called when the game starts or when spawned
-void AAudioTrigger::BeginPlay()
+void AAudioTrigger::ExecuteTrigger(APawn* Sender)
 {
-	Super::BeginPlay();
-	// bind delegates
-	OnActorBeginOverlap.AddDynamic(this, &AAudioTrigger::BeginOverlap);
+	Super::ExecuteTrigger(Sender);
+	AudioComponent->Play();
 }
-
-void AAudioTrigger::SetComponents(UAudioComponent* Component)
-{
-	AudioComponent = Component;
- }
-
-void AAudioTrigger::BeginOverlap(AActor* OverlappedActor, AActor* OtherActor)
-{
-	if (OtherActor == TargetActor)
-		UGameplayStatics::PlaySoundAtLocation(this, AudioComponent->Sound, AudioComponent->GetComponentLocation());
-}
-

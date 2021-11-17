@@ -2,6 +2,7 @@
 #include "ShooterController.h"
 #include "Player/Shooter.h"
 #include "../UnrealPlayground/Weapon/Gun.h"
+#include "Gameplay/GeneratorPiece.h"
 #include "../UnrealPlayground/ShooterGameMode.h"
 #include "Blueprint/UserWidget.h"
 #include "Weapon/CombatComponent.h"
@@ -51,10 +52,10 @@ void AShooterHUD::ReleaseWeapon(AWeapon* NewWeapon)
 
 void AShooterHUD::InternalUpdate()
 {
-	bPlayerHasWeapon = Combat->GetHeldWeapon() != nullptr;
 	Bloom = Combat->GetWeaponBloom();
 
 	AGun* HeldAsGun = Cast<AGun>(Combat->GetHeldWeapon());
+	bPlayerHasGun = HeldAsGun != nullptr;
 
 	if (HeldAsGun != nullptr)
 	{
@@ -101,6 +102,13 @@ void AShooterHUD::ShowPauseMenu()
 	}
 }
 
+void AShooterHUD::ShowDeathScreen()
+{
+	DeathScreenWidget->SetVisibility(ESlateVisibility::Visible);
+	Shooter->GetController<APlayerController>()->SetPause(true);
+	Shooter->GetController<APlayerController>()->bShowMouseCursor = true;
+}
+
 void AShooterHUD::HideUI()
 {
 	if (Shooter->GetController<APlayerController>())
@@ -116,27 +124,26 @@ void AShooterHUD::HideUI()
 	ControlsMenuWidget->SetVisibility(ESlateVisibility::Collapsed);
 }
 
-void AShooterHUD::ShowInteractionPrompt(FHitResult Hit)
+void AShooterHUD::ShowInteractionPrompt(const FInteractionPrompt& Hit)
 {
-	if (Hit.GetActor()->IsA(AVaultObject::StaticClass()))
+	if (!bInteractionPromptActive)
 	{
-		Shooter->bIsLookingAtVaultObject = true;
-		if (Shooter->GetCanVault())
-		{
-			VaultPromptWidget->SetVisibility(ESlateVisibility::HitTestInvisible);
-			Shooter->GetShooterMovement()->bCanVault = true;
-		}
+		bInteractionPromptActive = true;
+		InteractionPromptWidget->SetVisibility(ESlateVisibility::HitTestInvisible);		
 	}
-	else
+
+	if (Hit != LastScan)
 	{
-		InteractionPromptWidget->SetVisibility(ESlateVisibility::HitTestInvisible);
+		LastScan = Hit;
+		OnInteractionPromptChange.Broadcast();	
 	}
 }
 
-void AShooterHUD::HideInteractionPrompt(FHitResult Hit)
+void AShooterHUD::HideInteractionPrompt(const FInteractionPrompt& Hit)
 {
-	Shooter->bIsLookingAtVaultObject = false;
-	Shooter->GetShooterMovement()->bCanVault = false;
-	InteractionPromptWidget->SetVisibility(ESlateVisibility::Collapsed);
-	VaultPromptWidget->SetVisibility(ESlateVisibility::Collapsed);
+	if (bInteractionPromptActive)
+	{
+		bInteractionPromptActive = false;
+		InteractionPromptWidget->SetVisibility(ESlateVisibility::Collapsed);
+	}
 }
