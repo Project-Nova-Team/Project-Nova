@@ -60,11 +60,10 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Patrol")
 	AActor* PatrolActor;
 
-	UPROPERTY(BlueprintReadOnly)
-	uint8 bIsDead : 1;
-
 private:
 
 	/** Player object, past down by the owning cell*/
 	AActor* Player;
+
+	uint8 bIsDead : 1;
 };
