@@ -32,7 +32,9 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FHealthEvent OnDamaged;
 
-	void SetStartingHealth(int Amount);
+	void SetStartingHealth(float Amount);
+
+	float GetStartingHealth() const { return StartingHealth; }
 
 protected:
 	virtual void BeginPlay() override;
