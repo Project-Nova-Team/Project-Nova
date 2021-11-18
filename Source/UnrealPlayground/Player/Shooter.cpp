@@ -64,6 +64,7 @@ AShooter::AShooter()
 	Collider->SetCollisionProfileName("Pawn");
 	Collider->SetCapsuleHalfHeight(ShooterMovement->StandingHeight);
 	Collider->SetCapsuleRadius(ShooterMovement->CollisionRadius);
+	Collider->bDynamicObstacle = true;
 	CameraAnchor->SetRelativeLocation(FVector(0, 0, ShooterMovement->CameraHeight));
 
 	ShooterSkeletalMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Arms"));

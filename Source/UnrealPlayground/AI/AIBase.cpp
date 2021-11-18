@@ -32,23 +32,15 @@ void AAIBase::BeginPlay()
 
 void AAIBase::SetLifeStatus(const bool bIsAlive)
 {
+	bIsDead = !bIsAlive;
+
 	if (!bIsAlive)
 	{
-		GetMesh()->SetAnimationMode(EAnimationMode::AnimationCustomMode);
 		GetCapsuleComponent()->SetCollisionProfileName("NoCollision");
-		GetMesh()->SetCollisionProfileName("Ragdoll");	
-		GetMesh()->SetSimulatePhysics(true);
 	}
 
 	else
 	{
-		GetMesh()->SetSimulatePhysics(false);
-		GetMesh()->SetCollisionProfileName("NoCollision");	
-		GetCapsuleComponent()->SetCollisionProfileName("Pawn");		
-		GetMesh()->SetAnimationMode(EAnimationMode::AnimationBlueprint);
-
-		//Hack. our meshes will be better
-		GetMesh()->SetRelativeLocation(FVector::ZeroVector);
-		GetMesh()->SetRelativeRotation(FRotator(0, -90, 0));
+		GetCapsuleComponent()->SetCollisionProfileName("Pawn");
 	}
 }
