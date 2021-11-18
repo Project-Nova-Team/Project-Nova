@@ -42,5 +42,6 @@ void AAIBase::SetLifeStatus(const bool bIsAlive)
 	else
 	{
 		GetCapsuleComponent()->SetCollisionProfileName("Pawn");
+		Health->Revive();
 	}
 }

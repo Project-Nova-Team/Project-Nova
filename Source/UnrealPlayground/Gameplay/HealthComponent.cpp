@@ -8,7 +8,7 @@ UHealthComponent::UHealthComponent()
 	StartingHealth = MaxHealth;
 }
 
-void UHealthComponent::SetStartingHealth(int Amount)
+void UHealthComponent::SetStartingHealth(float Amount)
 {
 	StartingHealth = Amount;
 }
