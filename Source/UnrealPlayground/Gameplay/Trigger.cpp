@@ -105,12 +105,12 @@ void ATrigger::SetActive(const bool Value)
 
 		if (bIsActive)
 		{
-			TriggerVolume->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			TriggerVolume->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);			
 		}
 
 		else
 		{
-			TriggerVolume->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+			TriggerVolume->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		}
 	}
 }

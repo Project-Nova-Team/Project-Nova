@@ -15,7 +15,13 @@ AAIBase::AAIBase()
 	Health = CreateDefaultSubobject<UHealthComponent>(TEXT("Health"));
 
 	AttackMoveSpeed = 375;
-	
+}
+
+void AAIBase::SetVisible(const bool Value)
+{
+	const ECollisionEnabled::Type Visibility = Value ? ECollisionEnabled::QueryAndPhysics : ECollisionEnabled::NoCollision;
+	GetCapsuleComponent()->SetCollisionEnabled(Visibility);
+	GetMesh()->SetVisibility(Value);
 }
 
 void AAIBase::BeginPlay()
@@ -26,19 +32,15 @@ void AAIBase::BeginPlay()
 
 void AAIBase::SetLifeStatus(const bool bIsAlive)
 {
+	bIsDead = !bIsAlive;
+
 	if (!bIsAlive)
 	{
-		GetMesh()->SetAnimationMode(EAnimationMode::AnimationCustomMode);
 		GetCapsuleComponent()->SetCollisionProfileName("NoCollision");
-		GetMesh()->SetCollisionProfileName("Ragdoll");	
-		GetMesh()->SetSimulatePhysics(true);
 	}
 
 	else
 	{
-		GetMesh()->SetSimulatePhysics(false);
-		GetMesh()->SetCollisionProfileName("HitScan");	
 		GetCapsuleComponent()->SetCollisionProfileName("Pawn");
-		GetMesh()->SetAnimationMode(EAnimationMode::AnimationBlueprint);
 	}
 }
