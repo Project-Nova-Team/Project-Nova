@@ -64,6 +64,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	bool IsDead() const { return bIsDead; }
 
+	bool IsInactive() const { return bIsInactive; }
+
 	bool CanSeeTarget() const { return bHasVisionOfTarget; }
 
 	float GetLastAggressionTime() const { return LastAgressiveTime; }
