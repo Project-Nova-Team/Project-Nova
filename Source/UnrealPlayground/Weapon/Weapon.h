@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "../Gameplay/InteractiveObject.h"
+#include "Materials/MaterialInstance.h"
 #include "Weapon.generated.h"
 
 class USkeletalMesh;
@@ -89,6 +90,10 @@ public:
 	/** Invoked when the weapon attacks. Useful for audio*/
 	UPROPERTY(BlueprintAssignable)
 	FWeaponEvent OnWeaponAttack;
+
+	/** The materials that we set when the player picks up the weapon, so that it doesn't clip through walls*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon | OverlapMaterials")
+	TArray<UMaterialInstance*> OverlapRenderMaterials;
 
 	/** By how much do we displace the holding actors weapon mesh when held*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon | Animation")
