@@ -4,6 +4,8 @@
 #include "Components/SphereComponent.h"
 #include "MeleeComponent.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FHitEvent, AActor*, StruckActor, UClass*, StruckActorClass);
+
 UCLASS()
 class UNREALPLAYGROUND_API UMeleeComponent : public USphereComponent
 {
@@ -22,6 +24,9 @@ public:
 
 protected:
 	void BeginPlay() override;
+
+	UPROPERTY(BlueprintAssignable)
+	FHitEvent OnFirstHit;
 private:
 
 	/** How much damage dealt with each attack*/

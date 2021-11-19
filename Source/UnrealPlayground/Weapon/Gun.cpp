@@ -69,7 +69,7 @@ void AGun::BeginPlay()
 	{
 		AActor* NewActor = GetWorld()->SpawnActor(BulletTemplate->GetDefaultObject()->GetClass());
 		ABullet* NewBullet = Cast<ABullet>(NewActor);
-		NewBullet->InitializeOwner(BaseDamage, BodyMultiplier, LimbMultiplier, HeadMultiplier, MaxFireRange, ProjectileSpeed);
+		NewBullet->InitializeOwner(this, BaseDamage, MaxFireRange, ProjectileSpeed);
 		BulletPool.Add(NewBullet);
 	}	
 }
@@ -232,8 +232,6 @@ void AGun::FireWithNoise()
 
 	FVector ProjectileDirection = (ProjectileEndGuess - ProjectileStart).GetSafeNormal();
 
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::SanitizeFloat(ProjectileDirection | TraceDirection, 3));
-
 	if ((ProjectileDirection | TraceDirection) < ProjectilePredictionDot)
 	{
 		ProjectileDirection = TraceDirection;
@@ -268,7 +266,7 @@ ABullet* AGun::GetAvailableBullet()
 	//We don't have any available bullets in the pool, create a new one then return it
 	AActor* NewActor = GetWorld()->SpawnActor(BulletTemplate->GetDefaultObject()->GetClass());
 	ABullet* NewBullet = Cast<ABullet>(NewActor);
-	NewBullet->InitializeOwner(BaseDamage, BodyMultiplier, LimbMultiplier, HeadMultiplier, MaxFireRange, ProjectileSpeed);
+	NewBullet->InitializeOwner(this, BaseDamage, MaxFireRange, ProjectileSpeed);
 	NewBullet->SetBulletQueryParams(QueryParams);
 	BulletPool.Add(NewBullet);
 
