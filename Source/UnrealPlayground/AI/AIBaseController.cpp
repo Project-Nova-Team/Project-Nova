@@ -59,12 +59,7 @@ void AAIBaseController::BeginPlay()
 	//Init blackboard values
 	Blackboard->SetValueAsBool("bHasPatrolPath", bHasPatrolPath);
 	Blackboard->SetValueAsVector("HomeLocation", Home);
-	SetStartingSearch(true);
-
-	if (AIOwner->bStartsInActive)
-	{
-		SetAIActive(false, false);
-	}
+	SetStartingSearch(true);	
 }
 
 void AAIBaseController::LoadStateTrees()

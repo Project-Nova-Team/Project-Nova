@@ -65,5 +65,7 @@ private:
 			Out.Add(*It);
 		}
 	}
+
+	void LoadCells();
 //#endif
 };
