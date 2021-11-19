@@ -69,7 +69,7 @@ AAIBaseController* AAICell::GetNearestAI(const FVector& Point)
 
 	for (AAIBaseController* AI : AIUnits)
 	{
-		if (AI->IsDead())
+		if (AI->IsDead() || AI->IsInactive())
 		{
 			continue;
 		}
@@ -168,7 +168,7 @@ void AAICell::SetAllUnitStates(const FString NewState, const bool bIgnoreLower, 
 {
 	for (AAIBaseController* AI : AIUnits)
 	{
-		if (AI->IsDead() || AI == Ignore)
+		if (AI->IsDead() || AI->IsInactive() || AI == Ignore)
 		{
 			continue;
 		}

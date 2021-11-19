@@ -10,6 +10,7 @@ class UChildActorComponent;
 class ANavLinkProxy;
 struct FDelayedActionHandle;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FDoorEvent);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FDoorLockEvent, bool, bJustLocked);
 
 UENUM()
@@ -95,6 +96,14 @@ protected:
 	 */
 	UPROPERTY(BlueprintAssignable)
 	FDoorLockEvent OnDoorLockStatusChange;
+
+	/** Invoked when the door starts opening*/
+	UPROPERTY(BlueprintAssignable)
+	FDoorEvent OnDoorOpen;
+
+	/** Invoked when the door starts closing*/
+	UPROPERTY(BlueprintAssignable)
+	FDoorEvent OnDoorClose;
 
 private:
 

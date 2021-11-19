@@ -5,7 +5,9 @@
 #include "Bullet.generated.h"
 
 class UStaticMeshComponent;
-class AWeapon;
+class AGun;
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FBulletImpact, AActor*, StruckActor);
 
 UCLASS()
 class UNREALPLAYGROUND_API ABullet : public AActor
@@ -17,7 +19,7 @@ public:
 
 	void Tick(float DeltaTime) override;
 
-	void InitializeOwner(const float Base, const float Body, const float Limb, const float Head, const float Range, const float FireSpeed);
+	void InitializeOwner(AGun* WeaponOwner, float Damage, float Range, float ProjectileSpeed);
 
 	void SetBulletQueryParams(const FCollisionQueryParams Params) { QueryParams = Params; }
 
@@ -38,6 +40,14 @@ public:
 
 protected:
 	void BeginPlay() override;
+
+	UPROPERTY(BlueprintAssignable)
+	FBulletImpact OnBulletImpact;
+
+	/** Gun this bullet belongs to*/
+	UPROPERTY(Transient, BlueprintReadOnly)
+	AGun* Gun;
+
 private:
 
 	/** Mesh this bullet actor uses*/

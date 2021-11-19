@@ -27,6 +27,10 @@ public:
 	UFUNCTION(BlueprintCallable)
 	FORCEINLINE AActor* GetPatrolActor() const{ return PatrolActor; }
 
+	/** If true, this AI will start the level inactive. They will be invisible, register no stimulus, and perform no actions until they are enabled*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
+	uint8 bStartsInActive : 1;
+
 	void SetPlayer(AActor* Value) { Player = Value; }
 
 	/**
@@ -39,6 +43,8 @@ public:
 	float AttackMoveSpeed;
 
 	float DefaultMoveSpeed;
+
+	void SetVisible(const bool Value);
 
 protected:	
 
@@ -53,6 +59,9 @@ protected:
 	/** Actor in the level that contains a spline component the AI will patrol*/
 	UPROPERTY(EditAnywhere, Category = "Patrol")
 	AActor* PatrolActor;
+
+	UPROPERTY(BlueprintReadOnly)
+	uint8 bIsDead : 1;
 
 private:
 
