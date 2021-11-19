@@ -6,6 +6,8 @@
 
 class UStaticMeshComponent;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FVentEvent);
+
 UCLASS()
 class UNREALPLAYGROUND_API AVent : public AActor
 {
@@ -49,6 +51,12 @@ protected:
 
 	UFUNCTION()
 	void ActorEndOverlap(AActor* OverlappedActor, AActor* OtherActor);
+
+	UPROPERTY(BlueprintAssignable)
+	FVentEvent OnVentEnabled;
+
+	UPROPERTY(BlueprintAssignable)
+	FVentEvent OnVentDisabled;
 
 private:
 

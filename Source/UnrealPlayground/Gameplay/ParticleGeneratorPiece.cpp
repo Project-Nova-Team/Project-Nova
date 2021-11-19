@@ -12,13 +12,11 @@ AParticleGeneratorPiece::AParticleGeneratorPiece()
 void AParticleGeneratorPiece::BeginPlay()
 {
 	Super::BeginPlay();
-	ParticleSystem->ActivateSystem();
 }
 
 void AParticleGeneratorPiece::BreakPiece()
 {
 	AGeneratorPiece::BreakPiece();
-	ParticleSystem->ActivateSystem();
 }
 
 void AParticleGeneratorPiece::OnOverlap(AActor* OvelappedActor, AActor* OtherActor)

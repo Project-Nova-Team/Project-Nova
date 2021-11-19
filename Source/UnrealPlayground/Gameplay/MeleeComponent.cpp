@@ -23,6 +23,11 @@ void UMeleeComponent::HitActor(UPrimitiveComponent* OverlappedComponent, AActor*
 	{	
 		HitCollection.Emplace(OtherActor);
 		OtherActor->TakeDamage(Damage, FDamageEvent(), nullptr, GetOwner());
+
+		if (HitCollection.Num() == 1)
+		{
+			OnFirstHit.Broadcast(OtherActor, OtherClass);
+		}
 	}
 }
 
