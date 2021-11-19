@@ -64,6 +64,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	bool IsDead() const { return bIsDead; }
 
+	bool IsInactive() const { return bIsInactive; }
+
 	bool CanSeeTarget() const { return bHasVisionOfTarget; }
 
 	float GetLastAggressionTime() const { return LastAgressiveTime; }
@@ -93,6 +95,12 @@ public:
 	void SetTarget(AActor* NewTarget) { Target = NewTarget; }
 
 	void SetStartingSearch(const bool Value);
+
+	/** Sets the activity state of the AI. Activity differs from dead AI most notably by being visible. Setting an AI as active will also set their life status!*/
+	UFUNCTION(BlueprintCallable)
+	void SetAIActive(const bool bActivityStatus, const bool bRespawnAtCurrentLocation);
+
+	void SetStimulusEnabled(const bool Value);
 
 	/** How long does this AI remain aggressive for before returning to a non aggressive state*/
 	UPROPERTY(EditAnywhere, Category = "AI | Attack")
@@ -270,7 +278,14 @@ protected:
 	/** Was the last visual stimulus a success*/
 	uint8 bHasVisionOfTarget : 1;
 
+	/** True if the AI is dead*/
 	uint8 bIsDead : 1;
+
+	/** True if this AI is inactive*/
+	uint8 bIsInactive : 1;
+
+	/** True if the AI currently has active perception*/
+	uint8 bIsRegisteringStimulus : 1;
 
 	/** Game time the target last registered an agression*/
 	float LastAgressiveTime;
