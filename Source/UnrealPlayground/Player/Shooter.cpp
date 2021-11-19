@@ -137,7 +137,13 @@ void AShooter::ScanInteractiveObject()
 				InteractiveObject->InteractionEvent(this);
 				InputState.bIsTryingToInteract = false;
 			}
-		}	
+		}
+
+		else if (!bIsPrompted)
+		{
+			FInteractionPrompt Empty;
+			OnScanMiss.Broadcast(Empty);
+		}
 	}
 
 	else if(!bIsPrompted)
