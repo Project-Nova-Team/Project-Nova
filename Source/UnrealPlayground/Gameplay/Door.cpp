@@ -89,6 +89,7 @@ void ADoor::MaybeChangeDoorState()
 {
 	if (ShouldOpen())
 	{
+		OnDoorOpen.Broadcast();
 		State = EDS_Changing;
 		Handle = GetWorld()->GetAuthGameMode<AShooterGameMode>()->GetDelayedActionManager()->StartOverTimeAction(
 			this, &ADoor::OverTimeTransition, DoorTransitionTime, EDS_Open);
@@ -96,6 +97,7 @@ void ADoor::MaybeChangeDoorState()
 
 	else if (ShouldClose())
 	{
+		OnDoorClose.Broadcast();
 		State = EDS_Changing;
 		Handle = GetWorld()->GetAuthGameMode<AShooterGameMode>()->GetDelayedActionManager()->StartOverTimeAction(
 			this, &ADoor::OverTimeTransition, DoorTransitionTime, EDS_Closed);
