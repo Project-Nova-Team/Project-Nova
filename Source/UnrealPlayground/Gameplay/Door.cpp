@@ -4,7 +4,8 @@
 #include "GameFramework/Pawn.h"
 #include "../ShooterGameMode.h"
 #include "../Utility/DelayedActionManager.h"
-#include "Navigation/NavLinkProxy.h"
+#include "Components/BillboardComponent.h"
+#include "NavLinkRenderingComponent.h"
 #include "NavLinkCustomComponent.h"
 
 ADoor::ADoor()
@@ -24,22 +25,48 @@ ADoor::ADoor()
 	Trigger->AttachToComponent(Frame, FAttachmentTransformRules::KeepRelativeTransform);
 	Trigger->SetCollisionProfileName("OverlapOnlyPawn");
 
+	NavLink = CreateDefaultSubobject<UNavLinkCustomComponent>("Nav Link");
+	NavLink->SetNavigationRelevancy(true);
+	NavLink->SetLinkData(FVector(-70, 0, 0), FVector(70, 0, 0), ENavLinkDirection::BothWays);
+
+#if WITH_EDITORONLY_DATA
+	EdRenderComp = CreateDefaultSubobject<UNavLinkRenderingComponent>(TEXT("EdRenderComp"));
+	EdRenderComp->SetupAttachment(RootComponent);
+#endif
+
+#if WITH_EDITOR
+	SpriteComponent = CreateEditorOnlyDefaultSubobject<UBillboardComponent>(TEXT("Sprite"));
+	if (!IsRunningCommandlet() && (SpriteComponent != NULL))
+	{
+		struct FConstructorStatics
+		{
+			ConstructorHelpers::FObjectFinderOptional<UTexture2D> SpriteTexture;
+			FName ID_Decals;
+			FText NAME_Decals;
+			FConstructorStatics()
+				: SpriteTexture(TEXT("/Engine/EditorResources/AI/S_NavLink"))
+				, ID_Decals(TEXT("Navigation"))
+				, NAME_Decals(NSLOCTEXT("SpriteCategory", "Navigation", "Navigation"))
+			{
+			}
+		};
+		static FConstructorStatics ConstructorStatics;
+
+		SpriteComponent->Sprite = ConstructorStatics.SpriteTexture.Get();
+		SpriteComponent->SetRelativeScale3D(FVector(0.5f, 0.5f, 0.5f));
+		SpriteComponent->bHiddenInGame = true;
+		SpriteComponent->SetVisibleFlag(true);
+		SpriteComponent->SpriteInfo.Category = ConstructorStatics.ID_Decals;
+		SpriteComponent->SpriteInfo.DisplayName = ConstructorStatics.NAME_Decals;
+		SpriteComponent->SetupAttachment(RootComponent);
+		SpriteComponent->SetAbsolute(false, false, true);
+		SpriteComponent->bIsScreenSizeScaled = true;
+		SpriteComponent->SetRelativeLocation(FVector(0, 0, 50));
+	}
+#endif
+
 	DoorTransitionTime = 0.5f;
 	DoorOpenDistance = 100.f;
-}
-
-void ADoor::BeginPlay()
-{
-	Super::BeginPlay();
-
-	//Intentionally avoiding a null check. We need blueprint to force this components existence
-	NavLink = Cast<ANavLinkProxy>(FindComponentByClass<UChildActorComponent>()->GetChildActor());
-
-	if (bStartLocked)
-	{
-		SetIsLocked(true);
-		OnDoorLockStatusChange.Broadcast(true);
-	}
 
 	OnActorBeginOverlap.AddDynamic(this, &ADoor::ActorStartOverlap);
 	OnActorEndOverlap.AddDynamic(this, &ADoor::ActorEndOverlap);
@@ -49,22 +76,21 @@ void ADoor::SetIsLocked(const bool Value)
 {
 	if (Value != bIsLocked)
 	{
-		bIsLocked = Value;
-		OnDoorLockStatusChange.Broadcast(Value);
-		MaybeChangeDoorState();
-		NavLink->GetSmartLinkComp()->SetEnabled(!Value);
-
-		//TODO test with better nav area class if getting caught happens 
-		/*if (Value)
-		{
-			NavLink->GetSmartLinkComp()->ClearNavigationObstacle();
-		}
-		
-		else
-		{
-			NavLink->GetSmartLinkComp()->AddNavigationObstacle(UNavArea::StaticClass(), FVector(100, 100, 100));
-		}*/
+		SetIsLockedImpl(Value);
 	}
+}
+
+void ADoor::SetIsLockedImpl(const bool Value)
+{
+	bIsLocked = Value;
+
+	FEditorScriptExecutionGuard ScriptGuard; //lets us call this function during edit time;
+	{
+		ReceiveLockStatusChange(Value);
+	}
+
+	MaybeChangeDoorState();
+	NavLink->SetEnabled(!Value);
 }
 
 void ADoor::ActorStartOverlap(AActor* OverlappedActor, AActor* OtherActor)
@@ -89,7 +115,7 @@ void ADoor::MaybeChangeDoorState()
 {
 	if (ShouldOpen())
 	{
-		OnDoorOpen.Broadcast();
+		ReceiveDoorOpen();
 		State = EDS_Changing;
 		Handle = GetWorld()->GetAuthGameMode<AShooterGameMode>()->GetDelayedActionManager()->StartOverTimeAction(
 			this, &ADoor::OverTimeTransition, DoorTransitionTime, EDS_Open);
@@ -97,7 +123,7 @@ void ADoor::MaybeChangeDoorState()
 
 	else if (ShouldClose())
 	{
-		OnDoorClose.Broadcast();
+		ReceiveDoorClose();
 		State = EDS_Changing;
 		Handle = GetWorld()->GetAuthGameMode<AShooterGameMode>()->GetDelayedActionManager()->StartOverTimeAction(
 			this, &ADoor::OverTimeTransition, DoorTransitionTime, EDS_Closed);
@@ -130,3 +156,20 @@ void ADoor::OverTimeTransition(const EDoorState TargetState)
 		MaybeChangeDoorState();
 	}
 }
+
+
+
+
+#if WITH_EDITOR
+void ADoor::PostEditChangeProperty(struct FPropertyChangedEvent& e)
+{
+	Super::PostEditChangeProperty(e);
+
+	FName PropertyName = (e.Property != NULL) ? e.Property->GetFName() : NAME_None;
+
+	if (PropertyName == GET_MEMBER_NAME_CHECKED(ADoor, bIsLocked))
+	{
+		SetIsLockedImpl(bIsLocked);
+	}
+}
+#endif
