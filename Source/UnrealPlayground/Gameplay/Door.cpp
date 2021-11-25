@@ -157,9 +157,6 @@ void ADoor::OverTimeTransition(const EDoorState TargetState)
 	}
 }
 
-
-
-
 #if WITH_EDITOR
 void ADoor::PostEditChangeProperty(struct FPropertyChangedEvent& e)
 {
