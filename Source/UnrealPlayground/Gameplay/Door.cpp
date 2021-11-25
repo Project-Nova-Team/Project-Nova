@@ -76,14 +76,13 @@ void ADoor::SetIsLocked(const bool Value)
 {
 	if (Value != bIsLocked)
 	{
+		bIsLocked = Value;
 		SetIsLockedImpl(Value);
 	}
 }
 
 void ADoor::SetIsLockedImpl(const bool Value)
 {
-	bIsLocked = Value;
-
 	FEditorScriptExecutionGuard ScriptGuard; //lets us call this function during edit time;
 	{
 		ReceiveLockStatusChange(Value);
