@@ -7,11 +7,9 @@
 
 class UStaticMeshComponent;
 class UChildActorComponent;
-class ANavLinkProxy;
+class UNavLinkCustomComponent;
+class UNavLinkRenderingComponent;
 struct FDelayedActionHandle;
-
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FDoorEvent);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FDoorLockEvent, bool, bJustLocked);
 
 UENUM()
 enum EDoorState
@@ -30,7 +28,7 @@ public:
 	ADoor();
 
 	/** Sets the lock status of this door*/
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintSetter)
 	void SetIsLocked(const bool Value);
 
 	/** Should this door be opening*/
@@ -40,8 +38,6 @@ public:
 	FORCEINLINE bool ShouldClose() const { return State == EDS_Open && (CurrentPawnCount == 0 || bIsLocked); }
 
 protected:
-
-	virtual void BeginPlay() override;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
 	UStaticMeshComponent* LeftSide;
@@ -56,17 +52,13 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
 	UBoxComponent* Trigger;
 
-	/** C++ doesnt seem to play nice with child actor components... use this so AI can walk through doors*/
-	UPROPERTY(BlueprintReadOnly, Category = "Nav Link", meta = (AllowPrivateAccess = "true"))
-	ANavLinkProxy* NavLink;
+	/** Smart Nav link that gives us the ability to change AI pathing. We want to disable this when doors are locked*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Nav Link", meta = (AllowPrivateAccess = "true"))
+	UNavLinkCustomComponent* NavLink;
 
 	/** Whether or not the door is currently locked*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Door")
+	UPROPERTY(EditAnywhere, BlueprintSetter = SetIsLocked, Category = "Door")
 	uint8 bIsLocked : 1;
-
-	/** Whether or not the door should start lockedd*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door")
-	uint8 bStartLocked : 1;
 
 	/** How many seconds does the door take to open/close all the way*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door")
@@ -90,20 +82,32 @@ protected:
 	/** This function is run by the delayed action manager to lerp the door positions over time*/
 	void OverTimeTransition(const EDoorState TargetState);
 
+	void SetIsLockedImpl(const bool Value);
+
 	/** 
 	 * Invoked when SetIsLocked changes lock status (providing the new lock state)
 	 * This lets us tell blueprint subclass to update an emissive material
 	 */
-	UPROPERTY(BlueprintAssignable)
-	FDoorLockEvent OnDoorLockStatusChange;
+	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "Lock Changed"))
+	void ReceiveLockStatusChange(const bool LockStatus);
 
 	/** Invoked when the door starts opening*/
-	UPROPERTY(BlueprintAssignable)
-	FDoorEvent OnDoorOpen;
+	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "Door Opened"))
+	void ReceiveDoorOpen();
 
 	/** Invoked when the door starts closing*/
-	UPROPERTY(BlueprintAssignable)
-	FDoorEvent OnDoorClose;
+	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "Door Closed"))
+	void ReceiveDoorClose();
+
+#if WITH_EDITORONLY_DATA
+
+	UPROPERTY()
+	UNavLinkRenderingComponent* EdRenderComp;
+
+	UPROPERTY()
+	UBillboardComponent* SpriteComponent;
+
+#endif
 
 private:
 
@@ -115,4 +119,11 @@ private:
 
 	/** Delayed action handle for ease of LERP*/
 	FDelayedActionHandle* Handle;
+
+
+#if WITH_EDITOR
+public:
+	void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+
+#endif
 };
