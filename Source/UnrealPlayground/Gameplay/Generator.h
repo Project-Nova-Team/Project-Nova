@@ -43,7 +43,7 @@ protected:
 	FGeneratorPieceRepair OnPieceRepaired;
 
 	UFUNCTION()
-	void ReceivePieceRepaired();
+	virtual void ReceivePieceRepaired();
 
 	UFUNCTION(BlueprintCallable)
 	void BreakGenerator();

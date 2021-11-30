@@ -18,11 +18,6 @@ public:
 
 protected:
 	
-	void BeginPlay() override;
-
-	
 	UPROPERTY(Category = Mesh, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	UParticleSystemComponent* ParticleSystem;
-
-	void OnOverlap(AActor* OvelappedActor, AActor* OtherActor) override;
 };
