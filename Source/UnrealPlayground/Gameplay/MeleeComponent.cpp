@@ -3,8 +3,8 @@
 UMeleeComponent::UMeleeComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
-	SetCollisionProfileName("NoCollision");
-	
+	SetCollisionProfileName("OverlapAllDynamic");
+	SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	Damage = 35;
 }
 
@@ -12,10 +12,10 @@ void UMeleeComponent::BeginPlay()
 {
 	Super::BeginPlay();
 	IgnoreActorWhenMoving(GetOwner(), true);
-	GetOwner()->OnActorBeginOverlap.AddDynamic(this, &UMeleeComponent::HitActor);
+	OnComponentBeginOverlap.AddDynamic(this, &UMeleeComponent::HitActor);
 }
 
-void UMeleeComponent::HitActor(AActor* OverlappedActor, AActor* OtherActor)
+void UMeleeComponent::HitActor(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	UClass* const OtherClass = OtherActor->GetClass();
 
@@ -23,16 +23,21 @@ void UMeleeComponent::HitActor(AActor* OverlappedActor, AActor* OtherActor)
 	{	
 		HitCollection.Emplace(OtherActor);
 		OtherActor->TakeDamage(Damage, FDamageEvent(), nullptr, GetOwner());
+
+		if (HitCollection.Num() == 1)
+		{
+			OnFirstHit.Broadcast(OtherActor, OtherClass);
+		}
 	}
 }
 
 void UMeleeComponent::StartAttack()
 {
 	HitCollection.Reset();
-	SetCollisionProfileName("OverlapOnlyPawn");
+	SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 }
 
 void UMeleeComponent::EndAttack()
 {
-	SetCollisionProfileName("NoCollision");
+	SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }

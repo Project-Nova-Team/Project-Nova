@@ -8,6 +8,11 @@ UHealthComponent::UHealthComponent()
 	StartingHealth = MaxHealth;
 }
 
+void UHealthComponent::SetStartingHealth(float Amount)
+{
+	StartingHealth = Amount;
+}
+
 void UHealthComponent::BeginPlay()
 {
 	Super::BeginPlay();
