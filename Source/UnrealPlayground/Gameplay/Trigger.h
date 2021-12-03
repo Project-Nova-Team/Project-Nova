@@ -48,6 +48,12 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collider")
 	UBoxComponent* TriggerVolume;
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void TriggerActivated(APawn* Activator);
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void TriggerExited(APawn* Activator);
+
 #if WITH_EDITORONLY_DATA
 	/** Simple editor sprite to help designers see trigger locations*/
 	UPROPERTY()
