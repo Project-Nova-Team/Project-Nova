@@ -5,9 +5,13 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "InteractiveObject.h"
+#include "Components/ArrowComponent.h"
 #include "InteractiveButton.generated.h"
 
 struct FDelayedActionHandle;
+
+class UAudioComponent;
+class UMaterialInstanceDynamic;
 
 UENUM()
 enum EButtonState
@@ -44,13 +48,35 @@ public:
 
 protected:
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
+	UStaticMeshComponent* Panel;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
+	UStaticMeshComponent* Button;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
+	UArrowComponent* Arrow;
+
+	UMaterialInstanceDynamic* EmissiveMaterial;
+
+	/** Component that plays the sound*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sound")
+	UAudioComponent* AudioComponent;
+
 	void MaybeChangeButtonState();
+
+	void BeginPlay();
 
 	/** Button Retracts into the panel*/
 	void Retract();
 
 	/** Button Extends outward from the panel*/
 	void Extend();
+
+	void StartDelayedAction(EButtonState TargetState);
+
+	/** Initial offset of the button mesh to the panel*/
+	FVector InitialOffset;
 
 	/** How far this button retracts into the panel*/
 	UPROPERTY(EditAnywhere)
