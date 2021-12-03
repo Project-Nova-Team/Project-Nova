@@ -11,7 +11,7 @@ struct FInteractionPrompt
 
 public:
 
-	FInteractionPrompt() 
+	FInteractionPrompt()
 	{
 		Prefix = TEXT("Press");
 		Suffix = TEXT("to pick up ");
@@ -19,16 +19,16 @@ public:
 	}
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
-	FString Prefix;
+		FString Prefix;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
-	UTexture2D* Key;
+		UTexture2D* Key;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
-	FString Suffix;
+		FString Suffix;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
-	FString Name;
+		FString Name;
 
 	//Just compare the names since there is no need to update the UI if we look at another object with an identical name
 	bool operator!=(const FInteractionPrompt& rhs) const
@@ -50,7 +50,7 @@ class UNREALPLAYGROUND_API IInteractiveObject
 public:
 
 	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "OnInteract"))
-	void BlueprintInteract(APawn* EventSender);
+		void BlueprintInteract(APawn* EventSender);
 
 	virtual void InteractionEvent(APawn* EventSender) = 0;
 

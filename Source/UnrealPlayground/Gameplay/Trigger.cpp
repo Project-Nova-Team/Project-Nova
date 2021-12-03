@@ -82,7 +82,6 @@ void ATrigger::EndOverlap(AActor* OverlappedActor, AActor* OtherActor)
 	if (TriggerWhiteList.Contains(OtherActor->GetClass()))
 	{
 		OnTriggerExited.Broadcast(Cast<APawn>(OtherActor));
-		TriggerExited(Cast<APawn>(OtherActor));
 	}
 }
 
@@ -90,7 +89,6 @@ void ATrigger::ExecuteTrigger(APawn* Sender)
 {
 	//Invokes blueprint logic event
 	OnTriggerActivated.Broadcast(Sender);
-	TriggerActivated(Sender);
 
 	//Child classes fill out logic here
 	if (!bTriggerMoreThanOnce)
