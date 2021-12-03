@@ -54,15 +54,15 @@ protected:
 
 	/** How far this button retracts into the panel*/
 	UPROPERTY(EditAnywhere)
-		float PushDepth;
+	float PushDepth;
 
 	/** How long it takes for the button to retract*/
 	UPROPERTY(EditAnywhere)
-		float ButtonTransitionTime;
+	float ButtonTransitionTime;
 
 	/** Whether or not the button is currently locked*/
 	UPROPERTY(EditAnywhere, BlueprintSetter = SetIsLocked, Category = "Door")
-		uint8 bIsLocked : 1;
+	uint8 bIsLocked : 1;
 
 	/**This is mesh of button, not panel*/
 	UPROPERTY(BlueprintReadWrite)
@@ -81,7 +81,5 @@ protected:
 	void OverTimeTransition(const EButtonState TargetState);
 
 	uint8 bIsMoving;
-
-
 };
 

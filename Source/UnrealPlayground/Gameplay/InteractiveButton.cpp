@@ -2,13 +2,11 @@
 #include "InteractiveButton.h"
 #include "../ShooterGameMode.h"
 #include "../Utility/DelayedActionManager.h"
-#include <Runtime/Engine/Classes/Kismet/KismetMathLibrary.h>
-
 
 AInteractiveButton::AInteractiveButton() 
 {
-	PushDepth = 2.f;
-	ButtonTransitionTime = .25f;
+	PushDepth = 4.5f;
+	ButtonTransitionTime = .2f;
 }
 
 void AInteractiveButton::SetIsLocked(const bool Value)
@@ -26,12 +24,13 @@ void AInteractiveButton::InteractionEvent(APawn* EventSender)
 
 void AInteractiveButton::MaybeChangeButtonState()
 {
+	// if not locked and current state is extended, retract
 	if (ShouldRetract())
 	{
 		State = EBS_Changing;
 		Retract();
 	}
-
+	// if not locked and current state is retracted, extend
 	else if (ShouldExtend())
 	{
 		State = EBS_Changing;
@@ -43,9 +42,7 @@ void AInteractiveButton::OverTimeTransition(const EButtonState TargetState)
 {
 	bIsMoving = true;
 
-	/*This UKismetLibrary Function takes into account rotation, so that our 
-	Right vector is always right no matter the button orientation**/ 
-	const FVector Direction = UKismetMathLibrary::GetForwardVector(GetActorRotation());
+	const FVector Direction = FVector::RightVector;
 
 	float Offset;
 
@@ -62,7 +59,8 @@ void AInteractiveButton::OverTimeTransition(const EButtonState TargetState)
 
 	/*We've finished transitioning. Decide if we should start
 	closing or opening again because something might have occured during the transition*/
-	if (Handle->CurrentActionProgress >= 1.f)
+	// SET TO .8 INSTEAD OF 1 because of async button not finishing movement on time issue. Doesn't fix it but helps
+	if (Handle->CurrentActionProgress >= .8f)
 	{
 		bIsMoving = false;
 
