@@ -5,9 +5,13 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "InteractiveObject.h"
+#include "Components/ArrowComponent.h"
 #include "InteractiveButton.generated.h"
 
 struct FDelayedActionHandle;
+
+class UAudioComponent;
+class UMaterialInstanceDynamic;
 
 UENUM()
 enum EButtonState
@@ -34,7 +38,7 @@ public:
 
 	/** Sets the lock status of this Button*/
 	UFUNCTION(BlueprintSetter)
-	void SetIsLocked(const bool Value);
+		void SetIsLocked(const bool Value);
 
 	/** Should this button be opening*/
 	FORCEINLINE bool ShouldRetract() const { return !bIsLocked && State == EBS_Extended; }
@@ -44,7 +48,24 @@ public:
 
 protected:
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
+		UStaticMeshComponent* Panel;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
+		UStaticMeshComponent* Button;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
+		UArrowComponent* Arrow;
+
+	UMaterialInstanceDynamic* EmissiveMaterial;
+
+	/** Component that plays the sound*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sound")
+		UAudioComponent* AudioComponent;
+
 	void MaybeChangeButtonState();
+
+	void BeginPlay();
 
 	/** Button Retracts into the panel*/
 	void Retract();
@@ -52,24 +73,29 @@ protected:
 	/** Button Extends outward from the panel*/
 	void Extend();
 
+	void StartDelayedAction(EButtonState TargetState);
+
+	/** Initial offset of the button mesh to the panel*/
+	FVector InitialOffset;
+
 	/** How far this button retracts into the panel*/
 	UPROPERTY(EditAnywhere)
-	float PushDepth;
+		float PushDepth;
 
 	/** How long it takes for the button to retract*/
 	UPROPERTY(EditAnywhere)
-	float ButtonTransitionTime;
+		float ButtonTransitionTime;
 
 	/** Whether or not the button is currently locked*/
 	UPROPERTY(EditAnywhere, BlueprintSetter = SetIsLocked, Category = "Door")
-	uint8 bIsLocked : 1;
+		uint8 bIsLocked : 1;
 
 	/**This is mesh of button, not panel*/
 	UPROPERTY(BlueprintReadWrite)
-	UStaticMeshComponent* Mesh;
+		UStaticMeshComponent* Mesh;
 
 	UPROPERTY(Editanywhere, BlueprintReadWrite, Category = "Interactable")
-	FInteractionPrompt Prompt;
+		FInteractionPrompt Prompt;
 
 	/** Live state of this door*/
 	TEnumAsByte<EButtonState> State;
@@ -82,4 +108,3 @@ protected:
 
 	uint8 bIsMoving;
 };
-

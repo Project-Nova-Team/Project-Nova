@@ -1,12 +1,28 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 #include "InteractiveButton.h"
 #include "../ShooterGameMode.h"
+#include "Materials/MaterialInstanceDynamic.h"
+#include "Components/AudioComponent.h"
 #include "../Utility/DelayedActionManager.h"
 
-AInteractiveButton::AInteractiveButton() 
+AInteractiveButton::AInteractiveButton()
 {
-	PushDepth = 4.5f;
-	ButtonTransitionTime = .2f;
+	PushDepth = 10.f;
+	ButtonTransitionTime = .25f;
+
+	Panel = CreateDefaultSubobject<UStaticMeshComponent>("Panel");
+	SetRootComponent(Panel);
+
+	Button = CreateDefaultSubobject<UStaticMeshComponent>("Button");
+	Button->AttachToComponent(Panel, FAttachmentTransformRules::KeepRelativeTransform);
+
+	AudioComponent = CreateDefaultSubobject<UAudioComponent>("Audio");
+	AudioComponent->AttachToComponent(Panel, FAttachmentTransformRules::KeepRelativeTransform);
+
+	Arrow = CreateDefaultSubobject<UArrowComponent>("Arrow");
+	Arrow->AttachToComponent(Button, FAttachmentTransformRules::KeepRelativeTransform);
+
+	//Dynamic Material for Button is being set in BP
 }
 
 void AInteractiveButton::SetIsLocked(const bool Value)
@@ -22,19 +38,26 @@ void AInteractiveButton::InteractionEvent(APawn* EventSender)
 	MaybeChangeButtonState();
 }
 
+
+void AInteractiveButton::BeginPlay()
+{
+	Super::BeginPlay();
+	InitialOffset = Button->GetRelativeLocation();
+}
+
 void AInteractiveButton::MaybeChangeButtonState()
 {
 	// if not locked and current state is extended, retract
 	if (ShouldRetract())
 	{
 		State = EBS_Changing;
-		Retract();
+		StartDelayedAction(EBS_Retracted);
 	}
 	// if not locked and current state is retracted, extend
 	else if (ShouldExtend())
 	{
 		State = EBS_Changing;
-		Extend();
+		StartDelayedAction(EBS_Extended);
 	}
 }
 
@@ -42,44 +65,48 @@ void AInteractiveButton::OverTimeTransition(const EButtonState TargetState)
 {
 	bIsMoving = true;
 
-	const FVector Direction = FVector::RightVector;
+	const FVector Direction = FVector::ForwardVector;
 
 	float Offset;
 
-	if (TargetState == EBS_Extended)
+	if (TargetState == EBS_Retracted)
 	{
 		Offset = FMath::Lerp(0.f, PushDepth, Handle->CurrentActionProgress);
-		Mesh->SetRelativeLocation(Mesh->GetRelativeLocation() + -Direction * Offset);
+		Button->SetRelativeLocation(InitialOffset + Direction * Offset);
 	}
 	else
 	{
 		Offset = FMath::Lerp(PushDepth, 0.f, Handle->CurrentActionProgress);
-		Mesh->SetRelativeLocation(Mesh->GetRelativeLocation() + Direction * Offset);
+		Button->SetRelativeLocation(InitialOffset + Direction * Offset);
 	}
 
 	/*We've finished transitioning. Decide if we should start
 	closing or opening again because something might have occured during the transition*/
-	// SET TO .8 INSTEAD OF 1 because of async button not finishing movement on time issue. Doesn't fix it but helps
-	if (Handle->CurrentActionProgress >= .8f)
+	if (Handle->CurrentActionProgress >= 1.f)
 	{
 		bIsMoving = false;
 
 		State = TargetState;
 
-		if(State == EBS_Retracted)
-			Extend();
+		if (State == EBS_Retracted)
+		{
+			AudioComponent->Play();
+			StartDelayedAction(EBS_Extended);
+		}
 	}
 }
 
-
 void AInteractiveButton::Retract()
 {
-	Handle = GetWorld()->GetAuthGameMode<AShooterGameMode>()->GetDelayedActionManager()->StartOverTimeAction(
-		this, &AInteractiveButton::OverTimeTransition, ButtonTransitionTime, EBS_Retracted);
+
 }
 
 void AInteractiveButton::Extend()
 {
+}
+
+void AInteractiveButton::StartDelayedAction(EButtonState TargetState)
+{
 	Handle = GetWorld()->GetAuthGameMode<AShooterGameMode>()->GetDelayedActionManager()->StartOverTimeAction(
-		this, &AInteractiveButton::OverTimeTransition, ButtonTransitionTime, EBS_Extended);
+		this, &AInteractiveButton::OverTimeTransition, ButtonTransitionTime, TargetState);
 }

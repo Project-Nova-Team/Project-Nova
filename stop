@@ -1,0 +1,252 @@
+[33m37569f5[m[33m ([m[1;36mHEAD -> [m[1;32mdavid[m[33m, [m[1;31morigin/david[m[33m)[m Deleted .Idea from Jetbrains Rider
+[33m72912e8[m Merge branch 'main' into david
+[33mcf5f8fa[m Button Finished
+[33m62623a8[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m Merge branch 'peyton'
+[33mbdb8f23[m Create ScriptableTrigger.uasset
+[33m3fae58c[m Trigger events
+[33m15cc37b[m[33m ([m[1;31morigin/peyton[m[33m)[m update stairs
+[33m5f83c5f[m ship asset
+[33me85cf94[m Merge branch 'main' into david
+[33m22188c5[m Finalized Button Draft
+[33maa0c1e0[m trashcan object
+[33m50e181a[m assault and pistol textures new
+[33m5364b5d[m Button Finished
+[33mc386a56[m Merge remote-tracking branch 'origin/peyton'
+[33md3f8aaf[m objects and textures of ship
+[33m1750784[m Create radio.fbx
+[33mfd73840[m emsisive maps for weapons
+[33m1c112b4[m fuse box
+[33mc7a6a38[m Merge branch 'peyton'
+[33mf71ee73[m Merge branch 'main' into david
+[33mbaaa284[m fixes doors
+[33m2049cc1[m circutboard textures and object
+[33m5ec5179[m gun wrench an monster textures emmisve
+[33m142423f[m Merge branch 'main' into david
+[33mdafec28[m Started Button
+[33m276ee06[m[33m ([m[1;31morigin/AI-Rework[m[33m)[m more wiki pics
+[33m745b713[m img update
+[33mf34f638[m wiki images
+[33md24eff0[m Door edit time scripts
+[33m0c1451b[m finalizing milestone build fixes
+[33mb5cf57f[m Merge pull request #38 from Project-Nova-Team/david
+[33m1d65e88[m Merge branch 'main' into david
+[33m87e8388[m Integrates dat's level changes
+[33m7d388fa[m[33m ([m[1;31morigin/dat[m[33m)[m Merge branch 'main' into dat
+[33m9c3d691[m remvoes some garbage files
+[33md718ead[m SFX
+[33m92bcae8[m Overlap Render on arms and guns
+[33m9a23673[m audio
+[33m788b375[m Prototype2
+[33md22b5a5[m Merge branch 'main' into dat
+[33m8dbb171[m Pathing
+[33m2b0e19e[m AI Spawn triggers
+[33m646c78c[m Merge branch 'main' into dat
+[33mc08c26c[m Light Sequence
+[33m155a454[m spawn triggerz
+[33m5a29115[m spawn temp
+[33mb1951b4[m BIG CHANGES
+[33m74c95c4[m Merge branch 'main' into dat
+[33m8b990bf[m Merge branch 'david'
+[33m36f0eb4[m Generator Pieces and Interactive Object Highlighting
+[33m547b53a[m radiofpx and textures
+[33m86ed96d[m[33m ([m[1;31morigin/brendan[m[33m)[m Merge pull request #37 from Project-Nova-Team/brendan
+[33m0ccfe5e[m accessibility modifier
+[33m855813d[m Sequence Trigger
+[33ma6f0de1[m Merge branch 'peyton' into brendan
+[33mf15c424[m genertator screen resovled file
+[33m2f41561[m Generator build
+[33mc071bbe[m generator asset
+[33m64db71c[m Merge pull request #36 from Project-Nova-Team/brendan
+[33mbc0f0d5[m Merge branch 'main' into brendan
+[33m667d17c[m materials
+[33m6261991[m Merge pull request #35 from Project-Nova-Team/david
+[33mebfb83c[m Generator asset
+[33ma6d17b2[m generator imports
+[33mda471d7[m Merge branch 'peyton' into brendan
+[33m7fa2aad[m Lever texture new base textures
+[33m6dd8cbf[m assets
+[33mb092107[m generator
+[33m15a8258[m Merge branch 'peyton' into brendan
+[33me7cb8c7[m Edit generator mesh and textures
+[33md66d2f1[m clean up
+[33m3625f0e[m Triggers
+[33m0a57abd[m camera sway
+[33m029e7d1[m Pistol + Shotgun + More lights
+[33m483d802[m More doors
+[33m31264b5[m weapon specific sfx changes
+[33m4091fd3[m Merge branch 'jon' into brendan
+[33m602c1a9[m prepping weapon sfx fix
+[33md8672d4[m Adds Generator and Generator Piece functionality
+[33m404bce9[m Added doors
+[33md33d278[m Added a few more temp objects
+[33m18b8e2b[m Merge branch 'main' into jon
+[33m3cb9140[m[33m ([m[1;31morigin/cindy[m[33m)[m Merge pull request #34 from Project-Nova-Team/brendan
+[33mf731b35[m puuush
+[33mcafae4a[m settins
+[33mbd10ca4[m Merge branch 'david' into brendan
+[33mf8a35b4[m death
+[33mc782114[m Adds Death and title screens
+[33mc5a12f2[m Audiooo
+[33mcd3b0f8[m Merge branch 'dat' into brendan
+[33m4151468[m Changed Navmesh and shooter
+[33m792d866[m Merge branch 'dat' into brendan
+[33m4145c3a[m AI running
+[33mb8d6617[m First Build Layout
+[33m4d1ab4b[m Merge branch 'main' into dat
+[33m12b1099[m Yes
+[33m07f5bff[m Added stuffs
+[33mf304247[m Merge pull request #33 from Project-Nova-Team/brendan
+[33mc8305fd[m Door fix
+[33m30e86bd[m Merge branch 'dat' into brendan
+[33m0e69b0e[m AI animation fixes
+[33m80f68af[m Merge branch 'main' into dat
+[33mfc121be[m Merge pull request #32 from Project-Nova-Team/brendan
+[33m3c23d92[m vents (sus!)
+[33m077cadb[m Merge pull request #31 from Project-Nova-Team/brendan
+[33mb2169cb[m Door
+[33m2c25e7f[m Adds Removable Interface
+[33ma3615c0[m Build v.05
+[33m10fce10[m Merge branch 'main' into brendan
+[33mc8c9061[m Merge pull request #30 from Project-Nova-Team/david
+[33me0e6399[m Adds ability to play sound at a specific location with audiotrigger
+[33m0fc66b9[m Adds Bark and Audio Triggers
+[33mcaad5f4[m pick up assets and bp
+[33m4f095d2[m minor updates
+[33m52e90b9[m Removed unused map
+[33m1757ff1[m Import
+[33m79cef2e[m Stuffs
+[33m169072e[m Merge pull request #21 from Project-Nova-Team/dat
+[33m9b1be3d[m Merge branch 'dat' of https://github.com/Project-Nova-Team/Project-Nova into dat
+[33m7858f4a[m Merge branch 'main' into dat
+[33m650bc38[m Imports
+[33m93fa5b0[m Merge branch 'main' into david
+[33me83c4f5[m Adds UI and Bark Trigger begins
+[33m5ccc02e[m Merge pull request #29 from Project-Nova-Team/brendan
+[33m24631ae[m Ammo and health pickups
+[33mba4171a[m merged
+[33m9526df9[m ammo pickups
+[33mb7df5bd[m Merge branch 'main' into jon
+[33m881c7b4[m Added placeholders
+[33me0b19da[m Readjusted size of map
+[33m3a7a132[m Merge branch 'main' into dat
+[33ma7994e2[m stash
+[33me76a2ba[m Finished all greyboxing
+[33mdadd34b[m Pause Menu UI with quit functionality
+[33md37bc67[m Finally Fixed Git Reset problems
+[33m22697b0[m Merged main into david
+[33m08450a5[m Merge remote-tracking branch 'origin/main' into david
+[33mef16846[m Merge commit
+[33m462e351[m fixed the git reset
+[33m96d5cf8[m repo nuke
+[33mb493e2c[m Merge branch 'david' of https://github.com/Project-Nova-Team/Project-Nova into david
+[33mcf6c136[m Fixed Reset
+[33m2a9587b[m Merge branch 'david' of https://github.com/Project-Nova-Team/Project-Nova into david
+[33mb4fcace[m Adds pause menu and cleaned up HUDBP
+[33m73023bd[m Test
+[33mb5fb428[m Adds pause menu, cleaned up hudbp
+[33m0c645f0[m textures
+[33m4985105[m Changewalls
+[33m4ff5fcd[m Added placeholders
+[33mc43b9a6[m Merge pull request #28 from Project-Nova-Team/brendan
+[33mf30653f[m fixing merge conflicts
+[33m28bc430[m Merge pull request #27 from Project-Nova-Team/brendan
+[33m7192c36[m ReloadPlaceholder
+[33m52a5a55[m Merge branch 'main' into brendan
+[33mdb96ecc[m Merge pull request #26 from Project-Nova-Team/david
+[33m6515f3c[m Merge branch 'david' of https://github.com/Project-Nova-Team/Project-Nova into david
+[33m1573dfb[m Merge branch 'main' into david
+[33m4c6b685[m Fixed door tweaked pickups
+[33m286a302[m art importz
+[33md429a57[m Animation IKs
+[33m2e1846d[m Tweaked some lighting
+[33m303c73e[m Finished Basic Greyboxing
+[33m84d9d68[m Enclosed map and added lights.
+[33mb87b9f2[m BottomLeftRoom
+[33me5e4a0b[m Added short changes to door
+[33m1191adf[m Weapon system refactor
+[33m8eb5fc2[m Adds Door and door script
+[33m933759c[m Added walls to most rooms
+[33mb767241[m First iteration of floor map
+[33mee48ab6[m siwtching machines
+[33m2e93f79[m switching machines
+[33m44747dc[m Added new level
+[33ma58c55b[m InClassWork
+[33me7a788d[m Main floor completed and south wing walls made
+[33mb9a470d[m TwentyK static
+[33m4c77bbf[m Left Side and Lighting
+[33m32542f5[m Left side and Some lighting
+[33mfb187fe[m Fixing bad by reference passes
+[33m65c00f2[m More AI state fixes
+[33m00c56e9[m AI state management
+[33m60b2aa6[m No weapon UI when knife is out, fixed another weapon swap bug
+[33me7226b8[m Fixed shotgun, adds reload animation hook
+[33m76a32da[m Merge branch 'david' of https://github.com/Project-Nova-Team/Project-Nova into david
+[33m5a6f23d[m Fixed another swap issue, adds shotgun
+[33mcb42e7f[m place holder camera death animation
+[33m2e07947[m Merge pull request #23 from Project-Nova-Team/brendan
+[33mbc044ad[m Merge branch 'main' into brendan
+[33m244774a[m Merge pull request #22 from Project-Nova-Team/david
+[33m280def1[m Merge branch 'main' into david
+[33m6f6b64d[m Starting to fix swap bug
+[33meab54bb[m AI bugfixing
+[33m9fd327b[m Fixed Weapon Swap
+[33m1eaeec3[m Transfer
+[33m31227b5[m Moving stuff around / Scale
+[33m39f07e5[m Added main floor
+[33m7e3b01a[m Merge branch 'main' into brendan
+[33mf60ba6e[m Major refactor
+[33mcd78990[m Add Rooms - Elevator + Space Suit
+[33m3b99048[m Fixed weapon swap animation lockout
+[33mef321fa[m Adds weapon swap animation hook
+[33m83e7cbd[m Fixed vault animation hook
+[33m7fe5696[m Shooter state machine get accessor
+[33m6e398b7[m Testing Vertices
+[33mc229427[m Update Working.umap
+[33m619aede[m Merge branch 'main' into brendan
+[33ma03a2c2[m Test
+[33m410c0a1[m Merge pull request #20 from Project-Nova-Team/david
+[33m9967e0d[m Updated Umap
+[33mfb94779[m started animation hooking for vault
+[33m455eebd[m transfer
+[33maffbeaf[m Refined vault bp and state
+[33m4519473[m Fixed vault object prompt
+[33m51ac677[m Vault State
+[33m43a37d4[m Merge branch 'main' into david
+[33mf8826d0[m Weapon projectiles
+[33m666114b[m adds vault trigger system
+[33me29714f[m Merge branch 'main' of https://github.com/Project-Nova-Team/Project-Nova
+[33me012ac2[m Gun shoots bullets
+[33ma718dc2[m Merge pull request #19 from Project-Nova-Team/brendan
+[33m5098750[m AI search and attack
+[33m03929fb[m Merge pull request #18 from Project-Nova-Team/david
+[33mae1548b[m Fixed infinite jumping, ui pop up for interactable, vaulting trigger system
+[33mc96c6a6[m Merge pull request #17 from Project-Nova-Team/david
+[33m8378b14[m Merge branch 'main' into david
+[33m9d3b6cf[m Readding ShooterCombatComponent
+[33m4825c57[m Git problems
+[33me2c0793[m reuploaded due to git problem
+[33m8a12856[m adds shooterCombat component weapon swap changes
+[33m3105df6[m fixed weapon cycling bug
+[33m46d9b19[m Merge pull request #15 from Frontier-Pirate-Space/david
+[33m4e0d177[m Adds Ammo and Health Pickup Functionality
+[33m4e4b61d[m Adds Health and Ammo Pickups
+[33m55decaf[m Crouch bugfix
+[33mc298bb0[m Merge pull request #14 from Frontier-Pirate-Space/david
+[33m1286b3e[m added swap lockout functionality, fixed aim issue
+[33m249914b[m Improved Gun settings for demo
+[33m2946853[m Fixed Weapon Aim FOV issue
+[33m10e1d5b[m Combat component abstraction
+[33m1fe96b3[m Merge pull request #8 from Frontier-Pirate-Space/david
+[33m75274ce[m Added Aim Zoom
+[33m3b48a51[m Adds semi-auto functionality
+[33m982a40f[m Merge pull request #3 from Kobakat/brendan
+[33mae8f431[m Sets up AI perception
+[33m84ae08b[m Merge pull request #1 from Kobakat/brendan
+[33mc4d191a[m Adds combat and health components to AI base
+[33m3ffdb48[m Adds support for unclosed patrol path splines
+[33m10d4818[m Adds basic AI that can patrol a spline path
+[33m6c1c73f[m Fixes level crash when no player object exists
+[33m696d3bf[m Movement state now updates position if grounded on a moving object
+[33mc1dcbad[m minor file structure changes
+[33m2b10b29[m Corrects HUD init sequence
+[33m6dcbf37[m Initial commit
