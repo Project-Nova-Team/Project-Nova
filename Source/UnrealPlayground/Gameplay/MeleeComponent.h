@@ -4,6 +4,8 @@
 #include "Components/SphereComponent.h"
 #include "MeleeComponent.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FHitEvent, AActor*, StruckActor, UClass*, StruckActorClass);
+
 UCLASS()
 class UNREALPLAYGROUND_API UMeleeComponent : public USphereComponent
 {
@@ -22,6 +24,9 @@ public:
 
 protected:
 	void BeginPlay() override;
+
+	UPROPERTY(BlueprintAssignable)
+	FHitEvent OnFirstHit;
 private:
 
 	/** How much damage dealt with each attack*/
@@ -38,7 +43,7 @@ private:
 	/** Current collection of actors hit by this component. This will be cleared when an attack starts*/
 	TArray<AActor*> HitCollection;
 	
-	UFUNCTION()
 	/** Event function bound to OnComponentBeginOverlap, deals damage to the actor hit if it exists in ClassWhiteList*/
-	void HitActor(AActor* OverlappedActor, AActor* OtherActor);
+	UFUNCTION()
+	void HitActor(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 };

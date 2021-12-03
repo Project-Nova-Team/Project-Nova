@@ -3,11 +3,13 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "../Gameplay/InteractiveObject.h"
+#include "Materials/MaterialInstance.h"
 #include "Weapon.generated.h"
 
 class USkeletalMesh;
 class USkeletalMeshSocket;
 class UCombatComponent;
+class USoundBase;
 struct FWeaponInput;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FWeaponEvent);
@@ -89,6 +91,10 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FWeaponEvent OnWeaponAttack;
 
+	/** The materials that we set when the player picks up the weapon, so that it doesn't clip through walls*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon | OverlapMaterials")
+	TArray<UMaterialInstance*> OverlapRenderMaterials;
+
 	/** By how much do we displace the holding actors weapon mesh when held*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon | Animation")
 	FVector WeaponMeshOffset;
@@ -117,6 +123,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon | Animation")
 	float ImpulseKickFactor;
 
+	FInteractionPrompt& GetInteractionPrompt() override { return Prompt; }
+
 protected:
 
 	UPROPERTY(VisibleAnywhere, Category = "Mesh")
@@ -129,6 +137,17 @@ protected:
 	/** The amount of damage dealt by each attack withs this weapon*/
 	UPROPERTY(EditAnywhere, Category = "Weapon | Damage")
 	float BaseDamage;
+
+	/** Sound this object plays when reloaded*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon | Audio")
+	USoundBase* SFXReload;
+
+	/** Sound this object makes when switched to*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon | Audio")
+	USoundBase* SFXSwap;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
+	FInteractionPrompt Prompt;
 
 	UCombatComponent* OwningComponent;
 

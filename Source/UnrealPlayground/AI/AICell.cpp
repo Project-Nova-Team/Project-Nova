@@ -16,8 +16,7 @@ AAICell::AAICell()
 void AAICell::BeginPlay()
 {
 	Super::BeginPlay();
-	Player->OnMakeNoise.AddDynamic(this, &AAICell::RegisterAudioStimulus);
-	SetAIUnits();
+	Player->OnMakeNoise.AddDynamic(this, &AAICell::RegisterAudioStimulus);	
 }
 
 void AAICell::Tick(float DeltaTime)
@@ -53,11 +52,15 @@ void AAICell::SetAIUnits()
 			Controller->SetCell(this);
 			Controller->SetTarget(Player);
 			AsAI->SetPlayer(Player);
-			AsAI->GetMesh()->SetCollisionProfileName("HitScan");
 
 			Controller->OnInvestigation.AddDynamic(this, &AAICell::RegisterInvestigator);
 			Controller->OnAggression.AddDynamic(this, &AAICell::RegisterAggressor);
 			Controller->OnHeardSound.AddDynamic(this, &AAICell::SignalCellStimulus);
+
+			if (AsAI->bStartsInActive)
+			{
+				Controller->SetAIActive(false, false);
+			}
 		}
 	}
 }
@@ -69,7 +72,7 @@ AAIBaseController* AAICell::GetNearestAI(const FVector& Point)
 
 	for (AAIBaseController* AI : AIUnits)
 	{
-		if (AI->IsDead())
+		if (AI->IsDead() || AI->IsInactive())
 		{
 			continue;
 		}
@@ -168,7 +171,7 @@ void AAICell::SetAllUnitStates(const FString NewState, const bool bIgnoreLower, 
 {
 	for (AAIBaseController* AI : AIUnits)
 	{
-		if (AI->IsDead() || AI == Ignore)
+		if (AI->IsDead() || AI->IsInactive() || AI == Ignore)
 		{
 			continue;
 		}

@@ -35,6 +35,7 @@ void AVent::DisableGrateForDuration()
 {
 	Grate->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	Grate->SetVisibility(false);
+	OnVentDisabled.Broadcast();
 	bIsDisabled = true;
 	bDelayRunning = true;
 	GetWorld()->GetAuthGameMode<AShooterGameMode>()->GetDelayedActionManager()->StartDelayedAction(this, &AVent::MaybeReEnableGrate, DisableDuration);
@@ -56,6 +57,7 @@ void AVent::ReEnableGrate()
 	Grate->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	Grate->SetVisibility(true);
 	bIsDisabled = false;
+	OnVentEnabled.Broadcast();
 }
 
 void AVent::ActorEndOverlap(AActor* OverlappedActor, AActor* OtherActor)

@@ -25,6 +25,8 @@ AAIBaseController::AAIBaseController()
 	MinimumHearingThreshold = 50.f;
 	MinimumPropagationDistance = 10000.f;
 	MinimumIntensityThreshold = 10e-12f;
+
+	bIsRegisteringStimulus = true;
 }
 
 void AAIBaseController::BeginPlay()
@@ -52,15 +54,12 @@ void AAIBaseController::BeginPlay()
 		bHasPatrolPath = PatrolPath != nullptr;
 	}
 	
-	if (!bHasPatrolPath && Home.IsNearlyZero())
-	{
-		Home = AIOwner->GetActorLocation();
-	}
+	Home = AIOwner->GetActorLocation();
 
 	//Init blackboard values
 	Blackboard->SetValueAsBool("bHasPatrolPath", bHasPatrolPath);
 	Blackboard->SetValueAsVector("HomeLocation", Home);
-	SetStartingSearch(true);
+	SetStartingSearch(true);	
 }
 
 void AAIBaseController::LoadStateTrees()
@@ -86,27 +85,24 @@ void AAIBaseController::Tick(float DeltaTime)
 
 void AAIBaseController::SetLifeStatus(const bool bIsAlive)
 {
-	bIsDead = !bIsAlive;
-	AIOwner->SetLifeStatus(bIsAlive);
-
-	PerceptionComponent->SetSenseEnabled(UAISense_Sight::StaticClass(), bIsAlive);
-	PerceptionComponent->SetSenseEnabled(UAISense_Hearing::StaticClass(), bIsAlive);
-	PerceptionComponent->SetSenseEnabled(UAISense_Damage::StaticClass(), bIsAlive);
-	PerceptionComponent->SetSenseEnabled(UAISense_Touch::StaticClass(), bIsAlive);
-
-	if (!bIsAlive)
-	{	
-		BrainComponent->PauseLogic("Death");
-		SetState("Dead");
-		SetAggression(false);
-	}
-
-	else
+	if (bIsDead == bIsAlive)
 	{
-		BrainComponent->ResumeLogic("Respawn");
-		SetState("Patrol");
-		SetStartingSearch(true);
-	}
+		bIsDead = !bIsAlive;
+		AIOwner->SetLifeStatus(bIsAlive);
+
+		if (!bIsAlive)
+		{
+			SetState("Dead");
+			SetStimulusEnabled(false);
+		}
+
+		else
+		{	
+			PatrolIndex = 0;
+			SetState("Patrol");
+			SetStimulusEnabled(true);
+		}
+	}	
 }
 
 void AAIBaseController::Damaged(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
@@ -158,6 +154,56 @@ void AAIBaseController::SetStartingSearch(const bool Value)
 {
 	Blackboard->SetValueAsBool("bSearchStarting", Value);
 }
+
+void AAIBaseController::SetAIActive(const bool bActivityStatus, const bool bRespawnAtCurrentLocation)
+{
+	bIsInactive = !bActivityStatus;
+
+	if (bIsInactive)
+	{
+		SetStimulusEnabled(false);
+		AIOwner->SetVisible(false);
+	}
+
+	else
+	{
+		SetStimulusEnabled(true);
+		AIOwner->SetVisible(true);
+
+		if (bIsDead)
+		{
+			const FVector SpawnLocation = bRespawnAtCurrentLocation ? AIOwner->GetActorLocation() : Home;
+			AIOwner->SetActorLocation(SpawnLocation);
+			SetLifeStatus(true);
+		}
+	}	
+}
+
+void AAIBaseController::SetStimulusEnabled(const bool bValue)
+{
+	if (bIsRegisteringStimulus != bValue)
+	{
+		bIsRegisteringStimulus = bValue;
+
+		PerceptionComponent->SetSenseEnabled(UAISense_Sight::StaticClass(), bValue);
+		PerceptionComponent->SetSenseEnabled(UAISense_Hearing::StaticClass(), bValue);
+		PerceptionComponent->SetSenseEnabled(UAISense_Damage::StaticClass(), bValue);
+		PerceptionComponent->SetSenseEnabled(UAISense_Touch::StaticClass(), bValue);
+
+		if (bValue)
+		{
+			BrainComponent->ResumeLogic("Respawn");
+			SetStartingSearch(true);
+		}
+
+		else
+		{
+			BrainComponent->PauseLogic("Death");
+			SetAggression(false);
+		}
+	}
+}
+
 
 void AAIBaseController::SetMoveLocation(const FVector Location)
 {

@@ -52,6 +52,8 @@ AGun::AGun()
 	BloomCrouchBase = 5.f;
 	BloomProneBase = 2.5f;
 	BloomBaseMovementMultiplier = 3.f;
+
+	ProjectilePredictionDot = .98f;
 }
 
 
@@ -67,7 +69,7 @@ void AGun::BeginPlay()
 	{
 		AActor* NewActor = GetWorld()->SpawnActor(BulletTemplate->GetDefaultObject()->GetClass());
 		ABullet* NewBullet = Cast<ABullet>(NewActor);
-		NewBullet->InitializeOwner(BaseDamage, BodyMultiplier, LimbMultiplier, HeadMultiplier, MaxFireRange, ProjectileSpeed);
+		NewBullet->InitializeOwner(this, BaseDamage, MaxFireRange, ProjectileSpeed);
 		BulletPool.Add(NewBullet);
 	}	
 }
@@ -166,7 +168,11 @@ void AGun::FireStraight()
 	const bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_Pawn, QueryParams);
 	const FVector ProjectileEndGuess = bHit ? Hit.ImpactPoint : TraceEnd;
 
-	const FVector ProjectileDirection = (ProjectileEndGuess - ProjectileStart).GetSafeNormal();
+	FVector ProjectileDirection = (ProjectileEndGuess - ProjectileStart).GetSafeNormal();
+	if ((ProjectileDirection | TraceDirection) < ProjectilePredictionDot)
+	{
+		ProjectileDirection = TraceDirection;
+	}
 	const FQuat ProjectileRotation = ProjectileDirection.ToOrientationQuat();
 
 	//Get a bullet from the pool and send it off
@@ -224,7 +230,12 @@ void AGun::FireWithNoise()
 	const bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_Pawn, QueryParams);
 	const FVector ProjectileEndGuess = bHit ? Hit.ImpactPoint : TraceEnd;
 
-	const FVector ProjectileDirection = (ProjectileEndGuess - ProjectileStart).GetSafeNormal();
+	FVector ProjectileDirection = (ProjectileEndGuess - ProjectileStart).GetSafeNormal();
+
+	if ((ProjectileDirection | TraceDirection) < ProjectilePredictionDot)
+	{
+		ProjectileDirection = TraceDirection;
+	}
 	const FQuat ProjectileRotation = ProjectileDirection.ToOrientationQuat();
 
 	//Get a bullet from the pool and send it off
@@ -255,7 +266,7 @@ ABullet* AGun::GetAvailableBullet()
 	//We don't have any available bullets in the pool, create a new one then return it
 	AActor* NewActor = GetWorld()->SpawnActor(BulletTemplate->GetDefaultObject()->GetClass());
 	ABullet* NewBullet = Cast<ABullet>(NewActor);
-	NewBullet->InitializeOwner(BaseDamage, BodyMultiplier, LimbMultiplier, HeadMultiplier, MaxFireRange, ProjectileSpeed);
+	NewBullet->InitializeOwner(this, BaseDamage, MaxFireRange, ProjectileSpeed);
 	NewBullet->SetBulletQueryParams(QueryParams);
 	BulletPool.Add(NewBullet);
 

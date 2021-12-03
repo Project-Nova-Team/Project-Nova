@@ -35,6 +35,9 @@ public:
 	UFUNCTION()
 	void RegisterAggressor(bool bStarted);
 
+	/** Gets every AI unit inside the cell volume and marks it as belonging to this cell*/
+	void SetAIUnits();
+
 protected:
 	void BeginPlay() override;
 
@@ -59,9 +62,6 @@ private:
 
 	/** Collection of AI belonging to this cell are currently aggressive and contributing to Attacking the player*/
 	int32 AgressorCount;
-
-	/** Gets every AI unit inside the cell volume and marks it as belonging to this cell*/
-	void SetAIUnits();
 
 	/**
 	 * Sets the state of every AI in the cell. An AI can be supplied to skip the state change

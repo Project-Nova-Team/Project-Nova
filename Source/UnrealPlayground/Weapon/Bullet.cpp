@@ -1,6 +1,6 @@
 #include "Bullet.h"
 #include "Components/StaticMeshComponent.h"
-#include <Runtime/Engine/Classes/Kismet/KismetMathLibrary.h>
+#include "DrawDebugHelpers.h"
 
 ABullet::ABullet()
 {
@@ -12,14 +12,16 @@ ABullet::ABullet()
 	SetActorEnableCollision(false);
 }
 
-void ABullet::InitializeOwner(const float Base, const float Body, const float Limb, const float Head, const float Range, const float FireSpeed)
+void ABullet::InitializeOwner(AGun* WeaponOwner, float Damage, float Range, float ProjectileSpeed)
 {
-	BaseDamage = Base;
-	BodyMultiplier = Body;
-	LimbMultiplier = Limb;
-	HeadMultiplier = Head;
+	Gun = WeaponOwner;
+
+	BaseDamage = Damage;
 	MaxRange = Range;
-	Speed = FireSpeed;
+	Speed = ProjectileSpeed;
+	BodyMultiplier = 1;
+	LimbMultiplier = 1;
+	HeadMultiplier = 1;	
 }
 
 void ABullet::BeginPlay()
@@ -67,8 +69,15 @@ void ABullet::Tick(float DeltaTime)
 			const FDamageEvent DamageEvent;
 
 			Hit.Actor->TakeDamage(Damage, DamageEvent, nullptr, this);
-
+			OnBulletImpact.Broadcast(Hit.Actor.Get());
 			//TODO implement hit splat particle effects
+			
+		}
+		
+		//Play sound effects if we hit a brush
+		else
+		{
+			OnBulletImpact.Broadcast(nullptr);
 		}
 
 		SetIsActive(false);
