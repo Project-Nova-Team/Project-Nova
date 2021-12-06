@@ -38,7 +38,7 @@ public:
 
 	/** Sets the lock status of this Button*/
 	UFUNCTION(BlueprintSetter)
-		void SetIsLocked(const bool Value);
+	void SetIsLocked(const bool Value);
 
 	/** Should this button be opening*/
 	FORCEINLINE bool ShouldRetract() const { return !bIsLocked && State == EBS_Extended; }
@@ -62,6 +62,15 @@ protected:
 	/** Component that plays the sound*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sound")
 		UAudioComponent* AudioComponent;
+
+	/**
+	* Invoked when SetIsLocked changes lock status (providing the new lock state)
+	* This lets us tell blueprint subclass to update an emissive material
+	*/
+	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "Lock Changed"))
+	void ReceiveLockStatusChange(const bool LockStatus);
+
+	void SetIsLockedImpl(const bool Value);
 
 	void MaybeChangeButtonState();
 
@@ -88,7 +97,7 @@ protected:
 
 	/** Whether or not the button is currently locked*/
 	UPROPERTY(EditAnywhere, BlueprintSetter = SetIsLocked, Category = "Door")
-		uint8 bIsLocked : 1;
+	uint8 bIsLocked : 1;
 
 	/**This is mesh of button, not panel*/
 	UPROPERTY(BlueprintReadWrite)

@@ -30,7 +30,18 @@ void AInteractiveButton::SetIsLocked(const bool Value)
 	if (Value != bIsLocked)
 	{
 		bIsLocked = Value;
+		SetIsLockedImpl(Value);
 	}
+}
+
+void AInteractiveButton::SetIsLockedImpl(const bool Value)
+{
+	FEditorScriptExecutionGuard ScriptGuard; //lets us call this function during edit time;
+	{
+		ReceiveLockStatusChange(Value);
+	}
+
+	MaybeChangeButtonState();
 }
 
 void AInteractiveButton::InteractionEvent(APawn* EventSender)
