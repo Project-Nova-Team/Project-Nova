@@ -5,8 +5,12 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "InteractiveObject.h"
+#include "../ShooterGameMode.h"
 #include "Components/ArrowComponent.h"
+#include "../Utility/DelayedActionManager.h"
 #include "InteractiveButton.generated.h"
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FButtonPressEvent);
 
 struct FDelayedActionHandle;
 
@@ -40,6 +44,9 @@ public:
 	UFUNCTION(BlueprintSetter)
 	void SetIsLocked(const bool Value);
 
+	UPROPERTY()
+	FButtonPressEvent ButtonPressEvent;
+
 	/** Should this button be opening*/
 	FORCEINLINE bool ShouldRetract() const { return !bIsLocked && State == EBS_Extended; }
 
@@ -61,7 +68,7 @@ protected:
 
 	/** Component that plays the sound*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sound")
-		UAudioComponent* AudioComponent;
+	UAudioComponent* AudioComponent;
 
 	/**
 	* Invoked when SetIsLocked changes lock status (providing the new lock state)
@@ -96,7 +103,7 @@ protected:
 		float ButtonTransitionTime;
 
 	/** Whether or not the button is currently locked*/
-	UPROPERTY(EditAnywhere, BlueprintSetter = SetIsLocked, Category = "Door")
+	UPROPERTY(EditAnywhere, BlueprintSetter = SetIsLocked, Category = "Button")
 	uint8 bIsLocked : 1;
 
 	/**This is mesh of button, not panel*/

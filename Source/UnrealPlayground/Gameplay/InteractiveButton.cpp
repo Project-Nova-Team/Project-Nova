@@ -1,9 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 #include "InteractiveButton.h"
-#include "../ShooterGameMode.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Components/AudioComponent.h"
-#include "../Utility/DelayedActionManager.h"
 
 AInteractiveButton::AInteractiveButton()
 {
@@ -63,6 +61,9 @@ void AInteractiveButton::MaybeChangeButtonState()
 	{
 		State = EBS_Changing;
 		StartDelayedAction(EBS_Retracted);
+
+		ButtonPressEvent.Broadcast();
+
 	}
 	// if not locked and current state is retracted, extend
 	else if (ShouldExtend())
