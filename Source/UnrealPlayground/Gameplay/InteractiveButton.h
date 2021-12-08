@@ -10,8 +10,6 @@
 #include "../Utility/DelayedActionManager.h"
 #include "InteractiveButton.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FButtonPressEvent);
-
 struct FDelayedActionHandle;
 
 class UAudioComponent;
@@ -43,9 +41,6 @@ public:
 	/** Sets the lock status of this Button*/
 	UFUNCTION(BlueprintSetter)
 	void SetIsLocked(const bool Value);
-
-	UPROPERTY()
-	FButtonPressEvent ButtonPressEvent;
 
 	/** Should this button be opening*/
 	FORCEINLINE bool ShouldRetract() const { return !bIsLocked && State == EBS_Extended; }

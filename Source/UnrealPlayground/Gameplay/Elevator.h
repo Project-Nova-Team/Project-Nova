@@ -6,11 +6,20 @@
 #include "GameFramework/Actor.h"
 #include "../ShooterGameMode.h"
 #include "Components/BoxComponent.h"
+#include "Door.h"
 #include "Elevator.generated.h"
 
 struct FDelayedActionHandle;
 class AInteractiveButton;
 class UAudioComponent;
+
+UENUM()
+enum EElevatorState
+{
+	EES_Idle,
+	EES_Ascending,
+	EES_Descending
+};
 
 UCLASS()
 class UNREALPLAYGROUND_API AElevator : public AActor
@@ -26,7 +35,7 @@ protected:
 	virtual void BeginPlay() override;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
-	UStaticMeshComponent* FloorMesh;
+	UStaticMeshComponent* ElevatorBody;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Trigger", meta = (AllowPrivateAccess = "true"))
 	UBoxComponent* Trigger;
@@ -34,8 +43,17 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sound", meta = (AllowPrivateAccess = "true"))
 	UAudioComponent* AudioComponent;
 
-	UPROPERTY(EditAnywhere, Category = "Elevator", meta = (AllowPrivateAccess = "true"))
-	AInteractiveButton* Button;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
+	UStaticMeshComponent* ButtonPanel;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Door", meta = (AllowPrivateAccess = "true"))
+	ADoor* Door;
+
+	UPROPERTY(BlueprintReadWrite)
+	AInteractiveButton* UpButton;
+
+	UPROPERTY(BlueprintReadWrite)
+	AInteractiveButton* DownButton;
 
 	/** How many pawns are currently overlapped with this actor*/
 	int32 CurrentPawnCount;
@@ -66,8 +84,11 @@ protected:
 	virtual void ActorEndOverlap(AActor* OverlappedActor, AActor* OtherActor);
 
 	/** Move Elevator*/
-	void OverTimeTransition();
+	void OverTimeTransition(bool bMovesUp);
 
 	UFUNCTION()
-	void OnButtonPressed();
+	void OnUpButtonPressed(APawn* EventSender);
+
+	UFUNCTION()
+	void OnDownButtonPressed(APawn* EventSender);
 };

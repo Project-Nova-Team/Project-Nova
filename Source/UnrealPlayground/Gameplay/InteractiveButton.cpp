@@ -44,9 +44,10 @@ void AInteractiveButton::SetIsLockedImpl(const bool Value)
 
 void AInteractiveButton::InteractionEvent(APawn* EventSender)
 {
+	IInteractiveObject::InteractionEvent(EventSender);
+
 	MaybeChangeButtonState();
 }
-
 
 void AInteractiveButton::BeginPlay()
 {
@@ -62,7 +63,7 @@ void AInteractiveButton::MaybeChangeButtonState()
 		State = EBS_Changing;
 		StartDelayedAction(EBS_Retracted);
 
-		ButtonPressEvent.Broadcast();
+		//ButtonPressEvent.Broadcast();
 
 	}
 	// if not locked and current state is retracted, extend
