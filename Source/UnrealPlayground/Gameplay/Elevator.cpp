@@ -25,7 +25,7 @@ AElevator::AElevator()
 	UpButton->AttachToComponent(ButtonPanel, FAttachmentTransformRules::KeepRelativeTransform);
 
 	DownButton = CreateDefaultSubobject<AInteractiveButton>("Down Button");
-	DownButton->AttachToComponent(ButtonPanel, FAttachmentTransformRules::KeepRelativeTransform);
+	DownButton->AttachToComponent(ElevatorBody, FAttachmentTransformRules::KeepRelativeTransform);
 
 	// makes sure audio doesn't play on start
 	AudioComponent->bAutoActivate = false;
@@ -42,8 +42,6 @@ AElevator::AElevator()
 void AElevator::BeginPlay()
 {
 	Super::BeginPlay();
-
-	InitialOffset = ElevatorBody->GetRelativeLocation();
 
 	OnActorBeginOverlap.AddDynamic(this, &AElevator::ActorStartOverlap);
 	OnActorEndOverlap.AddDynamic(this, &AElevator::ActorEndOverlap);
@@ -62,7 +60,7 @@ void AElevator::ActorEndOverlap(AActor* OverlappedActor, AActor* OtherActor)
 	CurrentPawnCount--;
 }
 
-void AElevator::OverTimeTransition(bool bMovesUp)
+void AElevator::OverTimeTransition(bool bMovesUp, FVector InitialOffset)
 {
 	bIsMoving = true;
 	FVector Direction;
@@ -81,6 +79,9 @@ void AElevator::OverTimeTransition(bool bMovesUp)
 	if (Handle->CurrentActionProgress >= 1.f)
 	{
 		bIsMoving = false;
+
+		UpButton->SetIsLocked(false);
+		DownButton->SetIsLocked(false);
 	}
 }
 
@@ -88,8 +89,13 @@ void AElevator::OnUpButtonPressed(APawn* EventSender)
 {
 	if (CurrentPawnCount > 0)
 	{
+		FVector InitialOffset = ElevatorBody->GetRelativeLocation();
+
+		UpButton->SetIsLocked(true);
+		DownButton->SetIsLocked(true);
+
 		Handle = GetWorld()->GetAuthGameMode<AShooterGameMode>()->GetDelayedActionManager()->StartOverTimeAction(
-			this, &AElevator::OverTimeTransition, MoveDuration, true);
+			this, &AElevator::OverTimeTransition, MoveDuration, true, InitialOffset);
 	}
 }
 
@@ -97,8 +103,13 @@ void AElevator::OnDownButtonPressed(APawn* EventSender)
 {
 	if (CurrentPawnCount > 0)
 	{
+		FVector InitialOffset = ElevatorBody->GetRelativeLocation();
+
+	    UpButton->SetIsLocked(true);
+		DownButton->SetIsLocked(true);
+
 		Handle = GetWorld()->GetAuthGameMode<AShooterGameMode>()->GetDelayedActionManager()->StartOverTimeAction(
-			this, &AElevator::OverTimeTransition, MoveDuration, false);
+			this, &AElevator::OverTimeTransition, MoveDuration, false, InitialOffset);
 	}
 }
 

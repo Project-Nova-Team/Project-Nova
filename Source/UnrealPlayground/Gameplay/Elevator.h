@@ -73,8 +73,6 @@ protected:
 	UPROPERTY(EditAnywhere)
 	float MaxHeight;
 
-	FVector InitialOffset;
-
 	/** Invoked by ActorBeginOverlap*/
 	UFUNCTION()
 	virtual void ActorStartOverlap(AActor* OverlappedActor, AActor* OtherActor);
@@ -84,7 +82,7 @@ protected:
 	virtual void ActorEndOverlap(AActor* OverlappedActor, AActor* OtherActor);
 
 	/** Move Elevator*/
-	void OverTimeTransition(bool bMovesUp);
+	void OverTimeTransition(bool bMovesUp, FVector InitialOffset);
 
 	UFUNCTION()
 	void OnUpButtonPressed(APawn* EventSender);
