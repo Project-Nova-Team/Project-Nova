@@ -27,8 +27,8 @@ void AInteractiveButton::SetIsLocked(const bool Value)
 {
 	if (Value != bIsLocked)
 	{
-		bIsLocked = Value;
 		SetIsLockedImpl(Value);
+		bIsLocked = Value;
 	}
 }
 
@@ -39,11 +39,16 @@ void AInteractiveButton::SetIsLockedImpl(const bool Value)
 		ReceiveLockStatusChange(Value);
 	}
 
+	/*commented out because of an issue with the elevator 
+	causing both buttons to move when setlocked. Uncomment if needed - david*/ 
 	MaybeChangeButtonState();
 }
 
 void AInteractiveButton::InteractionEvent(APawn* EventSender)
 {
+	// for checking if should move
+	bIsInteracted = true;
+
 	IInteractiveObject::InteractionEvent(EventSender);
 
 	MaybeChangeButtonState();
@@ -62,22 +67,19 @@ void AInteractiveButton::MaybeChangeButtonState()
 	{
 		State = EBS_Changing;
 		StartDelayedAction(EBS_Retracted);
-
-		//ButtonPressEvent.Broadcast();
-
+		bIsMoving = true;
 	}
 	// if not locked and current state is retracted, extend
 	else if (ShouldExtend())
 	{
 		State = EBS_Changing;
 		StartDelayedAction(EBS_Extended);
+		bIsMoving = true;
 	}
 }
 
 void AInteractiveButton::OverTimeTransition(const EButtonState TargetState)
 {
-	bIsMoving = true;
-
 	const FVector Direction = FVector::ForwardVector;
 
 	float Offset;
@@ -99,6 +101,8 @@ void AInteractiveButton::OverTimeTransition(const EButtonState TargetState)
 	{
 		bIsMoving = false;
 
+		bIsInteracted = false;
+
 		State = TargetState;
 
 		if (State == EBS_Retracted)
@@ -107,15 +111,6 @@ void AInteractiveButton::OverTimeTransition(const EButtonState TargetState)
 			StartDelayedAction(EBS_Extended);
 		}
 	}
-}
-
-void AInteractiveButton::Retract()
-{
-
-}
-
-void AInteractiveButton::Extend()
-{
 }
 
 void AInteractiveButton::StartDelayedAction(EButtonState TargetState)

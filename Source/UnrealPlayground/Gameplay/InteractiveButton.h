@@ -43,10 +43,12 @@ public:
 	void SetIsLocked(const bool Value);
 
 	/** Should this button be opening*/
-	FORCEINLINE bool ShouldRetract() const { return !bIsLocked && State == EBS_Extended; }
+	FORCEINLINE bool ShouldRetract() const { return !bIsLocked && State == EBS_Extended && bIsInteracted; }
 
 	/** Should this Button be shutting.*/
 	FORCEINLINE bool ShouldExtend() const { return !bIsLocked && State == EBS_Retracted; }
+
+	uint8 bIsInteracted : 1;
 
 protected:
 
@@ -77,12 +79,6 @@ protected:
 	void MaybeChangeButtonState();
 
 	void BeginPlay();
-
-	/** Button Retracts into the panel*/
-	void Retract();
-
-	/** Button Extends outward from the panel*/
-	void Extend();
 
 	void StartDelayedAction(EButtonState TargetState);
 
@@ -117,5 +113,5 @@ protected:
 	/** Move Button*/
 	void OverTimeTransition(const EButtonState TargetState);
 
-	uint8 bIsMoving;
+	uint8 bIsMoving : 1;
 };
