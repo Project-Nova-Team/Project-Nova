@@ -6,14 +6,26 @@
 // Sets default values
 AElevator::AElevator()
 {
-	FloorMesh = CreateDefaultSubobject<UStaticMeshComponent>("Floor");
-	SetRootComponent(FloorMesh);
+	ElevatorBody = CreateDefaultSubobject<UStaticMeshComponent>("Elevator Body");
+	SetRootComponent(ElevatorBody);
 
 	Trigger = CreateDefaultSubobject<UBoxComponent>("Trigger");
-	Trigger->AttachToComponent(FloorMesh, FAttachmentTransformRules::KeepRelativeTransform);
+	Trigger->AttachToComponent(ElevatorBody, FAttachmentTransformRules::KeepRelativeTransform);
 
 	AudioComponent = CreateDefaultSubobject<UAudioComponent>("Audio Component");
-	AudioComponent->AttachToComponent(FloorMesh, FAttachmentTransformRules::KeepRelativeTransform);
+	AudioComponent->AttachToComponent(ElevatorBody, FAttachmentTransformRules::KeepRelativeTransform);
+
+	Door = CreateDefaultSubobject<ADoor>("Door");
+	Door->AttachToComponent(ElevatorBody, FAttachmentTransformRules::KeepRelativeTransform);
+
+	ButtonPanel = CreateDefaultSubobject<UStaticMeshComponent>("Button Panel");
+	ButtonPanel->AttachToComponent(ElevatorBody, FAttachmentTransformRules::KeepRelativeTransform);
+
+	UpButton = CreateDefaultSubobject<AInteractiveButton>("Up Button");
+	UpButton->AttachToComponent(ButtonPanel, FAttachmentTransformRules::KeepRelativeTransform);
+
+	DownButton = CreateDefaultSubobject<AInteractiveButton>("Down Button");
+	DownButton->AttachToComponent(ButtonPanel, FAttachmentTransformRules::KeepRelativeTransform);
 
 	// makes sure audio doesn't play on start
 	AudioComponent->bAutoActivate = false;
@@ -23,7 +35,7 @@ AElevator::AElevator()
 	MoveDuration = 5;
 
 	// Set the collision preset so the elevator can lift the player
-	FloorMesh->SetCollisionProfileName(TEXT("PhysicsActor"));
+	ElevatorBody->SetCollisionProfileName(TEXT("PhysicsActor"));
 }
 
 // Called when the game starts or when spawned
@@ -31,12 +43,13 @@ void AElevator::BeginPlay()
 {
 	Super::BeginPlay();
 
-	InitialOffset = FloorMesh->GetRelativeLocation();
+	InitialOffset = ElevatorBody->GetRelativeLocation();
 
 	OnActorBeginOverlap.AddDynamic(this, &AElevator::ActorStartOverlap);
 	OnActorEndOverlap.AddDynamic(this, &AElevator::ActorEndOverlap);
 
-	Button->ButtonPressEvent.AddDynamic(this, &AElevator::OnButtonPressed);
+	UpButton->OnInteract.AddUObject(this, &AElevator::OnUpButtonPressed);
+	DownButton->OnInteract.AddUObject(this, &AElevator::OnDownButtonPressed);
 }
 
 void AElevator::ActorStartOverlap(AActor* OverlappedActor, AActor* OtherActor)
@@ -49,16 +62,19 @@ void AElevator::ActorEndOverlap(AActor* OverlappedActor, AActor* OtherActor)
 	CurrentPawnCount--;
 }
 
-void AElevator::OverTimeTransition()
+void AElevator::OverTimeTransition(bool bMovesUp)
 {
 	bIsMoving = true;
-
-	const FVector Direction = FVector::UpVector;
-
+	FVector Direction;
 	float Offset;
 
+	if (bMovesUp)
+		Direction = FVector::UpVector;
+	else
+		Direction = FVector::DownVector;
+
 	Offset = FMath::Lerp(0.f, MaxHeight, Handle->CurrentActionProgress);
-	FloorMesh->SetRelativeLocation(InitialOffset + Direction * Offset);
+	ElevatorBody->SetRelativeLocation(InitialOffset + Direction * Offset);
 
 	/*We've finished transitioning. Decide if we should start
 	closing or opening again because something might have occured during the transition*/
@@ -68,13 +84,21 @@ void AElevator::OverTimeTransition()
 	}
 }
 
-void AElevator::OnButtonPressed()
+void AElevator::OnUpButtonPressed(APawn* EventSender)
 {
 	if (CurrentPawnCount > 0)
 	{
 		Handle = GetWorld()->GetAuthGameMode<AShooterGameMode>()->GetDelayedActionManager()->StartOverTimeAction(
-			this, &AElevator::OverTimeTransition, MoveDuration);
+			this, &AElevator::OverTimeTransition, MoveDuration, true);
 	}
+}
 
+void AElevator::OnDownButtonPressed(APawn* EventSender)
+{
+	if (CurrentPawnCount > 0)
+	{
+		Handle = GetWorld()->GetAuthGameMode<AShooterGameMode>()->GetDelayedActionManager()->StartOverTimeAction(
+			this, &AElevator::OverTimeTransition, MoveDuration, false);
+	}
 }
 
