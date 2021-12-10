@@ -35,7 +35,7 @@ AElevator::AElevator()
 	MoveDuration = 5;
 
 	// Set the collision preset so the elevator can lift the player
-	ElevatorBody->SetCollisionProfileName(TEXT("PhysicsActor"));
+	ElevatorBody->SetCollisionProfileName(TEXT("BlockAllDynamic"));
 }
 
 // Called when the game starts or when spawned
