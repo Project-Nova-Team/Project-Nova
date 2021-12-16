@@ -22,20 +22,27 @@ void AShooterHUD::Initialize()
 		Combat = Shooter->GetCombat();
 	}
 
-	Combat->OnArsenalAddition.AddUObject(this, &AShooterHUD::ReceiveWeapon);
-	Combat->OnArsenalRemoval.AddUObject(this, &AShooterHUD::ReleaseWeapon);
+	//Temp fix. Causes crashes in levels where the player is not auto-possesed because the HUD auto-posses the default pawn instead
+	if (Combat != nullptr)
+	{
+		Combat->OnArsenalAddition.AddUObject(this, &AShooterHUD::ReceiveWeapon);
+		Combat->OnArsenalRemoval.AddUObject(this, &AShooterHUD::ReleaseWeapon);
 
-	if (GetWorld()->GetAuthGameMode<AShooterGameMode>())
-		GetWorld()->GetAuthGameMode<AShooterGameMode>()->OnPause.AddUObject(this, &AShooterHUD::ShowPauseMenu);
+		if (GetWorld()->GetAuthGameMode<AShooterGameMode>())
+			GetWorld()->GetAuthGameMode<AShooterGameMode>()->OnPause.AddUObject(this, &AShooterHUD::ShowPauseMenu);
 
-	Shooter->OnScanHit.AddDynamic(this, &AShooterHUD::ShowInteractionPrompt);
-	Shooter->OnScanMiss.AddDynamic(this, &AShooterHUD::HideInteractionPrompt);
+		Shooter->OnScanHit.AddDynamic(this, &AShooterHUD::ShowInteractionPrompt);
+		Shooter->OnScanMiss.AddDynamic(this, &AShooterHUD::HideInteractionPrompt);
+	}	
 }
 
 void AShooterHUD::Tick(float DeltaTime)
 {
-	Super::Tick(DeltaTime);
-	Bloom = Combat->GetWeaponBloom();
+	if (Combat != nullptr)
+	{
+		Super::Tick(DeltaTime);
+		Bloom = Combat->GetWeaponBloom();
+	}
 }
 
 void AShooterHUD::ReceiveWeapon(AWeapon* NewWeapon)
