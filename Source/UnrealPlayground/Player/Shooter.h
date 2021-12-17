@@ -167,6 +167,13 @@ public:
 	UPROPERTY(BlueprintReadWrite)
 	uint8 bIsPrompted : 1;
 
+	/** Forces state to change to the given state name*/
+	UFUNCTION(BlueprintCallable, Category = "State")
+	void SetStateOverride(const FString NewState);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
+	FString StartingStateOverride;
+
 protected:
 	virtual void BeginPlay() override;
 

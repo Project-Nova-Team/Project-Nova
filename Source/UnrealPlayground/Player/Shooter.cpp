@@ -78,6 +78,13 @@ AShooter::AShooter()
 
 	Health = CreateDefaultSubobject<UHealthComponent>(TEXT("Health"));
 	PerceptionSource = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("Stimulus Source"));
+
+	StartingStateOverride.Empty();
+}
+
+void AShooter::SetStateOverride(const FString NewState)
+{
+	StateMachine->SetState(NewState);
 }
 
 void AShooter::BeginPlay()
@@ -90,6 +97,12 @@ void AShooter::BeginPlay()
 
 	StateMachine = NewObject<UShooterStateMachine>();
 	StateMachine->Initialize(this);
+
+	if (!StartingStateOverride.IsEmpty())
+	{
+		SetStateOverride(StartingStateOverride);
+	}
+
 	OnStateLoadComplete.Broadcast();
 
 	InputState.Owner = this;
@@ -177,7 +190,7 @@ void AShooter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	InputComponent->BindAction("Reload", IE_Released, this, &AShooter::ReloadRelease);
 	// bind pause to game mode because pausing is not a shooter behavior
 	InputComponent->BindAction("Pause", IE_Pressed, GetWorld()->GetAuthGameMode<AShooterGameMode>(), &AShooterGameMode::PauseGame)
-		.bExecuteWhenPaused = true;;
+		.bExecuteWhenPaused = true;
 }
 
 void AShooter::ShooterMakeNoise(FVector Location, float Volume)
