@@ -49,7 +49,7 @@ class UNREALPLAYGROUND_API IInteractiveObject
 
 public:
 
-	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "OnInteract"))
+	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "On Interact"))
 	void BlueprintInteract(APawn* EventSender);
 
 	virtual void InteractionEvent(APawn* EventSender) = 0;

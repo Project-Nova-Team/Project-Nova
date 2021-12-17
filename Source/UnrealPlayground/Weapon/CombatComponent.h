@@ -62,6 +62,7 @@ public:
 
 	void SetUpConstruction(USceneComponent* TraceComponent, USkeletalMeshComponent* MeshComponent, FWeaponInput* Stance);
 
+	UFUNCTION(BlueprintCallable)
 	void PickUpWeapon(AWeapon* NewWeapon);
 
 	/** Sets the attack state of the weapon*/
