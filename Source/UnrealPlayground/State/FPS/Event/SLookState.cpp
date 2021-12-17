@@ -7,7 +7,13 @@ void USLookState::Initialize(UStateMachine* StateMachine, UObject* ContextObject
 	Movement = Cast<UShooterMovementComponent>(Shooter->GetMovementComponent());
 	Input = Shooter->GetInput();
 
-	Cast<APlayerController>(Shooter->GetController())->PlayerCameraManager->StartCameraFade(2, 0, 6, FLinearColor(FColor::Black));
+	APlayerController* ShooterController = Cast<APlayerController>(Shooter->GetController());
+
+	if (ShooterController != nullptr)
+	{
+		ShooterController->PlayerCameraManager->StartCameraFade(1, 0, 6, FLinearColor(FColor::Black));
+	}
+	
 }
 
 void USLookState::RotateCameraFromInput(const float DeltaTime)
