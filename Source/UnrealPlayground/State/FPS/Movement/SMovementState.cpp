@@ -47,18 +47,7 @@ void USMovementState::CheckForVault()
 {
 	if (Input->bIsTryingToVault && Movement->bIsOnGround && Shooter->CanVault())
 	{
-		// calls USVaultState.OnEnter
 		FlagTransition("Vaulting", 10);
-
-		//Movement->Velocity.Z += Movement->JumpForce;
-
-		//Input->bIsTryingToVault = false;
-
-		////Lift slighly in the air so the next ground check returns false
-		//Movement->bIsOnGround = false;
-		//const FVector CurrentLoc = Collider->GetComponentLocation();
-		//const FVector Adjustment = FVector(0, 0, FLOOR_DIST);
-		//Collider->SetWorldLocation(CurrentLoc + Adjustment, true);
 	}
 }
 
@@ -374,6 +363,8 @@ void USMovementState::CorrectCollision(const float DeltaTime, FVector Delta, FHi
 			FVector NewDeltaMovement = CalculateSurfaceMovement(NewDelta, Movement->GroundHitData);
 			MoveShooter(NewDeltaMovement, CollisionHit);
 		}
+
+		int a = 0.5f;
 	}
 }
 
@@ -413,7 +404,7 @@ bool USMovementState::CanStepOntoSurface(const FHitResult CollisionData, FVector
 {	
 	const FVector CurrentLocation = Collider->GetComponentLocation();
 	const float HalfHeight = Collider->GetScaledCapsuleHalfHeight();
-	const FVector PushAmount = Movement->Velocity.GetSafeNormal2D(); //TODO magic number
+	const FVector PushAmount = Movement->Velocity.GetSafeNormal2D();
 
 	FVector TraceEnd = CollisionData.ImpactPoint + PushAmount;
 	TraceEnd.Z = CurrentLocation.Z - HalfHeight;
@@ -478,7 +469,6 @@ bool USMovementState::IsOnGround()
 	const float TestBoxHeight = ((HalfHeight - Radius) + 1.f) * GROUND_CHECK_EPSILON;
 
 	//We need to sweep a bit deeper into the floor than we are hovering above the surface
-	//Not sure why such a high tolerance (20%!) is requried to make this work
 	const float FloorCorrection = (1.2f * FLOOR_DIST) / GROUND_CHECK_EPSILON;
 	FCollisionShape TestBox = FCollisionShape::MakeBox(FVector(TestBoxWidth, TestBoxWidth, TestBoxHeight));
 	FVector SweepEnd = CapsuleLocation - FVector(0.f, 0.f, Radius + FloorCorrection);
@@ -527,8 +517,6 @@ void USMovementState::HandleBaseMovement() const
 		{
 			FHitResult Collision;
 			MoveShooter(Delta, Collision);
-			
-			///TODO check for hits and move based on time
 		}
 	}
 }

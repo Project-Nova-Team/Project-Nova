@@ -13,7 +13,6 @@ void USLookState::Initialize(UStateMachine* StateMachine, UObject* ContextObject
 	{
 		ShooterController->PlayerCameraManager->StartCameraFade(1, 0, 6, FLinearColor(FColor::Black));
 	}
-	
 }
 
 void USLookState::RotateCameraFromInput(const float DeltaTime)
