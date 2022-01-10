@@ -14,7 +14,6 @@ ATrigger::ATrigger()
 
 
 	//Yoinked from source
-	//All this does is add a sprite to the triggers, but only in editor (will not appear in builds)
 #if WITH_EDITORONLY_DATA
 	SpriteComponent = CreateEditorOnlyDefaultSubobject<UBillboardComponent>(TEXT("Sprite"));
 	SpriteComponent->AttachToComponent(TriggerVolume, FAttachmentTransformRules::KeepRelativeTransform);

@@ -49,8 +49,7 @@ void ABullet::Tick(float DeltaTime)
 	
 	if (Hit.bBlockingHit)
 	{
-		AActor* const HitActor = Hit.GetActor();
-		if (HitActor != nullptr)
+		if (Hit.Actor != nullptr)
 		{
 			float DamageFactor = BodyMultiplier;
 
@@ -69,8 +68,8 @@ void ABullet::Tick(float DeltaTime)
 			//not sure if its safe to pass a nullptr
 			const FDamageEvent DamageEvent;
 
-			HitActor->TakeDamage(Damage, DamageEvent, nullptr, this);
-			OnBulletImpact.Broadcast(HitActor);
+			Hit.Actor->TakeDamage(Damage, DamageEvent, nullptr, this);
+			OnBulletImpact.Broadcast(Hit.Actor.Get());
 			//TODO implement hit splat particle effects
 			
 		}

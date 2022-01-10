@@ -43,11 +43,9 @@ void AAICell::SetAIUnits()
 
 	for (FHitResult Hit : Hits)
 	{
-		AActor* const HitActor = Hit.GetActor();
-
-		if (HitActor != nullptr && HitActor->IsA(AAIBase::StaticClass()))
+		if (Hit.Actor != nullptr && Hit.Actor->IsA(AAIBase::StaticClass()))
 		{
-			AAIBase* const AsAI = Cast<AAIBase>(HitActor);
+			AAIBase* const AsAI = Cast<AAIBase>(Hit.Actor);
 			AAIBaseController* const Controller = Cast<AAIBaseController>(AsAI->GetController());
 
 			AIUnits.Add(Controller);
