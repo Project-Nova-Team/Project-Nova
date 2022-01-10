@@ -129,16 +129,18 @@ void AShooter::ScanInteractiveObject()
 	const FVector TraceEnd = TraceStart + Camera->GetForwardVector() * FMath::Min(ShooterMovement->StandingHeight * 2.f, ShooterMovement->InteractionDistance);
 	const bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_Camera, QueryParams);
 
+	AActor* const HitActor = Hit.GetActor();
+
 	//We're looking at an object that is interactive
-	if (bHit && Hit.Actor != nullptr && Hit.Actor->Implements<UInteractiveObject>())
+	if (bHit && HitActor != nullptr && HitActor->Implements<UInteractiveObject>())
 	{
 		//HACK THIS
-		if (Hit.Actor->IsA(AHealthPickup::StaticClass()) && Health->bIsFullHealth)
+		if (HitActor->IsA(AHealthPickup::StaticClass()) && Health->bIsFullHealth)
 		{
 			return;
 		}
 
-		IInteractiveObject* InteractiveObject = Cast<IInteractiveObject>(Hit.Actor);
+		IInteractiveObject* InteractiveObject = Cast<IInteractiveObject>(HitActor);
 
 		if (InteractiveObject->CanInteract())
 		{
