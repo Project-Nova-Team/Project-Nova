@@ -6,6 +6,11 @@ void USLookState::Initialize(UStateMachine* StateMachine, UObject* ContextObject
 
 	Movement = Cast<UShooterMovementComponent>(Shooter->GetMovementComponent());
 	Input = Shooter->GetInput();
+}
+
+void USLookState::OnEnter()
+{
+	Super::OnEnter();
 
 	APlayerController* ShooterController = Cast<APlayerController>(Shooter->GetController());
 

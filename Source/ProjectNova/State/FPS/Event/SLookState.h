@@ -12,6 +12,7 @@ class PROJECTNOVA_API USLookState : public USEventState
 public:
 	virtual void Initialize(UStateMachine* StateMachine, UObject* ContextObject) override;
 	virtual void Tick(const float DeltaTime) override;
+	void OnEnter() override;
 
 protected:
 
