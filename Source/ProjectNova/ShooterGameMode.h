@@ -36,10 +36,6 @@ public:
 private:
 	UPROPERTY(Transient)
 	UDelayedActionManager* DelayedActionManager;
-
-	/** Collection of all the AI cells in the level. Fetched once on level load*/
-	UPROPERTY(Transient)
-	TArray<AAICell*> AICells;
 	
 	UPROPERTY(Transient)
 	AShooter* Player;
@@ -56,16 +52,5 @@ private:
 	{
 		return *TActorIterator<ActorClass>(World);
 	}
-
-	template<typename ActorClass>
-	void FindAllActors(UWorld* World, TArray<ActorClass*>& Out)
-	{
-		for (TActorIterator<ActorClass> It(World); It; ++It)
-		{
-			Out.Add(*It);
-		}
-	}
-
-	void LoadCells();
 //#endif
 };
