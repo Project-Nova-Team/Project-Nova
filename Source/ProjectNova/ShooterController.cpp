@@ -5,6 +5,8 @@ void AShooterController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
 
+	SetGenericTeamId(FGenericTeamId(0));
+
 	if (MyHUD != nullptr)
 	{
 		MyHUD->bShowHUD = true;
@@ -25,5 +27,13 @@ void AShooterController::OnUnPossess()
 	if (MyHUD != nullptr)
 	{
 		MyHUD->bShowHUD = false;
+	}
+}
+
+void AShooterController::SetGenericTeamId(const FGenericTeamId& NewTeamID)
+{
+	if (TeamID != NewTeamID)
+	{
+		TeamID = NewTeamID;
 	}
 }

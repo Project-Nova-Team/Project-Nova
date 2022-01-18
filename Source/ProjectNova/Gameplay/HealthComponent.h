@@ -15,22 +15,31 @@ public:
 
 	UHealthComponent();
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable, Category = "Health")
 	void Heal(const float HealAmount);
 
+	/** Revives the actor to maximum health*/
 	void Revive();
+
+	/** Revives the actor to the specified health*/
+	UFUNCTION(BlueprintCallable, Category = "Health")
+	void Revive(const float ReviveHealth);
 
 	/** Whether or not the current health is equal to the max health*/
 	UPROPERTY(BlueprintReadOnly, Category = "Health")
 	uint8 bIsFullHealth : 1;
 
-	/** Event that is fired when taking damage that would leave us below 0 health*/
+	/** Delegate executed when this components actor reaches 0 health*/
 	UPROPERTY(BlueprintAssignable)
 	FHealthEvent OnDeath;
 
-	/** Event that is fired when taking valid damage that doesn't kill the owner*/
+	/** Delegate executed when this components actor reaches 0 health*/
 	UPROPERTY(BlueprintAssignable)
 	FHealthEvent OnDamaged;
+
+	/** Delegate executed anytime this component's actor revives*/
+	UPROPERTY(BlueprintAssignable)
+	FHealthEvent OnRevive;
 
 	void SetStartingHealth(float Amount);
 
