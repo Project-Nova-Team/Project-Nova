@@ -27,7 +27,7 @@ struct FShooterInput : public FWeaponInput
 
 	/** 
 	* Runs within the shooter's Tick to handle any input states that need to be watched 
-	* @param	DeltaTime				Time slice
+	* @param	DeltaTime				Time slice 
 	*/
 	void Tick(const float DeltaTime);
 
