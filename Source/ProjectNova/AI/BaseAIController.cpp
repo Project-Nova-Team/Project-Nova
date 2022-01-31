@@ -43,14 +43,22 @@ void ABaseAIController::SetSensesEnabled(const bool bEnableSenses)
 
 void ABaseAIController::SetBehaviorTreeEnabled(const bool bEnableTree)
 {
-	if (bEnableTree)
+	if (!bEnableTree)
 	{
 		BrainComponent->StopLogic(TEXT("Loaded"));
 	}
 
 	else
 	{
-		BrainComponent->StartLogic();
+		if (BrainComponent != nullptr)
+		{
+			BrainComponent->StartLogic();
+		}
+
+		else
+		{
+			RunBehaviorTree(BehaviorTreeAsset);
+		}
 	}
 }
 
@@ -115,11 +123,16 @@ void ABaseAIController::OnPossess(APawn* InPawn)
 		AIPawn->GetHealth()->OnDeath.AddDynamic(this, &ABaseAIController::OwnerDeath);
 		AIPawn->GetHealth()->OnRevive.AddDynamic(this, &ABaseAIController::OwnerRevive);
 		PerceptionComponent->OnTargetPerceptionUpdated.AddDynamic(this, &ABaseAIController::PerceptionUpdated);
+		Handle = AIPawn->OnLoadStatusChanged.AddUObject(this, &ABaseAIController::SetLogicEnabled);
+		bLogicEnabled = AIPawn->GetIsLoaded();
+		
+		if (bLogicEnabled)
+		{
+			SetSensesEnabled(true);
 
-		SetSensesEnabled(true);
-
-		//Note that this overrides bStartLogicOnPosses and starts the tree regardless of that value
-		RunBehaviorTree(BehaviorTreeAsset);
+			//Note that this overrides bStartLogicOnPosses and starts the tree regardless of that value
+			RunBehaviorTree(BehaviorTreeAsset);
+		}		
 	}
 }
 
@@ -134,6 +147,7 @@ void ABaseAIController::OnUnPossess()
 		GetAICharacter()->GetHealth()->OnDeath.RemoveDynamic(this, &ABaseAIController::OwnerDeath);
 		GetAICharacter()->GetHealth()->OnRevive.RemoveDynamic(this, &ABaseAIController::OwnerRevive);
 		PerceptionComponent->OnTargetPerceptionUpdated.RemoveDynamic(this, &ABaseAIController::PerceptionUpdated);
+		GetAICharacter()->OnLoadStatusChanged.Remove(Handle);
 
 		SetSensesEnabled(false);
 

@@ -18,6 +18,7 @@ ABaseAI::ABaseAI()
 	//Gurantees we aren't ticking animation when this AI isn't loaded which is a nice performance boost
 	GetMesh()->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
 	GetMesh()->SetCollisionProfileName("Ragdoll");
+	GetMovementComponent()->bUpdateOnlyIfRendered = true;
 
 #if WITH_EDITOR
 	SpriteComponent = CreateEditorOnlyDefaultSubobject<UBillboardComponent>(TEXT("Sprite"));
@@ -40,7 +41,9 @@ ABaseAI::ABaseAI()
 void ABaseAI::SetIsLoaded(const bool bLoadAI)
 {
 	SetActorTickEnabled(bLoadAI);
+	PrimaryActorTick.bStartWithTickEnabled = bLoadAI;
 	GetMovementComponent()->SetComponentTickEnabled(bLoadAI);
+	GetMovementComponent()->PrimaryComponentTick.bStartWithTickEnabled = bLoadAI;
 
 	GetMesh()->SetVisibility(bLoadAI);
 	GetCapsuleComponent()->SetCollisionEnabled(bLoadAI ? ECollisionEnabled::QueryAndPhysics : ECollisionEnabled::NoCollision);

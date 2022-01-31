@@ -6,7 +6,7 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FHealthEvent);
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS( ClassGroup=(Custom), HideCategories=(Tags, AssetUserData, Activation, Collision, Cooking), meta=(BlueprintSpawnableComponent))
 class PROJECTNOVA_API UHealthComponent : public UActorComponent
 {
 	GENERATED_BODY()

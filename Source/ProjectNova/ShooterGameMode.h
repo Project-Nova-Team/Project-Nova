@@ -45,7 +45,7 @@ private:
 	void PlayerDeath();
 
 	//TODO parsing the actor hierarchy is and always will be a crime
-	//We will be serializing AICells and the player in builds
+	//We will be serializing player in builds
 //#if WITH_EDITOR
 	template<class ActorClass>
 	ActorClass* FindActor(UWorld* World)

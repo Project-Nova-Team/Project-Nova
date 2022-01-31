@@ -16,7 +16,7 @@ public:
 	ABaseAIController();
 
 	UFUNCTION(BlueprintCallable, Category = "AI")
-	FORCEINLINE ABaseAI* GetAICharacter() { return GetOwner<ABaseAI>(); }
+	FORCEINLINE ABaseAI* GetAICharacter() { return GetPawn<ABaseAI>(); }
 	
 	/** 
 	 * Sets load status and handles necessary changes to AI
@@ -24,6 +24,7 @@ public:
 	 * @param	bLoadAI				The new loaded status of this AI
 	 * @param	bRevive				If true, revive this AI if it was previously dead
 	 */
+	UFUNCTION()
 	void SetLogicEnabled(const bool bEnableLogic);
 
 protected:
@@ -67,10 +68,17 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "Hear Enemy"))
 	void ReceiveHearEnemy(AActor* Enemy, const FAIStimulus& Stimulus);
 
+	/** Blueprint event executed when an AI registers a friendly sight stimulus*/
+	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "Spot Friend"))
+	void ReceiveSpotFriendly(AActor* Friend, const FAIStimulus& Stimulus);
+
 private:
 
 	/** Whether or not the AI logic is active which includes perception and behavior trees*/
 	uint8 bLogicEnabled : 1;
+
+	/** Delegate handle for load status changes*/
+	FDelegateHandle Handle;
 
 protected:
 
