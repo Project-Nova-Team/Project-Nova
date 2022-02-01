@@ -221,6 +221,9 @@ private:
 	/** Casts a trace from the camera to see if there is an object nearby we can interact with*/	
 	void ScanInteractiveObject();
 
+	/** Casts a trace from the camera to see if there is an object nearby we can interact with*/
+	void Interact(IInteractiveObject* Object, FScanEvent ScanDelegate);
+
 	/** Called when a weapon is added to the combat arsenal, we immediatly put all the ammo from the inventory into the gun*/
 	void LoadAmmoOnWeaponGet(AWeapon* NewWeapon);
 
