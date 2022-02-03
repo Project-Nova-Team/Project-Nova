@@ -38,6 +38,8 @@ public:
 
 	FInteractionPrompt& GetInteractionPrompt() override { return Prompt; }
 
+	void RecieveLookedAt(APawn* EventSender) override;
+
 	/** Sets the lock status of this Button*/
 	UFUNCTION(BlueprintSetter)
 	void SetIsLocked(const bool Value);

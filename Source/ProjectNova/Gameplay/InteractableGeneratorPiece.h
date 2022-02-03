@@ -17,6 +17,8 @@ public:
 
 	FInteractionPrompt& GetInteractionPrompt() override { return Prompt; }
 
+	void RecieveLookedAt(APawn* EventSender);
+
 protected:
 
 	virtual void BeginPlay() override;

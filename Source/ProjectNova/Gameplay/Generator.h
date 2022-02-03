@@ -23,6 +23,8 @@ public:
 
 	bool CanInteract() const override { return RepairedPieces == Pieces.Num() && !bHasBeenActivated; }
 
+	void RecieveLookedAt(APawn* EventSender) override;
+
 protected:
 
 	virtual void BeginPlay() override;

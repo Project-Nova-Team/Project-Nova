@@ -27,3 +27,7 @@ void AHealthPickup::InteractionEvent(APawn* EventSender)
 		}
 	}
 }
+
+void AHealthPickup::RecieveLookedAt(APawn* EventSender)
+{
+}

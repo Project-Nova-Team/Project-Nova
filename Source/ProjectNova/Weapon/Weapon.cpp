@@ -70,3 +70,12 @@ void AWeapon::SetWeaponSceneValues(USceneComponent* TraceOriginComponent, USkele
 	TraceOrigin = TraceOriginComponent;
 	ProjectileOriginMesh = HeldWeapon;
 }
+
+void AWeapon::RecieveLookedAt(APawn* EventSender)
+{
+	if (!Settings) { return; }
+
+	Settings->RemoveActionMapping(DefaultInteractMapping);
+	Settings->AddActionMapping(FInputActionKeyMapping(TEXT("Interact"), InteractKey));
+	Settings->SaveKeyMappings();
+}

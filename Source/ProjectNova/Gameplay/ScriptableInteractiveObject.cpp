@@ -12,3 +12,7 @@ void AScriptableInteractiveObject::InteractionEvent(APawn* EventSender)
 {
 	Execute_BlueprintInteract(this, EventSender);
 }
+
+void AScriptableInteractiveObject::RecieveLookedAt(APawn* EventSender)
+{
+}

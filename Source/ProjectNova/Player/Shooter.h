@@ -249,6 +249,8 @@ private:
 	void ReloadPress()					{ Combat->ReceiveReload(); }
 	void ReloadRelease()				{  }
 
+	bool test = false;
+
 	//TODO delete all of this
 //#if WITH_EDITOR
 	UPROPERTY(EditAnywhere, Category = "SOUND TEST")

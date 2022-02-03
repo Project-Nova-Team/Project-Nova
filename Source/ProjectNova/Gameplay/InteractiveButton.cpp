@@ -23,6 +23,10 @@ AInteractiveButton::AInteractiveButton()
 	//Dynamic Material for Button is being set in BP
 }
 
+void AInteractiveButton::RecieveLookedAt(APawn* EventSender)
+{
+}
+
 void AInteractiveButton::SetIsLocked(const bool Value)
 {
 	if (Value != bIsLocked)

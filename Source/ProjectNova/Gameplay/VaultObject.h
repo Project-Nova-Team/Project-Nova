@@ -24,6 +24,10 @@ public:
 
 	FInteractionPrompt& GetInteractionPrompt() override { return Prompt; }
 
+	void RecieveLookedAt(APawn* EventSender) override;
+
+	FKey InteractKey;
+
 protected:
 
 	// Called when the game starts or when spawned
@@ -45,4 +49,6 @@ protected:
 	/** Invoked by ActorEndOverlap*/
 	UFUNCTION()
 	virtual void ActorEndOverlap(AActor* OverlappedActor, AActor* OtherActor);
+
+	bool bIsPlayerInTrigger;
 };

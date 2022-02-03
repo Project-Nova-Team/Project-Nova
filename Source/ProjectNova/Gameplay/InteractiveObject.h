@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
+#include <Runtime/Engine/Classes/GameFramework/InputSettings.h>
 #include "InteractiveObject.generated.h"
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FInteractionEvent, APawn*);
@@ -54,6 +55,8 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "On Interact"))
 	void BlueprintInteract(APawn* EventSender);
 
+	virtual void RecieveLookedAt(APawn* EventSender) = 0;
+
 	virtual void InteractionEvent(APawn* EventSender) { OnInteract.Broadcast(EventSender); }
 
 	FInteractionEvent OnInteract;
@@ -62,4 +65,10 @@ public:
 
 	/** Forces classes that inherit from this provide prompt data*/
 	virtual FInteractionPrompt& GetInteractionPrompt() = 0;
+
+	UInputSettings* Settings = const_cast<UInputSettings*>(GetDefault<UInputSettings>());
+
+	FInputActionKeyMapping DefaultInteractMapping = FInputActionKeyMapping(TEXT("Interact"), EKeys::E);
+
+	FKey InteractKey;
 };

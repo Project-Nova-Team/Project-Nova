@@ -141,11 +141,6 @@ void AShooter::ScanInteractiveObject()
 		IInteractiveObject* InteractiveObject = Cast<IInteractiveObject>(Hit.Actor);
 
 		Interact(InteractiveObject, OnScanHit);
-
-		if (InputState.bIsTryingToInteract)
-		{
-			
-		}
 	}
 
 	else if(!bIsPrompted)
@@ -159,11 +154,18 @@ void AShooter::Interact(IInteractiveObject* Object, FScanEvent ScanDelegate)
 {
 	// we can add other code here around this method for any additional logic we want the player to be in control of in the future.
 	//Lets us do UI things in blueprint
-	OnScanHit.Broadcast(Object->GetInteractionPrompt());
+	if (Object->CanInteract())
+	{
+		OnScanHit.Broadcast(Object->GetInteractionPrompt());
 
-	Object->InteractionEvent(this);
+		Object->RecieveLookedAt(this);
+	}
 
-	InputState.bIsTryingToInteract = false;
+	if (InputState.bIsTryingToInteract)
+	{
+		Object->InteractionEvent(this);
+		InputState.bIsTryingToInteract = false;
+	}
 }
 
 void AShooter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)

@@ -24,6 +24,8 @@ public:
 
 	virtual bool CanInteract() const { return true; }
 
+	void RecieveLookedAt(APawn* EventSender) override;
+
 protected:
 
 	UPROPERTY(EditAnywhere)

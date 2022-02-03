@@ -1,6 +1,10 @@
 #include "InteractableGeneratorPiece.h"
 #include "Components/StaticMeshComponent.h"
 
+void AInteractableGeneratorPiece::RecieveLookedAt(APawn* EventSender)
+{
+}
+
 void AInteractableGeneratorPiece::BeginPlay()
 {
 	//We don't call super because we don't want to bind the hit delegate, we just want to have the interaction event fix the piece instead

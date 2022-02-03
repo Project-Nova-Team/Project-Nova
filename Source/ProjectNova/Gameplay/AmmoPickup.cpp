@@ -37,3 +37,7 @@ void AAmmoPickup::InteractionEvent(APawn* EventSender)
 		RemoveSelf(this);
 	}
 }
+
+void AAmmoPickup::RecieveLookedAt(APawn* EventSender)
+{
+}

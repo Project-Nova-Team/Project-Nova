@@ -20,6 +20,8 @@ public:
 
 	FInteractionPrompt& GetInteractionPrompt() override { return Prompt; }
 
+	void RecieveLookedAt(APawn* EventSender) override;
+
 protected:
 
 	/** How much ammo does the player get when getting this pickup*/

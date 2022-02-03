@@ -19,6 +19,8 @@ public:
 
 	void InteractionEvent(APawn* EventSender) override;
 
+	void RecieveLookedAt(APawn* EventSender);
+
 protected:
 
 	/** Whether or not the object can be interacted with. */

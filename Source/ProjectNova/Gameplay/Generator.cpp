@@ -12,6 +12,10 @@ AGenerator::AGenerator()
 	SetRootComponent(Mesh);
 }
 
+void AGenerator::RecieveLookedAt(APawn* EventSender)
+{
+}
+
 void AGenerator::BeginPlay()
 {
 	Super::BeginPlay();
