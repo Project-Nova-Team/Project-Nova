@@ -68,7 +68,6 @@ public:
 
 	UInputSettings* Settings = const_cast<UInputSettings*>(GetDefault<UInputSettings>());
 
-	FInputActionKeyMapping DefaultInteractMapping = FInputActionKeyMapping(TEXT("Interact"), EKeys::E);
-
-	FKey InteractKey;
+	// Setting this to E default could be cause of a crash
+	FKey InteractKey = EKeys::E;
 };

@@ -20,13 +20,11 @@ public:
 
 	void InteractionEvent(APawn* EventSender) override;
 
-	bool CanInteract() const override { return true; }
+	bool CanInteract() const override { return bIsPlayerInTrigger; }
 
 	FInteractionPrompt& GetInteractionPrompt() override { return Prompt; }
 
 	void RecieveLookedAt(APawn* EventSender) override;
-
-	FKey InteractKey;
 
 protected:
 

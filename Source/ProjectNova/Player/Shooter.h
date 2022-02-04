@@ -249,7 +249,7 @@ private:
 	void ReloadPress()					{ Combat->ReceiveReload(); }
 	void ReloadRelease()				{  }
 
-	bool test = false;
+	bool bCanScanObject;
 
 	//TODO delete all of this
 //#if WITH_EDITOR

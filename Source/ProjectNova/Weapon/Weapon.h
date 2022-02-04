@@ -127,8 +127,6 @@ public:
 
 	void RecieveLookedAt(APawn* EventSender) override;
 
-	FKey InteractionKey = EKeys::E;
-
 protected:
 
 	UPROPERTY(VisibleAnywhere, Category = "Mesh")

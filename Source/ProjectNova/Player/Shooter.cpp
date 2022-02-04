@@ -147,6 +147,9 @@ void AShooter::ScanInteractiveObject()
 	{
 		FInteractionPrompt Empty;
 		OnScanMiss.Broadcast(Empty);
+
+		if(!bCanScanObject)
+			bCanScanObject = true;
 	}
 }
 
@@ -157,8 +160,12 @@ void AShooter::Interact(IInteractiveObject* Object, FScanEvent ScanDelegate)
 	if (Object->CanInteract())
 	{
 		OnScanHit.Broadcast(Object->GetInteractionPrompt());
-
-		Object->RecieveLookedAt(this);
+		
+		if (bCanScanObject)
+		{
+			Object->RecieveLookedAt(this);
+			bCanScanObject = false;
+		}
 	}
 
 	if (InputState.bIsTryingToInteract)
