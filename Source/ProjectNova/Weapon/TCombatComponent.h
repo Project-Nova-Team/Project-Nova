@@ -1,0 +1,158 @@
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Components/ActorComponent.h"
+#include "TWeapon.h"
+#include "TCombatComponent.generated.h"
+
+DECLARE_DELEGATE(FAnimationRequest);
+DECLARE_DELEGATE_OneParam(FNotifyWeaponHUD, const FWeaponHUD&);
+
+UCLASS()
+class PROJECTNOVA_API UTCombatComponent : public UActorComponent
+{
+	GENERATED_BODY()
+
+public:
+
+	UTCombatComponent();
+
+	void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	
+	/** Global socket name combat components use to attach weapons to*/
+	static FName WeaponSocketName;
+
+	/** Delegate that notifies owning pawn to update it's HUD because a weapon requested it to*/
+	FNotifyWeaponHUD OnUpdateHUD;
+
+	/** Executed on receiving Aim Start command*/
+	FAnimationRequest OnAimStart;
+
+	/** Executed on receiving Aim Stop command*/
+	FAnimationRequest OnAimStop;
+
+	/** Executed on receiving Reload command*/
+	FAnimationRequest OnReload;
+
+	/** Executed on receiving Swap command*/
+	FAnimationRequest OnSwap;
+
+	/** Executed on receiving a command that cancels animation*/
+	FAnimationRequest OnAnimCancel;
+
+protected:
+
+	/** Collection of weapons on this component*/
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combat | Arsenal")
+	TArray<ATWeapon*> Arsenal;
+
+	/**
+	 * Max number of weapons that can exist in the Arsenal. Picking up a new weapon while holding this many weapons
+	 * Will drop the currently held weapon for the new one
+	 */
+	UPROPERTY(EditAnywhere, Category = "Combat | General")
+	int32 MaxWeaponCount;
+
+private:
+
+	/** Weapons that are picked up will be attached to this mesh (usually the owning pawn's character mesh)*/
+	USkeletalMeshComponent* AttachmentMesh;
+
+	/** Scene component used to perform HitScan tests (usually the camera)*/
+	USceneComponent* TraceOrigin;
+
+	/** Current index of the Arsenal array. The weapon at this index in arsenal is the currently held weapon*/
+	int32 CurrentWeaponIndex;
+
+
+	// Input State //
+
+	/** True if a weapon reload is currently occuring.*/
+	uint8 bIsReloading : 1;
+
+	/** True if a swap is currently occuring.*/
+	uint8 bIsSwapping : 1;
+
+	/** True if the held weapon is aimable and in an aim state*/
+	uint8 bIsAimed : 1;
+
+	/** True if the we are currently playing an animation that would prevent us from peforming other actions*/
+	uint8 bIsInAnimation : 1;
+
+	/** True if the attack binding is currently being held down*/
+	uint8 bIsTryingToAttack : 1;
+
+
+	// Hud //
+
+	/** Whether or not this component will update the HUD*/
+	uint8 bUpdatesHUD : 1;
+	
+public:
+
+	/** Helper function that should be called by the owning actor after adding this component in the constructor
+	 *	This enables picked up weapons to attach themselves to their owners socket and get information for projectile
+	 *  traces. Ex. A gun firing a bullet
+	 *
+	 * @param	SocketMesh		The mesh you want any picked up weapons to attach themselves to
+	 * @param	TraceComponent	A scene component (usually a camera) you want to perform hit scan tests with. Useful for gun firing
+	 */
+	void SetUpConstruction(USkeletalMeshComponent* SocketMesh, USceneComponent* TraceComponent);
+
+	/** Adds a new weapon to this combat component's Arsenal*/
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void PickUpWeapon(ATWeapon* NewWeapon);
+
+	/** Switches currently held weapon to a new one 
+	 *	Adjusts CurrentWeaponIndex by the specified direction. 
+	 *  This should usually be called with parameters of (-1, 1)
+	 */
+	void SwapWeapon(const int32 Direction);
+
+	/** Returns the weapon currently being held. Returns null if there are none*/
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	FORCEINLINE ATWeapon* GetHeldWeapon() const;
+	
+	/** Returns component responsible for mesh traces*/
+	FORCEINLINE USceneComponent* GetTraceOrigin() const { return TraceOrigin; }
+
+	/** Returns whether or not this component updates it's owner's HUD*/
+	FORCEINLINE bool GetUpdatesHUD() const { return bUpdatesHUD; }
+
+private:
+
+	FORCEINLINE bool IsActionLocked() const { return (GetHeldWeapon() == nullptr) || bIsReloading || bIsInAnimation || bIsSwapping; }
+
+	FORCEINLINE bool IsNonSwapLocked() const { return (GetHeldWeapon() == nullptr) || bIsInAnimation || bIsAimed; }
+
+	FORCEINLINE bool IsReloadLocked() const { return (GetHeldWeapon() == nullptr) || bIsReloading || bIsInAnimation || bIsAimed; }
+
+
+public:
+
+	void ReceiveReload();
+
+	void ReceiveStartAttack();
+
+	void ReceiveStopAttack();
+
+	void ReceiveAimStart();
+
+	void ReceiveAimStop();
+
+	/**
+	 * An anim instance should call this function with the status of a reload montage
+	 * If interrupted, (by something like a swap), we dont want to add ammo to the gun
+	 * We want to make sure the animation fully completed to actually give ammo!
+	 */
+	void ReceiveReloadComplete(const bool bInterrupted);
+
+	/** An anim instance should call this function with the status of a vault/aim/attack montage*/
+	void ReceiveAnimationComplete();
+
+	/** An anim instance should call this function with the status of an swap montage*/
+	void ReceiveSwapComplete();
+
+	/** Executed by a weapon in this components Arsenal when it is requesting a HUD update*/
+	void UpdateHUD();
+};

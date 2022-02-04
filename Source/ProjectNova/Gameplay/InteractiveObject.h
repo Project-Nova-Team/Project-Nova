@@ -14,29 +14,24 @@ struct FInteractionPrompt
 public:
 
 	FInteractionPrompt() 
+		: Prefix(NSLOCTEXT("Interaction","Press", "Press "))
+		, Suffix(NSLOCTEXT("Interaction", "topickup", "to pick up "))
+		, Name(NSLOCTEXT("Interaction", "Object", "Object"))
 	{
-		Prefix = TEXT("Press");
-		Suffix = TEXT("to pick up ");
-		Name = TEXT("object.");
 	}
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
-	FString Prefix;
+	FText Prefix;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
 	UTexture2D* Key;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
-	FString Suffix;
+	FText Suffix;
 
+	/** Display text, what actually appears on screen*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
-	FString Name;
-
-	//Just compare the names since there is no need to update the UI if we look at another object with an identical name
-	bool operator!=(const FInteractionPrompt& rhs) const
-	{
-		return Name != rhs.Name;
-	}
+	FText Name;
 };
 
 UINTERFACE(MinimalAPI)
@@ -61,5 +56,5 @@ public:
 	virtual bool CanInteract() const { return true; }
 
 	/** Forces classes that inherit from this provide prompt data*/
-	virtual FInteractionPrompt& GetInteractionPrompt() = 0;
+	virtual const FInteractionPrompt& GetInteractionPrompt() const = 0;
 };

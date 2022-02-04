@@ -15,7 +15,7 @@ public:
 
 	bool CanInteract() const override { return !bIsRepaired; }
 
-	FInteractionPrompt& GetInteractionPrompt() override { return Prompt; }
+	const FInteractionPrompt& GetInteractionPrompt() const override { return Prompt; }
 
 protected:
 

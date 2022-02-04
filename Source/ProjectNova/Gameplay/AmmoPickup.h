@@ -18,7 +18,7 @@ public:
 
 	virtual void InteractionEvent(APawn* EventSender) override;
 
-	FInteractionPrompt& GetInteractionPrompt() override { return Prompt; }
+	const FInteractionPrompt& GetInteractionPrompt() const override { return Prompt; }
 
 protected:
 
