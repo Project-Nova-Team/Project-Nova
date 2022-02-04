@@ -47,7 +47,6 @@ protected:
 	 * Prompt_Exit				Prompt closes after trigger is exited
 	 * Prompt_Input				Prompt will close after InputAction input is received
 	 * Prompt_Duration			Prompt will close after duration
-	 * Prompt_DurationExit		Prompt will close after duration once exiting from the trigger
 	 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Prompt | Satisfier")
 	TEnumAsByte<EPromptSatisfier> PromptSatisfier;

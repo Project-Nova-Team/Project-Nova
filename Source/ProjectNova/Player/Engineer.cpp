@@ -36,7 +36,7 @@ AEngineer::AEngineer()
 void AEngineer::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
+	ScanInteractiveObject();
 }
 
 void AEngineer::BeginPlay()
@@ -83,7 +83,7 @@ void AEngineer::ScanInteractiveObject()
 	}
 
 	// If we were looking at something previously but aren't anymore, clear the HUD
-	if (LastScannedObject == nullptr)
+	if (LastScannedObject != nullptr)
 	{
 		OnInteractionUpdate.ExecuteIfBound(nullptr);
 	}
