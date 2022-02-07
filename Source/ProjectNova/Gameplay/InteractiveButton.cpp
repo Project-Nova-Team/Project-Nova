@@ -20,6 +20,7 @@ AInteractiveButton::AInteractiveButton()
 	Arrow = CreateDefaultSubobject<UArrowComponent>("Arrow");
 	Arrow->AttachToComponent(Button, FAttachmentTransformRules::KeepRelativeTransform);
 
+	ActionMappingName = "Interact";
 	//Dynamic Material for Button is being set in BP
 }
 
@@ -27,25 +28,8 @@ void AInteractiveButton::RecieveLookedAt(APawn* EventSender)
 {
 	if (CanInteract())
 	{
-		for (int i = 0; i < Settings->GetActionMappings().Num(); i++)
-		{
-			// Find Action Mapping named Interact
-			if (Settings->GetActionMappings()[i].ActionName == "Interact")
-			{
-				UE_LOG(LogTemp, Warning, TEXT("Interact Key: %s"), *InteractKey.GetFName().ToString());
-				FInputActionKeyMapping TargetMapping = Settings->GetActionMappings()[i];
-				if (TargetMapping.Key != InteractKey)
-				{
-					UE_LOG(LogTemp, Warning, TEXT("Key Before: %s"), *TargetMapping.Key.GetFName().ToString());
-					// Remove any key bindings on current interact action
-					Settings->RemoveActionMapping(TargetMapping);
-					// Add custom keybinding
-					Settings->AddActionMapping(FInputActionKeyMapping(TEXT("Interact"), InteractKey));
-					Settings->SaveKeyMappings();
-					UE_LOG(LogTemp, Warning, TEXT("Key After: %s"), *Settings->GetActionMappings()[i].Key.GetFName().ToString());
-				}
-			}
-		}
+		BindingIndex = EventSender->InputComponent->BindAction<FShooterBindingEvent>(ActionMappingName,
+			IE_Pressed, this, &AInteractiveButton::InteractionEvent, EventSender).GetHandle();
 	}
 }
 
@@ -56,6 +40,11 @@ void AInteractiveButton::SetIsLocked(const bool Value)
 		SetIsLockedImpl(Value);
 		bIsLocked = Value;
 	}
+}
+
+void AInteractiveButton::RecieveLookedAway(APawn* EventSender, int32 MappingIndexToRemove)
+{
+	EventSender->InputComponent->RemoveActionBindingForHandle(MappingIndexToRemove);
 }
 
 void AInteractiveButton::SetIsLockedImpl(const bool Value)

@@ -20,7 +20,11 @@ public:
 
 	FInteractionPrompt& GetInteractionPrompt() override { return Prompt; }
 
+	FName& GetInteractionMappingName() override { return ActionMappingName; }
+
 	void RecieveLookedAt(APawn* EventSender) override;
+
+	void RecieveLookedAway(APawn* EventSender, int32 MappingIndexToRemove) override;
 
 protected:
 
@@ -37,4 +41,11 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
 	FInteractionPrompt Prompt;
+
+	UPROPERTY(EditAnywhere, Category = "Mesh")
+	FName InputActionName;
+
+	/** Is set to interact by default. See Edit->ProjectSettings->Input for list of action mapping names.*/
+	UPROPERTY(EditAnywhere, Category = "Interaction")
+	FName ActionMappingName;
 };

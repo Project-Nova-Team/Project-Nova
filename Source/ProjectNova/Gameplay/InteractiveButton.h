@@ -38,6 +38,8 @@ public:
 
 	FInteractionPrompt& GetInteractionPrompt() override { return Prompt; }
 
+	FName& GetInteractionMappingName() override { return ActionMappingName; }
+
 	void RecieveLookedAt(APawn* EventSender) override;
 
 	/** Sets the lock status of this Button*/
@@ -51,6 +53,8 @@ public:
 	FORCEINLINE bool ShouldExtend() const { return !bIsLocked && State == EBS_Retracted; }
 
 	uint8 bIsInteracted : 1;
+
+	void RecieveLookedAway(APawn* EventSender, int32 MappingIndexToRemove) override;
 
 protected:
 
@@ -116,4 +120,8 @@ protected:
 	void OverTimeTransition(const EButtonState TargetState);
 
 	uint8 bIsMoving : 1;
+
+	/** Is set to interact by default. See Edit->ProjectSettings->Input for list of action mapping names.*/
+	UPROPERTY(EditAnywhere, Category = "Interaction")
+	FName ActionMappingName;
 };

@@ -31,7 +31,7 @@ public:
 	void RecieveLookedAway(APawn* EventSender, int32 MappingIndexToRemove) override;
 
 	UPROPERTY(VisibleAnywhere)
-	USceneComponent* Offset;
+	USceneComponent* OffsetTransform;
 
 protected:
 

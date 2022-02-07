@@ -7,6 +7,14 @@
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FInteractionEvent, APawn*);
 
+DECLARE_DELEGATE_OneParam(FShooterBindingEvent, APawn*)
+
+UENUM()
+enum EInputActionMappings
+{
+	IM_None
+};
+
 USTRUCT(BlueprintType)
 struct FInteractionPrompt
 {
@@ -57,17 +65,21 @@ public:
 
 	virtual void RecieveLookedAt(APawn* EventSender) = 0;
 
+	virtual void RecieveLookedAway(APawn* EventSender, int32 MappingIndexToRemove) = 0;
+
 	virtual void InteractionEvent(APawn* EventSender) { OnInteract.Broadcast(EventSender); }
 
 	FInteractionEvent OnInteract;
 
 	virtual bool CanInteract() const { return true; }
 
-	/** Forces classes that inherit from this provide prompt data*/
+	/** Forces classes that inherit from this to provide prompt data*/
 	virtual FInteractionPrompt& GetInteractionPrompt() = 0;
 
-	UInputSettings* Settings = const_cast<UInputSettings*>(GetDefault<UInputSettings>());
+	/** Forces classes that inherit from this to provide mapping data*/
+	virtual FName& GetInteractionMappingName() = 0;
 
-	// Setting this to E default could be cause of a crash
-	FKey InteractKey = EKeys::E;
+	//UInputSettings* Settings = const_cast<UInputSettings*>(GetDefault<UInputSettings>());
+
+	int32 BindingIndex;
 };

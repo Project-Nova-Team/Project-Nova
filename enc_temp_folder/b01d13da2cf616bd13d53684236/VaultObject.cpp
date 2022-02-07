@@ -11,8 +11,8 @@ AVaultObject::AVaultObject()
 	Trigger = CreateDefaultSubobject<UBoxComponent>("Trigger");
 	Trigger->AttachToComponent(ObjectBody, FAttachmentTransformRules::KeepRelativeTransform);
 
-	Offset = CreateDefaultSubobject<USceneComponent>(TEXT("Offset"));
-	Offset->AttachToComponent(ObjectBody, FAttachmentTransformRules::KeepRelativeTransform);
+	OffsetTransform = CreateDefaultSubobject<USceneComponent>(TEXT("Offset"));
+	OffsetTransform->AttachToComponent(ObjectBody, FAttachmentTransformRules::KeepRelativeTransform);
 
 	ActionMappingName = "Vault";
 }

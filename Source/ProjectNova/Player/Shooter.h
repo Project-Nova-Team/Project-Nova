@@ -15,6 +15,7 @@ class UMeleeComponent;
 class UHealthComponent;
 class UAIPerceptionStimuliSourceComponent;
 class AGun;
+class AVaultObject;
 enum EGunClass;
 
 DECLARE_MULTICAST_DELEGATE(FStateLoadEvent);
@@ -227,6 +228,12 @@ private:
 	/** Called when a weapon is added to the combat arsenal, we immediatly put all the ammo from the inventory into the gun*/
 	void LoadAmmoOnWeaponGet(AWeapon* NewWeapon);
 
+	void HandleVault(AVaultObject* Obj);
+
+	bool bCanScanObject;
+
+	IInteractiveObject* LastScannedObject;
+
 	///		 Begin Input Bindings	   ///
 	void MoveInputX(const float Value)	{ InputState.MoveX = Value; }
 	void MoveInputY(const float Value)	{ InputState.MoveY = Value; }
@@ -248,8 +255,6 @@ private:
 	void SprintRelease()				{ InputState.bIsTryingToSprint = false; }
 	void ReloadPress()					{ Combat->ReceiveReload(); }
 	void ReloadRelease()				{  }
-
-	bool bCanScanObject;
 
 	//TODO delete all of this
 //#if WITH_EDITOR

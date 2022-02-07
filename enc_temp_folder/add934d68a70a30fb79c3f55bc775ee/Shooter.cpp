@@ -282,10 +282,10 @@ void AShooter::LoadAmmoOnWeaponGet(AWeapon* NewWeapon)
 
 void AShooter::HandleVault(AVaultObject* Obj)
 {
-	FVector Offset = Obj->Offset->GetComponentLocation();
-	this->SetActorLocation(Offset);
-
-	
+	float OffsetZ = Obj->OffsetTransform->GetComponentLocation().Z;
+	UE_LOG(LogTemp, Warning, TEXT("%f"), OffsetZ);
+	FVector Offset = FVector(0, 0, OffsetZ);
+	this->SetActorLocation(Obj->GetActorLocation() + Offset);
 }
 
 bool AShooter::HasGunOfType(const EGunClass GunType) const
