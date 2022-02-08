@@ -44,6 +44,7 @@ void AInteractiveButton::SetIsLocked(const bool Value)
 
 void AInteractiveButton::RecieveLookedAway(APawn* EventSender, int32 MappingIndexToRemove)
 {
+	// Remove the delegate tied to the this object's desired ActionMapping
 	EventSender->InputComponent->RemoveActionBindingForHandle(MappingIndexToRemove);
 }
 

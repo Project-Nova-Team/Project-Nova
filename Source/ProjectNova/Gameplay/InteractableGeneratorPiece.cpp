@@ -1,6 +1,11 @@
 #include "InteractableGeneratorPiece.h"
 #include "Components/StaticMeshComponent.h"
 
+AInteractableGeneratorPiece::AInteractableGeneratorPiece()
+{
+	ActionMappingName = "Interact";
+}
+
 void AInteractableGeneratorPiece::RecieveLookedAt(APawn* EventSender)
 {
 	if (CanInteract())
@@ -12,6 +17,7 @@ void AInteractableGeneratorPiece::RecieveLookedAt(APawn* EventSender)
 
 void AInteractableGeneratorPiece::RecieveLookedAway(APawn* EventSender, int32 MappingIndexToRemove)
 {
+	// Remove the delegate tied to the this object's desired ActionMapping
 	EventSender->InputComponent->RemoveActionBindingForHandle(MappingIndexToRemove);
 }
 

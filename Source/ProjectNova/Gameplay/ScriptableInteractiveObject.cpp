@@ -26,5 +26,6 @@ void AScriptableInteractiveObject::RecieveLookedAt(APawn* EventSender)
 
 void AScriptableInteractiveObject::RecieveLookedAway(APawn* EventSender, int32 MappingIndexToRemove)
 {
+	// Remove the delegate tied to the this object's desired ActionMapping
 	EventSender->InputComponent->RemoveActionBindingForHandle(MappingIndexToRemove);
 }

@@ -25,6 +25,7 @@ void AGenerator::RecieveLookedAt(APawn* EventSender)
 
 void AGenerator::RecieveLookedAway(APawn* EventSender, int32 MappingIndexToRemove)
 {
+	// Remove the delegate tied to the this object's desired ActionMapping
 	EventSender->InputComponent->RemoveActionBindingForHandle(MappingIndexToRemove);
 }
 

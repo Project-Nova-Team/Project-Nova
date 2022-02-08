@@ -41,5 +41,6 @@ void AHealthPickup::RecieveLookedAt(APawn* EventSender)
 
 void AHealthPickup::RecieveLookedAway(APawn* EventSender, int32 MappingIndexToRemove)
 {
+	// Remove the delegate tied to the this object's desired ActionMapping
 	EventSender->InputComponent->RemoveActionBindingForHandle(MappingIndexToRemove);
 }

@@ -11,6 +11,9 @@ class PROJECTNOVA_API AInteractableGeneratorPiece : public AGeneratorPiece, publ
 	GENERATED_BODY()
 
 public:
+
+	AInteractableGeneratorPiece();
+
 	void InteractionEvent(APawn* EventSender) override;
 
 	bool CanInteract() const override { return !bIsRepaired; }

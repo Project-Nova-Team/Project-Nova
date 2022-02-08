@@ -153,8 +153,11 @@ void AShooter::ScanInteractiveObject()
 		{
 			if (!bCanScanObject)
 			{
-				if(LastScannedObject != nullptr)
+				if (LastScannedObject != nullptr)
+				{
+					UE_LOG(LogTemp, Warning, TEXT("%s mapping recieved look away"), *LastScannedObject->GetInteractionMappingName().ToString());
 					LastScannedObject->RecieveLookedAway(this, LastScannedObject->BindingIndex);
+				}
 			}
 		}
 			
@@ -165,35 +168,33 @@ void AShooter::ScanInteractiveObject()
 
 void AShooter::Interact(IInteractiveObject* Object, FScanEvent ScanDelegate)
 {
-	// we can add other code here around this method for any additional logic we want the player to be in control of in the future.
-	//Lets us do UI things in blueprint
 	if (Object->CanInteract())
 	{
+		//Lets us do UI things in blueprint
 		OnScanHit.Broadcast(Object->GetInteractionPrompt());
 		
 		if (bCanScanObject)
 		{
+			UE_LOG(LogTemp, Warning, TEXT("%s mapping scanned"), *Object->GetInteractionMappingName().ToString());
 			Object->RecieveLookedAt(this);
 			bCanScanObject = false;
 		}
 	}
 
+
+	/* Vault is handled in the shooter because vault object does not impose the vault.
+	Any action that the shooter needs to impose needs to be done in this method */ 
 	if (InputState.bIsTryingToVault)
 	{
 		AVaultObject* TempVaultObject = Cast<AVaultObject>(Object);
 		if (TempVaultObject)
 		{
+			UE_LOG(LogTemp, Warning, TEXT("%s Vault Object not null, Vault Initiated"), *TempVaultObject->GetInteractionMappingName().ToString());
 			HandleVault(TempVaultObject);
 		}
 		
 		InputState.bIsTryingToVault = false;
 	}
-
-	//if (InputState.bIsTryingToInteract)
-	//{
-	//	Object->InteractionEvent(this);
-	//	InputState.bIsTryingToInteract = false;
-	//}
 }
 
 void AShooter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -282,10 +283,9 @@ void AShooter::LoadAmmoOnWeaponGet(AWeapon* NewWeapon)
 
 void AShooter::HandleVault(AVaultObject* Obj)
 {
+	// Temp teleportation code
 	FVector Offset = Obj->Offset->GetComponentLocation();
 	this->SetActorLocation(Offset);
-
-	
 }
 
 bool AShooter::HasGunOfType(const EGunClass GunType) const

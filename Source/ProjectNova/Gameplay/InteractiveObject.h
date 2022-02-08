@@ -78,8 +78,7 @@ public:
 
 	/** Forces classes that inherit from this to provide mapping data*/
 	virtual FName& GetInteractionMappingName() = 0;
-
-	//UInputSettings* Settings = const_cast<UInputSettings*>(GetDefault<UInputSettings>());
-
+	
+	/** Used for removing bindings on ScanMiss*/
 	int32 BindingIndex;
 };

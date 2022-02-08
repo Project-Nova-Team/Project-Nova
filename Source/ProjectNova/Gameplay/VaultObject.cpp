@@ -51,6 +51,7 @@ void AVaultObject::RecieveLookedAt(APawn* EventSender)
 
 void AVaultObject::RecieveLookedAway(APawn* EventSender, int32 MappingIndexToRemove)
 {
+	// Remove the delegate tied to the this object's desired ActionMapping
 	EventSender->InputComponent->RemoveActionBindingForHandle(MappingIndexToRemove);
 }
 
@@ -70,12 +71,10 @@ void AVaultObject::InteractionEvent(APawn* EventSender)
 
 void AVaultObject::ActorStartOverlap(AActor* OverlappedActor, AActor* OtherActor)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Overlap Vault Object"));
 	bIsPlayerInTrigger = true;
 }
 
 void AVaultObject::ActorEndOverlap(AActor* OverlappedActor, AActor* OtherActor)
 {
-	UE_LOG(LogTemp, Warning, TEXT("End Overlap Vault Object"));
 	bIsPlayerInTrigger = false;
 }
