@@ -36,7 +36,7 @@ public:
 
 	bool CanInteract() const override { return !bIsLocked && !bIsMoving; }
 
-	const FInteractionPrompt& GetInteractionPrompt() const override { return Prompt; }
+	FInteractionPrompt& GetInteractionPrompt() override { return Prompt; }
 
 	/** Sets the lock status of this Button*/
 	UFUNCTION(BlueprintSetter)

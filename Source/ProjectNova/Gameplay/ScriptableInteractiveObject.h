@@ -15,7 +15,7 @@ public:
 
 	bool CanInteract() const override { return bCanInteract; }
 
-	const FInteractionPrompt& GetInteractionPrompt() const override { return Prompt; }
+	FInteractionPrompt& GetInteractionPrompt() override { return Prompt; }
 
 	void InteractionEvent(APawn* EventSender) override;
 

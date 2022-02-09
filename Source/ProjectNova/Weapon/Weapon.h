@@ -123,7 +123,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon | Animation")
 	float ImpulseKickFactor;
 
-	const FInteractionPrompt& GetInteractionPrompt() const override { return Prompt; }
+	FInteractionPrompt& GetInteractionPrompt() override { return Prompt; }
 
 protected:
 

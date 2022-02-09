@@ -16,7 +16,7 @@ public:
 	// Sets default values for this actor's properties
 	AVaultObject();
 
-	const FInteractionPrompt& GetInteractionPrompt() const override { return Prompt; }
+	FInteractionPrompt& GetInteractionPrompt() override { return Prompt; }
 
 private:
 	virtual void InteractionEvent(APawn* EventSender) override;

@@ -139,8 +139,7 @@ void AShooterHUD::ShowInteractionPrompt(const FInteractionPrompt& Hit)
 		InteractionPromptWidget->SetVisibility(ESlateVisibility::HitTestInvisible);		
 	}
 
-	//PUTTING THIS HERE BECAUSE ITS GETTING DELETED
-	if (true) // Hit != LastScan
+	if (Hit != LastScan)
 	{
 		LastScan = Hit;
 		OnInteractionPromptChange.Broadcast();	

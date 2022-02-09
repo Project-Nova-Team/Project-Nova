@@ -19,7 +19,7 @@ public:
 
 	void InteractionEvent(APawn* EventSender) override;
 
-	const FInteractionPrompt& GetInteractionPrompt() const override { return Prompt; }
+	FInteractionPrompt& GetInteractionPrompt() override { return Prompt; }
 
 	bool CanInteract() const override { return RepairedPieces == Pieces.Num() && !bHasBeenActivated; }
 
