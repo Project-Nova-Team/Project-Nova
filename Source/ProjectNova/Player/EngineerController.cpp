@@ -17,26 +17,9 @@ void AEngineerController::OnPossess(APawn* InPawn)
 
 	SetGenericTeamId(FGenericTeamId(0));
 
-	if (MyHUD == nullptr)
+	if (MyHUD != nullptr)
 	{
-		//No HUD, create one.
-		FActorSpawnParameters SpawnInfo;
-		SpawnInfo.Owner = this;
-		SpawnInfo.Instigator = GetInstigator();
-		SpawnInfo.ObjectFlags |= RF_Transient;	// We never want to save HUDs into a map
-		EngineerHUD = GetWorld()->SpawnActor<AEngineerHUD>(SpawnInfo);
-		MyHUD = EngineerHUD;
-	}
-
-	if (EngineerHUD != nullptr && !bHudInitialized)
-	{
-		MyHUD->bShowHUD = true;
-
-		if (!bHudInitialized)
-		{
-			EngineerHUD->Initialize();
-			bHudInitialized = true;		
-		}	
+		MyHUD->bShowHUD = true;		
 	}
 }
 
@@ -48,6 +31,15 @@ void AEngineerController::OnUnPossess()
 	{
 		MyHUD->bShowHUD = false;
 	}
+}
+
+void AEngineerController::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+
+	//Super implementation assigns the hud so this is always safe
+	EngineerHUD = Cast<AEngineerHUD>(MyHUD);
+	EngineerHUD->Initialize();
 }
 
 void AEngineerController::SetGenericTeamId(const FGenericTeamId& NewTeamID)

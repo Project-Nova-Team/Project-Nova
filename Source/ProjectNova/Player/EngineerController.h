@@ -20,9 +20,6 @@ private:
 	/** Team ID used for AI threat/friend detection*/
 	FGenericTeamId TeamID;
 
-	/** Have the HUD properties already been initialized. This occurs on first possession*/
-	uint8 bHudInitialized;
-
 public:
 
 	void ReceivePause();
@@ -31,6 +28,7 @@ public:
 
 	void OnUnPossess() override;
 	void OnPossess(APawn* InPawn) override;
+	void PostInitializeComponents() override;
 
 	void SetGenericTeamId(const FGenericTeamId& NewTeamID) override;
 	FGenericTeamId GetGenericTeamId() const override { return TeamID; }	

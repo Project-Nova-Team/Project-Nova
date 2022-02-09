@@ -44,13 +44,11 @@ void AEngineerHUD::ReceiveInteractionUpdate(IInteractiveObject* Info)
 {
 	if (Info == nullptr)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, TEXT("Revoke"));
 		InteractionPromptRevoke();
 	}
 
 	else
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("Provide"));
 		InteractionPromptProvided(Info->GetInteractionPrompt());
 	}
 }
