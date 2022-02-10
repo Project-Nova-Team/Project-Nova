@@ -3,10 +3,10 @@
 
 AMeleeWeapon::AMeleeWeapon()
 {
-	BaseDamage = 50.f;
+	
 }
 
-void AMeleeWeapon::StartAttack()
+void AMeleeWeapon::Attack()
 {
-	OnWeaponAttack.Broadcast();
+	//@todo
 }

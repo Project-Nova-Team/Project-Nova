@@ -12,21 +12,29 @@ class PROJECTNOVA_API AShooterController : public APlayerController, public IGen
 {
 	GENERATED_BODY()
 
+private:
+
+	/** Cached cast version of MyHUD for ease of use*/
+	AShooterHUD* ShooterHUD;
+
+	/** Team ID used for AI threat/friend detection*/
+	FGenericTeamId TeamID;
+
 public:
-	AShooterController() { }
+
+	void ReceivePause();
+
+	/// Begin APawn Interface ///
 
 	void OnUnPossess() override;
 	void OnPossess(APawn* InPawn) override;
 
 	void SetGenericTeamId(const FGenericTeamId& NewTeamID) override;
-
 	FGenericTeamId GetGenericTeamId() const override { return TeamID; }
+
 
 private:
 
-	/** Load order for controller/hud/gamemode is complicated so we just use this to check if its the first load sequence*/
-	uint8 bHUDInit : 1;
-
-	/** Team ID*/
-	FGenericTeamId TeamID;
+	/** Handle to pause input bind*/
+	int32 BindingHandle;
 };

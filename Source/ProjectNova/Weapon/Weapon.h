@@ -3,153 +3,208 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "../Gameplay/InteractiveObject.h"
-#include "Materials/MaterialInstance.h"
 #include "Weapon.generated.h"
 
-class USkeletalMesh;
-class USkeletalMeshSocket;
-class UCombatComponent;
-class USoundBase;
-struct FWeaponInput;
-
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FWeaponEvent);
-DECLARE_DELEGATE(FWeaponUIEvent);
-
-USTRUCT(BlueprintType)
-struct FWeaponUIData
+/** Type of locomotion to use when this weapon is held*/
+UENUM()
+enum ELocomotionType
 {
-	GENERATED_BODY()
-	
-public:
+	LT_Default,
+	LT_Pistol,
+	LT_Rifle
 };
 
-UCLASS()
+/** Structure holding relevant animation IK transform offset info*/
+USTRUCT(BlueprintType)
+struct FWeaponAnimationData
+{
+	GENERATED_BODY()
+
+public:
+
+	FWeaponAnimationData()
+		:	Impulse(50.f)
+		,	ImpulseFallOff(50.f)
+		,	ImpulseRecovery(50.f)
+		,	ImpulseKickFactor(0.3f)
+		,	ImpulseVelocityMax(10.f)
+		,	ImpulseMax(10.f)
+	{
+	}
+
+	/** By how much do we displace the holding actors weapon mesh when held*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = " IK")
+	FVector AbsoluteLocationOffset;
+
+	/** By how much do we rotate the holding actors weapon mesh when held*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = " IK")
+	FRotator AbsoluteRotationOffset;
+
+	/** What type of locomotion should be used when this weapon is held*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TEnumAsByte<ELocomotionType> LocomotionType;
+
+	/** IK position offset of right hand*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = " IK")
+	FVector REffectorLocationOffset;
+
+	/** IK position offset of right elbow*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = " IK")
+	FVector RTargetLocationOffset;
+
+	/** IK position offset of left elbow*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = " IK")
+	FVector LTargetLocationOffset;
+
+	/** How much recoil is applied each time the weapon is fired*/
+	UPROPERTY(EditAnywhere, Category = "Impulse")
+	float Impulse;
+
+	/** Controls how quickly the impulse decays*/
+	UPROPERTY(EditAnywhere, Category = "Impulse")
+	float ImpulseFallOff;
+
+	/** Controls how quickly weapon position returns to normal after firing*/
+	UPROPERTY(EditAnywhere, Category = "Impulse")
+	float ImpulseRecovery;
+
+	/** Maximum amount of impulse rate of change that can be applied to the weapon*/
+	UPROPERTY(EditAnywhere, Category = "Impulse")
+	float ImpulseVelocityMax;
+
+	/** Maximum amount of impulse offset that can be applied to the weapon*/
+	UPROPERTY(EditAnywhere, Category = "Impulse")
+	float ImpulseMax;
+
+	/** Factor to multiply by kick to determine rotation "kick-back" of weapon IK*/
+	UPROPERTY(EditAnywhere, Category = "Impulse")
+	float ImpulseKickFactor;
+
+	/** Actual impulse value to read from weapon*/
+	float ImpulseOffset;
+
+	/** Live impulse value*/
+	float ImpulseVelocity;
+
+};
+
+/** Struct package that is sent to a HUD class */
+USTRUCT(BlueprintType)
+struct FWeaponHUD
+{
+	GENERATED_BODY()
+
+public:
+
+	FWeaponHUD() { }
+
+	/** Image sprite when this weapon is held*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UTexture2D* HUDTexture;
+
+	/** Reticle sprite when this weapon is held*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UTexture2D* ReticleTexture;
+
+	UPROPERTY()
+	int32 LoadedAmmo;
+
+	UPROPERTY()
+	int32 MaxAmmo;
+
+	UPROPERTY()
+	int32 ExcessAmmo;
+};
+
+class UCombatComponent;
+
+UCLASS(HideCategories = ("Animation", "Sockets", "Component Tick", "Clothing", "Master Pose Component", "Physics", "Clothing Simulation", "Collision", "Rendering", "Skin Weights", "Navigation", "Virtual Texture", "Tags", "Component Replication", "Activation", "Cooking", "Skeletal Mesh", "Optimization", "Material Parameters", "HLOD", "Mobile", "Asset User Data", "Actor", "Input", "LOD"))
 class PROJECTNOVA_API AWeapon : public AActor, public IInteractiveObject
 {
 	GENERATED_BODY()
-	
-public:	
+
+public:
+	// Sets default values for this actor's properties
 	AWeapon();
 
-	void InteractionEvent(APawn* EventSender) override;
+	/** Should this weapon require a fresh attack input or should a single input be able to be held*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon | General")
+	uint8 bAttackContinuously : 1;
 
-	/** TODO stop inlining once we get some fields in FWeaponUIData*/
-	FWeaponUIData GetWeaponUI() const { return FWeaponUIData(); }
-
-	/** Returns the mesh this weapon uses*/
-	FORCEINLINE USkeletalMeshComponent* GetMeshComponent() const { return Mesh; }
-
-	/** Returns the mesh's skeletal mesh this weapon uses*/
-	FORCEINLINE USkeletalMesh* GetSkeletalMesh() const { return Mesh->SkeletalMesh; }
-
-	/** Returns the combat component this weapon is attached to, if any*/
-	FORCEINLINE UCombatComponent* GetOwningComponent() const { return OwningComponent; }
-
-	virtual bool IsReloadable() { return false; }
-
-	UFUNCTION(BlueprintCallable)
-	virtual bool IsAimable() { return false; }
-
-	/** Initiates an attack. Returns true if the attack was executed successfully.*/
-	virtual void StartAttack() { }
-
-	/** Called by CombatComponent when attack input has been removed*/
-	virtual void StopAttack() { }
-
-	/** Sets the aim status of the weapon*/
-	virtual void SetAim(const bool bNewAim) { bIsAimed = bNewAim; }
-
-	virtual void Reload() { }
-
-	/**
-	 * Passes references of scene components to the weapon so it knows where to begin weapon fire/traces from
-	 *
-	 * @param	TraceOriginComponent				Scene component a traveling hitscan beam is fired from. Typically the camera of a player
-	 * @param	ProjectileOrigin					Scene component we use to get a socket on a gun barrel to fire a cosmetic projectile from
-	 */
-	virtual void SetWeaponSceneValues(USceneComponent* TraceOriginComponent, USkeletalMeshComponent* ProjectileOrigin);
-
-	/**
-	* Pointer to a level object that determines where the line trace begins for firing
-	* For the shooter, this is the camera component
-	*/
+	/** Scene component used for fire traces. Typically the holding pawns camera*/
 	USceneComponent* TraceOrigin;
 
-	/**
-	 * Pointer to a the skeletal mesh component of the weapon's owner. This is provided
-	 * so we can access a socket on the mesh to fire a cosmetic projectile from 
-	 */
-	USkeletalMeshComponent* ProjectileOriginMesh;
-
-	/** Pointer to a stance enum that weapons use to vary things like bloom*/
-	FWeaponInput* OwnerInput;
-
-	/** When invoked, any HUD subscribed to this event will update values*/
-	FWeaponUIEvent OnUpdateUI;
-
-	/** Invoked when the weapon attacks. Useful for audio*/
-	UPROPERTY(BlueprintAssignable)
-	FWeaponEvent OnWeaponAttack;
-
-	/** The materials that we set when the player picks up the weapon, so that it doesn't clip through walls*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon | OverlapMaterials")
-	TArray<UMaterialInstance*> OverlapRenderMaterials;
-
-	/** By how much do we displace the holding actors weapon mesh when held*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon | Animation")
-	FVector WeaponMeshOffset;
-
-	/** By how much do we rotate the holding actors weapon mesh when held*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon | Animation")
-	FRotator WeaponMeshRotationOffset;
-
-	/** How much do we displace the holding actors weapon socket when held*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon | Animation")
-	FVector REffectorIK;
-
-	/** Right hand target IK position*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon | Animation")
-	FVector RTargetIK;
-
-	/** Left hand target IK position, Effector location is determiend by the actual socket*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon | Animation")
-	FVector LTargetIK;
-
-	/** How much is the right hand weapon socket rotated while this is held*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon | Animation")
-	FRotator RHandRotationIK;
-
-	/** How much to factor rotational "kick" from impulse. Lower values provide less kick*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon | Animation")
-	float ImpulseKickFactor;
-
-	FInteractionPrompt& GetInteractionPrompt() override { return Prompt; }
+	/** Data concerning this weapon's IK transform*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "IK Animation")
+	FWeaponAnimationData AnimData;
 
 protected:
 
-	UPROPERTY(VisibleAnywhere, Category = "Mesh")
+	/** The mesh component this weapon uses as its physical representation when not held*/
+	UPROPERTY(VisibleAnywhere, Category = "Weapon | Mesh")
 	USkeletalMeshComponent* Mesh;
 
-	/** Force applied to weapon when dropped by a pawn*/
-	UPROPERTY(EditAnywhere, Category = "Weapon | General")
+	/** Amount of physics force applied to the weapon when the owning pawn throws it away*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon | General")
 	float ThrowForce;
 
-	/** The amount of damage dealt by each attack withs this weapon*/
-	UPROPERTY(EditAnywhere, Category = "Weapon | Damage")
-	float BaseDamage;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI | HUD")
+	FWeaponHUD HUDData;
 
-	/** Sound this object plays when reloaded*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon | Audio")
-	USoundBase* SFXReload;
-
-	/** Sound this object makes when switched to*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon | Audio")
-	USoundBase* SFXSwap;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI | Interaction")
 	FInteractionPrompt Prompt;
 
+	/** CombatComponent this weapon currently belongs to*/
 	UCombatComponent* OwningComponent;
 
-	uint8 bIsAimed : 1;
+public:
+
+	/** Sets the OwningComponent value of this weapon*/
+	virtual void SetCombatComponent(UCombatComponent* NewOwner);
+
+	/** Defines whether or not this weapon contains aiming capabilities*/
+	virtual bool IsAimable() { return false; }
+
+	/** Defines whether or not this weapon contains reload capabilities*/
+	virtual bool IsReloadable() { return false; }
+
+	/** Executes subclass implementation when receiving a press aim command*/
+	virtual void StartAim() { }
+
+	/** Executes subclass implementation when receiving a release aim command*/
+	virtual void StopAim() { }
+
+	/** Executes subclass implementation when receiving a press attack*/
+	virtual void Attack() { }
+
+	/** Executes subclass implementation when receiving a reload command*/
+	virtual void Reload() { }
+
+
+	virtual FInteractionPrompt& GetInteractionPrompt() override { return Prompt; }
+
+	const FWeaponHUD& GetImmutableHUD() const { return HUDData; }
+
+	FORCEINLINE USkeletalMeshComponent* GetMesh() const { return Mesh; }
+
+protected:
+
+	/** Informs the combat component this weapon's properties need to be updated in the HUD*/
+	virtual void NotifyHUD();
+
+	/** Places this weapon in the event senders inventory if they contain a combat component*/
+	virtual void InteractionEvent(APawn* EventSender) override;
+
+	/** Blueprint event executed when this weapon executes its Attack function*/
+	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "Attack"))
+	void ReceiveAttack();
+
+private:
+
+	/**
+	 * If true, this weapon will broadcast information
+	 * Weapons that are picked up by pawns who own a HUD should mark this as true
+	 * and false when dropped
+	 */
+	uint8 bReportHUDEvents;
 };

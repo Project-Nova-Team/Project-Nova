@@ -12,5 +12,5 @@ class PROJECTNOVA_API AMeleeWeapon : public AWeapon
 public:	
 	AMeleeWeapon();
 
-	void StartAttack() override;
+	void Attack() override;
 };

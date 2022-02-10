@@ -21,13 +21,7 @@ void AShooterGameMode::InitGame(const FString& MapName, const FString& Options, 
 	DelayedActionManager = NewObject<UDelayedActionManager>();
 	DelayedActionManager->Initialize();
 
-	//Remove this at some point becuase its really slow. It also crashes us if theres not a shooter in the level
-	if (Player == nullptr)
-	{
-		Player = FindActor<AShooter>(GetWorld());
-		Player->GetHealth()->OnDeath.AddDynamic(this, &AShooterGameMode::PlayerDeath);
-	}
-
+	//If we can't figure out why "lighting needs rebuild" warnings wont go away, we can set this flag for builds
 	//GEngine->bSuppressMapWarnings = true;
 }
 
@@ -37,13 +31,12 @@ void AShooterGameMode::Tick(float DeltaTime)
 	DelayedActionManager->TickRunningActions(DeltaTime);
 }
 
-void AShooterGameMode::PlayerDeath()
+void AShooterGameMode::PostLogin(APlayerController* NewPlayer)
 {
-	//Do reset pipeline stuff here when player dies
-	Cast<AShooterHUD>(Cast<APlayerController>(Player->GetController())->MyHUD)->ShowDeathScreen();
-}
+	ShooterController = Cast<AShooterController>(NewPlayer);
 
-void AShooterGameMode::PauseGame()
-{
-	OnPause.Broadcast();
+	if (ShooterController != nullptr)
+	{
+		Shooter = ShooterController->GetPawn<AShooter>();
+	}
 }

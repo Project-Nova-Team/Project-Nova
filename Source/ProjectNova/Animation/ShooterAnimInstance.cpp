@@ -1,176 +1,191 @@
 #include "ShooterAnimInstance.h"
-#include "Animation/AnimMontage.h"
-#include "../State/FPS/Event/SVaultState.h"
-#include "../State/FPS/Movement/STuckState.h"
-#include "../State/FPS/ShooterStateMachine.h"
-#include "../Player/ShooterMovementComponent.h"
-#include "../Weapon/CombatComponent.h"
 #include "../Player/Shooter.h"
-#include "../Weapon/MeleeWeapon.h"
-#include "../Player/FirstPersonCameraComponent.h"
+#include "../Weapon/Gun.h"
 
-
-void UShooterAnimInstance::NativeBeginPlay()
+UShooterAnimInstance::UShooterAnimInstance()
 {
-	Super::NativeBeginPlay();
-	// Get Owning pawn
-	Shooter = Cast<AShooter>(TryGetPawnOwner());
+	bUseDefaultLocomotion = true;
 
-	if (Shooter == nullptr)
+	LookSwayMultiplier = 10.f;
+	MoveSwayMultiplier = 10.f;
+	SwaySpeed = 5.f;
+}
+
+void UShooterAnimInstance::ReceiveWeaponSwitch(const AWeapon* NewWeapon)
+{
+	HeldWeapon = NewWeapon;
+
+	if (NewWeapon)
 	{
-		// if cast fails, try get owning actor
-		Shooter = Cast<AShooter>(GetOwningActor());
+		WeaponAlpha = 1.f;
+
+		NewWeapon->GetMesh()->SetRelativeLocation(NewWeapon->AnimData.AbsoluteLocationOffset);
+		NewWeapon->GetMesh()->SetRelativeRotation(NewWeapon->AnimData.AbsoluteRotationOffset);
+
+		REffectorLocation = NewWeapon->AnimData.REffectorLocationOffset;
+		RTargetLocation = NewWeapon->AnimData.RTargetLocationOffset;
+		LTargetLocation = NewWeapon->AnimData.LTargetLocationOffset;
+
+		//If we're holding a gun, apply additional IK
+		GunAlpha = Cast<AGun>(NewWeapon) ? 1.f : 0.f;
 	}
 
-	ShooterMovement = Shooter->GetShooterMovement();
-	ShooterMesh = Shooter->GetSkeletalMeshComponent();
-	ShooterCombat = Shooter->GetCombat();
-	ShooterCamera = Shooter->GetCameraCast();
-	ShooterMelee = Shooter->GetMelee();
-
-	Shooter->OnStateLoadComplete.AddUObject(this, &UShooterAnimInstance::BindState);
-
-	ShooterCombat->OnAimStart.AddDynamic(this, &UShooterAnimInstance::PlayAimStartMontage);
-	ShooterCombat->OnAimStop.AddDynamic(this, &UShooterAnimInstance::PlayAimStopMontage);
-	ShooterCombat->OnReload.AddDynamic(this, &UShooterAnimInstance::PlayReloadMontage);
-	ShooterCombat->OnSwap.AddDynamic(this, &UShooterAnimInstance::PlaySwapMontage);
-	ShooterCombat->OnAnimCancel.AddDynamic(this, &UShooterAnimInstance::StopMontage);
-	ShooterCombat->OnArsenalAddition.AddUObject(this, &UShooterAnimInstance::ReceiveNewWeaponPickup);
-	ShooterCombat->OnArsenalRemoval.AddUObject(this, &UShooterAnimInstance::ReceiveNewWeaponDrop);
-
-	OnMontageEnded.AddDynamic(this, &UShooterAnimInstance::MontageEnd);
-}
-
-void UShooterAnimInstance::BindState()
-{
-	//This feels hacky, but might be the proper way to do it..
-	//Sound/Animation have this problem of needing to be everywhere 
-	UState* Raw = Shooter->GetStateMachine()->GetStateAtKey("Vaulting");
-	Vault = Cast<USVaultState>(Raw);
-	Vault->OnVaultEnter.AddDynamic(this, &UShooterAnimInstance::PlayVaultMontage);
-}
-
-void UShooterAnimInstance::ReceiveNewWeaponPickup(AWeapon* NewWeapon)
-{
-	if (NewWeapon->IsA(AMeleeWeapon::StaticClass()))
+	//No gun, no IK
+	else
 	{
-		NewWeapon->OnWeaponAttack.AddDynamic(this, &UShooterAnimInstance::PlayAttackMontage);
+		GunAlpha = 0.f;
+		WeaponAlpha = 0.f;
+	}
+
+	ELocomotionType Type = NewWeapon ? NewWeapon->AnimData.LocomotionType : LT_Default;
+
+	switch (Type)
+	{
+	case LT_Default:
+		bUseDefaultLocomotion = true;
+		bUsePistolLocomotion = false;
+		bUseRifleLocomotion = false;
+		break;
+	case LT_Pistol:
+		bUseDefaultLocomotion = false;
+		bUsePistolLocomotion = true;
+		bUseRifleLocomotion = false;
+		break;
+	case LT_Rifle:
+		bUseDefaultLocomotion = false;
+		bUsePistolLocomotion = false;
+		bUseRifleLocomotion = true;
+		break;
 	}
 }
 
-void UShooterAnimInstance::ReceiveNewWeaponDrop(AWeapon* NewWeapon)
+void UShooterAnimInstance::NativeInitializeAnimation()
 {
-	if (NewWeapon->GetClass() == AMeleeWeapon::StaticClass())
+	//Cache this so we don't have to grab/cast it every update
+	//Note this fails in anim bp preview so we will have perform an if each update
+	//Perhaps consider using a preprocessor to cut out the check, although 
+	//the perfomance draw of this check is negligble
+	Shooter = Cast<AShooter>(GetOwningActor());
+
+	if (Shooter)
 	{
-		NewWeapon->OnWeaponAttack.RemoveDynamic(this, &UShooterAnimInstance::PlayAttackMontage);
+		LocomotionHandle = Shooter->GetCombat()->OnLocomotionChange.AddUObject(this, &UShooterAnimInstance::ReceiveWeaponSwitch);
+
+		Shooter->GetCombat()->OnAimStart.BindUObject(this, &UShooterAnimInstance::ReceiveAimStart);
+		Shooter->GetCombat()->OnAimStop.BindUObject(this, &UShooterAnimInstance::ReceiveAimStop);
+		Shooter->GetCombat()->OnReload.BindUObject(this, &UShooterAnimInstance::ReceiveReload);
+		Shooter->GetCombat()->OnSwap.BindUObject(this, &UShooterAnimInstance::ReceiveSwap);
+		Shooter->GetCombat()->OnAnimCancel.BindUObject(this, &UShooterAnimInstance::ReceiveAnimStop);
+		OnMontageEnded.AddDynamic(this, &UShooterAnimInstance::ReceiveMontageEnded);
 	}
 }
 
-bool UShooterAnimInstance::IsTucked()
+void UShooterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 {
-	return Shooter->GetStateMachine()->GetActiveState()->IsA(USTuckState::StaticClass());
+	if (Shooter)
+	{
+		MoveSpeed = Shooter->GetShooterMovement()->Velocity.Size2D();
+		bIsFalling = !Shooter->GetShooterMovement()->bIsOnGround;
+		AnalogModifier = Shooter->GetInput()->bIsRunning ? 2.f : 1.f;
+
+		ComputeWeaponSway(DeltaSeconds);
+	}
 }
 
-bool UShooterAnimInstance::IsMovingOnGround()
+void UShooterAnimInstance::NativeUninitializeAnimation()
 {
-	return ShooterMovement->bIsOnGround && !ShooterMovement->InputVelocity.IsNearlyZero();
+	if (Shooter)
+	{
+		Shooter->GetCombat()->OnLocomotionChange.Remove(LocomotionHandle);
+		Shooter->GetCombat()->OnAimStart.Unbind();
+		Shooter->GetCombat()->OnAimStop.Unbind();
+		Shooter->GetCombat()->OnReload.Unbind();
+		Shooter->GetCombat()->OnSwap.Unbind();
+		Shooter->GetCombat()->OnAnimCancel.Unbind();
+
+		//preferably find a better way to get a handle to a dynamic multicast
+		OnMontageEnded.Remove(this, TEXT("ReceiveMontageEnded"));
+	}
 }
 
-bool UShooterAnimInstance::IsFalling()
+void UShooterAnimInstance::ComputeWeaponSway(const float DeltaSeconds)
 {
-	return !ShooterMovement->bIsOnGround;
+	//Computes rotation for the right hand when a weapon is held
+	if (HeldWeapon)
+	{
+		REffectorRotation.Roll = FMath::FInterpTo(REffectorRotation.Roll, Shooter->GetInput()->MoveX * MoveSwayMultiplier, DeltaSeconds, SwaySpeed);
+		REffectorRotation.Pitch = FMath::FInterpTo(REffectorRotation.Pitch, Shooter->GetInput()->LookY * LookSwayMultiplier, DeltaSeconds, SwaySpeed);
+		REffectorRotation.Yaw = FMath::FInterpTo(REffectorRotation.Yaw, Shooter->GetInput()->LookX * LookSwayMultiplier, DeltaSeconds, SwaySpeed);
+
+		if (GunAlpha > 0.f)
+		{
+			FTransform Transform = HeldWeapon->GetMesh()->GetSocketTransform(UCombatComponent::SecondarySocketName);
+			LEffectorLocation = Transform.GetLocation();
+			LEffectorRotation = Transform.GetRotation().Rotator();
+
+			//Compute impulse
+			ImpulseLocation = FVector(-1.f * HeldWeapon->AnimData.ImpulseOffset, 0.f, 0.f);
+
+			REffectorRotation.Pitch += HeldWeapon->AnimData.ImpulseOffset * HeldWeapon->AnimData.ImpulseKickFactor;
+		}
+	}
 }
 
-bool UShooterAnimInstance::IsRunning()
-{
-	return Shooter->GetStateMachine()->GetActiveState() == Shooter->GetStateMachine()->GetStateAtKey("Running");
-}
-
-void UShooterAnimInstance::PlayVaultMontage()
-{
-	Montage_Play(VaultAnimMontage, 1.0f);
-}
-
-void UShooterAnimInstance::PlaySwapMontage()
-{
-	Montage_Play(SwapAnimMontage, 1.0f);
-}
-
-void UShooterAnimInstance::PlayAimStartMontage()
+void UShooterAnimInstance::ReceiveAimStart()
 {
 	Montage_Play(AimStartAnimMontage, 1.0f);
-	OnAimStart.Broadcast();
 }
 
-void UShooterAnimInstance::PlayAimStopMontage()
+void UShooterAnimInstance::ReceiveAimStop()
 {
 	Montage_Play(AimStopAnimMontage, 1.0f);
-	OnAimStop.Broadcast();
 }
 
-void UShooterAnimInstance::PlayReloadMontage()
+void UShooterAnimInstance::ReceiveReload()
 {
 	Montage_Play(ReloadAnimMontage, 1.0f);
 }
 
-void UShooterAnimInstance::StopMontage()
+void UShooterAnimInstance::ReceiveAnimStop()
 {
 	StopAllMontages(0.1); //hack magic numba
 }
 
-void UShooterAnimInstance::PlayAttackMontage()
+void UShooterAnimInstance::ReceiveSwap()
 {
-	Montage_Play(MeleeAttackMontage, 1.0f);
+	Montage_Play(SwapAnimMontage, 1.0f);
 }
 
-void UShooterAnimInstance::MontageEnd(UAnimMontage* Montage, bool bInterupted)
+void UShooterAnimInstance::ReceiveMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
 	if (Montage == VaultAnimMontage)
 	{
-		Vault->ReceiveVaultAnimComplete();
+
 	}
 
 	else if (Montage == ReloadAnimMontage)
 	{
-		ShooterCombat->ReceiveReloadComplete(bInterupted);
+		Shooter->GetCombat()->ReceiveReloadComplete(bInterrupted);
 	}
 
 	else if (Montage == SwapAnimMontage)
 	{
-		if (bInterupted && !Montage_IsActive(SwapAnimMontage))
+		if (bInterrupted && !Montage_IsActive(SwapAnimMontage))
 		{
-			ShooterCombat->ReceiveSwapComplete();
+			Shooter->GetCombat()->ReceiveSwapComplete();
 		}
 
-		else if (!bInterupted)
+		else if (!bInterrupted)
 		{
-			ShooterCombat->ReceiveSwapComplete();
+			Shooter->GetCombat()->ReceiveSwapComplete();
 		}
 	}
 
 	else if (Montage == AimStartAnimMontage || Montage == AimStopAnimMontage || Montage == MeleeAttackMontage)
 	{
-		if (!bInterupted)
+		if (!bInterrupted)
 		{
-			ShooterCombat->ReceiveAnimationComplete();
-		}	
+			Shooter->GetCombat()->ReceiveAnimationComplete();
+		}
 	}
-}
-
-FTransform UShooterAnimInstance::GetWeaponSocketTransform(FName SocketName)
-{
-	return Shooter->GetWeaponMesh()->GetSocketTransform(SocketName);
-}
-
-void UShooterAnimInstance::StartFOVLerp(const float TargetFOV, const float Time)
-{
-	AimHandle = GetWorld()->
-		GetAuthGameMode<AShooterGameMode>()->
-		GetDelayedActionManager()->
-		StartOverTimeAction(this, &UShooterAnimInstance::LerpFOV, Time, ShooterCamera->FieldOfView, TargetFOV);
-}
-
-void UShooterAnimInstance::LerpFOV(const float StartFOV, const float TargetFOV)
-{
-	ShooterCamera->FieldOfView = FMath::Lerp(StartFOV, TargetFOV, AimHandle->CurrentActionProgress);
 }

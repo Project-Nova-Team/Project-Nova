@@ -2,16 +2,11 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
-#include "EngineUtils.h"
-#include "GameFramework/PlayerController.h"
 #include "ShooterGameMode.generated.h"
 
 class UDelayedActionManager;
 class AShooter;
-class AAICell;
-
-/** On Pause Delegate*/
-DECLARE_MULTICAST_DELEGATE(FPauseEvent);
+class AShooterController;
 
 UCLASS()
 class PROJECTNOVA_API AShooterGameMode : public AGameModeBase
@@ -27,30 +22,18 @@ public:
 
 	UDelayedActionManager* GetDelayedActionManager() const { return DelayedActionManager; }
 
-	// public in order to be bound to input delegate
-	UFUNCTION()
-	void PauseGame();
+	void PostLogin(APlayerController* NewPlayer) override;
 
-	FPauseEvent OnPause;
+protected:
+
+	UPROPERTY(BlueprintReadOnly, Category = "Game Mode")
+	AShooter* Shooter;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Game Mode")
+	AShooterController* ShooterController;
 
 private:
+
 	UPROPERTY(Transient)
 	UDelayedActionManager* DelayedActionManager;
-	
-	UPROPERTY(Transient)
-	AShooter* Player;
-
-	/** Invoked when the player dies*/
-	UFUNCTION()
-	void PlayerDeath();
-
-	//TODO parsing the actor hierarchy is and always will be a crime
-	//We will be serializing player in builds
-//#if WITH_EDITOR
-	template<class ActorClass>
-	ActorClass* FindActor(UWorld* World)
-	{
-		return *TActorIterator<ActorClass>(World);
-	}
-//#endif
 };
