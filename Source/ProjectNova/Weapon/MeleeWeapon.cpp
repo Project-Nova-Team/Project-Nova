@@ -3,10 +3,25 @@
 
 AMeleeWeapon::AMeleeWeapon()
 {
-	
+	Damage = 20.f;
 }
 
 void AMeleeWeapon::Attack()
 {
-	//@todo
+	ReceiveAttack();
+}
+
+void AMeleeWeapon::SetCombatComponent(UCombatComponent* NewOwner)
+{
+	Super::SetCombatComponent(NewOwner);
+
+	if (NewOwner != nullptr)
+	{
+		Mesh->SetCollisionProfileName(TEXT("OverlapOnlyPawn"));
+	}
+
+	else
+	{
+		Mesh->SetCollisionProfileName(TEXT("Ragdoll"));
+	}
 }

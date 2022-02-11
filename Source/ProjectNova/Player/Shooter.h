@@ -3,7 +3,6 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
 #include "ShooterMovementComponent.h"
-#include "WeaponInput.h"
 #include "FirstPersonCameraComponent.h"
 #include "../Weapon/CombatComponent.h"
 #include "../Gameplay/InteractiveObject.h"

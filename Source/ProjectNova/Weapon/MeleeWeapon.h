@@ -13,4 +13,11 @@ public:
 	AMeleeWeapon();
 
 	void Attack() override;
+
+	void SetCombatComponent(UCombatComponent* NewOwner) override;
+
+protected:
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon | Damage")
+	float Damage;
 };

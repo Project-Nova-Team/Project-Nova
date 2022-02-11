@@ -141,7 +141,7 @@ public:
 protected:
 
 	/** The mesh component this weapon uses as its physical representation when not held*/
-	UPROPERTY(VisibleAnywhere, Category = "Weapon | Mesh")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon | Mesh")
 	USkeletalMeshComponent* Mesh;
 
 	/** Amount of physics force applied to the weapon when the owning pawn throws it away*/
