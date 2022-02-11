@@ -1,21 +1,11 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
+#include "../Weapon/Weapon.h"
 #include "ShooterAnimInstance.generated.h"
 
-class AShooter;
-class AWeapon;
-class UFirstPersonCameraComponent;
-class UShooterMovementComponent;
-class UCombatComponent;
-class UMeleeComponent;
-class USVaultState;
-struct FDelayedActionHandle;
-
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FAimEvent);
+class AGun;
 
 UCLASS()
 class PROJECTNOVA_API UShooterAnimInstance : public UAnimInstance
@@ -23,6 +13,84 @@ class PROJECTNOVA_API UShooterAnimInstance : public UAnimInstance
 	GENERATED_BODY()
 
 public:
+
+	UShooterAnimInstance();
+
+protected:
+
+	UPROPERTY(BlueprintReadOnly, Category = "Animation")
+	class AShooter* Shooter;
+
+	/** Kind of hacky, set as true to enable event reporting (use this on the arms only*/
+	UPROPERTY(BlueprintReadWrite, Category = "Animation")
+	uint8 bReportEvents : 1;
+
+
+	/***	Locomotion		***/
+
+	UPROPERTY(BlueprintReadOnly, Category = "Animation")
+	uint8 bUseDefaultLocomotion : 1;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Animation")
+	uint8 bUsePistolLocomotion : 1;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Animation")
+	uint8 bUseRifleLocomotion : 1;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Animation")
+	uint8 bIsFalling : 1;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Animation")
+	float AnalogModifier;
+
+	/***	IK	   ***/
+
+	/** Amount of sway applied from movement*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	float MoveSwayMultiplier;
+
+	/** Amount of sway to applied from look*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	float LookSwayMultiplier;
+
+	/** How quickly is sway interpolated*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	float SwaySpeed;
+
+	/** Component space position of the right hand effector*/
+	UPROPERTY(BlueprintReadOnly, Category = "Animation")
+	FVector REffectorLocation;
+
+	/** Component space transform of right target (right elbow)*/
+	UPROPERTY(BlueprintReadOnly, Category = "Animation")
+	FVector RTargetLocation;
+
+	/** Component space transform of left target (left elbow)*/
+	UPROPERTY(BlueprintReadOnly, Category = "Animation")
+	FVector LTargetLocation;
+
+	/** World space location of left effector, determined by weapon's Secondary_Socket world space position*/
+	UPROPERTY(BlueprintReadOnly, Category = "Animation")
+	FVector LEffectorLocation;
+
+	/** Orientation to rotate right effector, determined by properties such as socket orientation and weapon say*/
+	UPROPERTY(BlueprintReadOnly, Category = "Animation")
+	FRotator REffectorRotation;
+
+	/** Orientation to rotate left effector, determined by weapon's Secondary_Socket orientation*/
+	UPROPERTY(BlueprintReadOnly, Category = "Animation")
+	FRotator LEffectorRotation;
+
+	/** Additional effector offset determined by impulse applied from gun fire*/
+	UPROPERTY(BlueprintReadOnly, Category = "Animation")
+	FVector ImpulseLocation;
+
+	/** IK Blending Alpha. 1 when weapon is held, 0 if otherwise or when in montage*/
+	UPROPERTY(BlueprintReadOnly, Category = "Animation")
+	float AlphaIK;
+
+	/***	Montage		***/
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
 	UAnimMontage* VaultAnimMontage;
 
@@ -41,109 +109,34 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
 	UAnimMontage* MeleeAttackMontage;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
-	class UCameraAnim* CameraDeathAnimation;
+private:
 
-	//Need this to gurantee the State machine is loaded before we try and state events
-	void BindState();
+	/** Delegate handle for unbinding locomotion multicast delegate*/
+	FDelegateHandle LocomotionHandle;
 
-protected:
+	/** Currently held weapon*/
+	const AWeapon* HeldWeapon;
 
-	UPROPERTY(BlueprintAssignable)
-	FAimEvent OnAimStart;
+public:
 
-	UPROPERTY(BlueprintAssignable)
-	FAimEvent OnAimStop;
+	/*** Begin AnimInstance Interface***/
 
-	UFUNCTION()
-	void ReceiveNewWeaponPickup(AWeapon* NewWeapon);
-
-	UFUNCTION()
-	void ReceiveNewWeaponDrop(AWeapon* NewWeapon);
+	virtual void NativeInitializeAnimation() override;
+	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
+	virtual void NativeUninitializeAnimation() override;
 
 private:
 
-	USkeletalMeshComponent* ShooterMesh;
+	void ReceiveWeaponSwitch(const AWeapon* NewWeapon);
 
-	/** Animation Hooks**/
+	void ReceiveAimStart();
+	void ReceiveAimStop();
+	void ReceiveReload();
+	void ReceiveAnimStop();
+	void ReceiveSwap();
 
-	//UFUNCTION(BlueprintCallable, Category = "Animation")
-
-	UFUNCTION(BlueprintCallable, Category = "Animation")
-	bool IsTucked();
-
-	/** Returns whether this shooter is walking*/
-	UFUNCTION(BlueprintCallable, Category = "Animation")
-	bool IsMovingOnGround();
-
-	/** Returns whether this shooter is falling*/
-	UFUNCTION(BlueprintCallable, Category = "Animation")
-	bool IsFalling();
-
-	/** Returns whether this shooter is falling*/
-	UFUNCTION(BlueprintCallable, Category = "Animation")
-	bool IsRunning();
-
-
-	/** Execute Montages*/
-
-	UFUNCTION(BlueprintCallable, Category = "Animation")
-	void PlayVaultMontage();
-
-	UFUNCTION(BlueprintCallable, Category = "Animation")
-	void PlaySwapMontage();
-
-	UFUNCTION(BlueprintCallable, Category = "Animation")
-	void PlayReloadMontage();
-
-	UFUNCTION(BlueprintCallable, Category = "Animation")
-	void PlayAimStartMontage();
-
-	UFUNCTION(BlueprintCallable, Category = "Animation")
-	void PlayAimStopMontage();
-
-	UFUNCTION(BlueprintCallable, Category = "Animation")
-	void StopMontage();
-
-	UFUNCTION(BlueprintCallable, Category = "Animation")
-	void PlayAttackMontage();
+	void ComputeWeaponSway(const float DeltaSeconds);
 
 	UFUNCTION()
-	void MontageEnd(UAnimMontage* Montage, bool bInterupted);
-
-	void NativeBeginPlay() override;
-
-protected:
-
-	/** Shooter Reference - obtained by getting owner and casting to AShooter*/
-	UPROPERTY(BlueprintReadOnly)
-	AShooter* Shooter;
-
-	UPROPERTY(BlueprintReadOnly)
-	UShooterMovementComponent* ShooterMovement;
-
-	UPROPERTY(BlueprintReadOnly)
-	UCombatComponent* ShooterCombat;
-
-	UPROPERTY(BlueprintReadOnly)
-	UFirstPersonCameraComponent* ShooterCamera;
-
-	UPROPERTY(BlueprintReadOnly)
-	UMeleeComponent* ShooterMelee;
-
-	/** Returns the transform of the weapon socket by name*/
-	UFUNCTION(BlueprintCallable)
-	FTransform GetWeaponSocketTransform(FName SocketName);
-
-	UFUNCTION(BlueprintCallable)
-	void StartFOVLerp(const float TargetFOV, const float Time);
-
-	void LerpFOV(const float StartFOV, const float TargetFOV);
-
-	//Ugly
-	USVaultState* Vault;
-
-private:
-	/**Handle for aim fov lerping*/
-	FDelayedActionHandle* AimHandle;
+	void ReceiveMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 };

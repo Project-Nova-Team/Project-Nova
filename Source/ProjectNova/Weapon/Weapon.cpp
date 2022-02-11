@@ -1,72 +1,73 @@
 #include "Weapon.h"
-#include "Components/SkeletalMeshComponent.h"
-#include "Engine/SkeletalMeshSocket.h"
 #include "CombatComponent.h"
+#include "GameFramework/PlayerController.h"
+#include "Components/SkeletalMeshComponent.h"
 
 AWeapon::AWeapon()
 {
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bStartWithTickEnabled = false;
 
-	Mesh = CreateDefaultSubobject<USkeletalMeshComponent>("Mesh");
+	Mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Mesh"));
 	SetRootComponent(Mesh);
-
-	Mesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-	Mesh->SetCollisionProfileName("Ragdoll");	
-	Mesh->SetSimulatePhysics(true);
-
-	ThrowForce = 100000.f;
-
-	BaseDamage = 25.f;
-	ImpulseKickFactor = .3f;
+	Mesh->SetCollisionProfileName(TEXT("Ragdoll"));
 }
 
-void AWeapon::InteractionEvent(APawn* EventSender)
-{
-	//We are already being held by another combat component
-	if (OwningComponent != nullptr)
-	{
-		return;
-	}
-	
-	//If the EventSender has a combat component, pick this weapon up
-	if (UCombatComponent* Combat = EventSender->FindComponentByClass<UCombatComponent>())
-	{
-		Combat->PickUpWeapon(this);
-		OwningComponent = Combat;
-	}
-}
-
-void AWeapon::SetWeaponSceneValues(USceneComponent* TraceOriginComponent, USkeletalMeshComponent* HeldWeapon)
+void AWeapon::SetCombatComponent(UCombatComponent* NewOwner)
 {
 	//A pawn has picked the weapon up
-	if (TraceOriginComponent != nullptr)
+	if (NewOwner != nullptr)
 	{
-		//Hide actor
-		Mesh->SetVisibility(false);
-		Mesh->SetSimulatePhysics(false);
-		Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		//Set properties involving world		
 		PrimaryActorTick.SetTickFunctionEnable(true);
+
+		//Set properties involving animation
+		Mesh->SetRelativeLocation(AnimData.AbsoluteLocationOffset);
+		Mesh->SetRelativeRotation(AnimData.AbsoluteRotationOffset);
+		TraceOrigin = NewOwner->GetTraceOrigin();
+
+		bReportHUDEvents = NewOwner->GetUpdatesHUD();
 	}
 
 	//A pawn has dropped the weapon
 	else
 	{
-		//Move the gun a little below the camera 
-		const FVector DropLocation = TraceOrigin->GetComponentLocation() - FVector(0, 0, 30.f);
-		SetActorLocation(DropLocation);
+		DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+		/** Stop reporting UI events*/
+		bReportHUDEvents = false;
 
-		//Display actor
-		Mesh->SetVisibility(true);
+		//Re-enable world values
 		Mesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		Mesh->SetSimulatePhysics(true);
+		PrimaryActorTick.SetTickFunctionEnable(false);
 
 		//Apply a force to make it look like the gun was thrown
-		Mesh->AddForce(TraceOrigin->GetForwardVector().GetSafeNormal2D() * ThrowForce);
-		PrimaryActorTick.SetTickFunctionEnable(false);
-		OwningComponent = nullptr;
-		OwnerInput = nullptr;
+		Mesh->AddForce(TraceOrigin->GetForwardVector() * ThrowForce);
+		TraceOrigin = nullptr;
 	}
 
-	TraceOrigin = TraceOriginComponent;
-	ProjectileOriginMesh = HeldWeapon;
+	OwningComponent = NewOwner;
+}
+
+void AWeapon::NotifyHUD()
+{
+	if (bReportHUDEvents && OwningComponent != nullptr)
+	{
+		OwningComponent->UpdateHUD();
+	}
+}
+
+void AWeapon::InteractionEvent(APawn* EventSender)
+{
+	//We are already being held by another combat component
+	//This could happen if two pawns attempt to pick up the weapon on the same frame
+	if (OwningComponent != nullptr)
+	{
+		return;
+	}
+
+	//If the EventSender has a combat component, pick this weapon up
+	if (UCombatComponent* Combat = EventSender->FindComponentByClass<UCombatComponent>())
+	{
+		Combat->PickUpWeapon(this);
+	}
 }

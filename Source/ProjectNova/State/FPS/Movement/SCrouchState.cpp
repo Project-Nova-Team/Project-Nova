@@ -13,13 +13,11 @@ void USCrouchState::Initialize(UStateMachine* StateMachine, UObject* ContextObje
 void USCrouchState::OnEnter()
 {
 	Super::OnEnter();
-	Input->Stance = WFS_Crouching;
 }
 
 void USCrouchState::OnExit()
 {
 	Super::OnExit();
-	Input->Stance = WFS_Standing;
 }
 
 void USCrouchState::Tick(const float DeltaTime)
