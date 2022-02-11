@@ -25,9 +25,9 @@ public:
 	FWeaponAnimationData()
 		:	Impulse(50.f)
 		,	ImpulseFallOff(50.f)
-		,	ImpulseRecovery(50.f)
-		,	ImpulseKickFactor(0.3f)
+		,	ImpulseRecovery(50.f)	
 		,	ImpulseVelocityMax(10.f)
+		,	ImpulseKickFactor(0.3f)
 		,	ImpulseMax(10.f)
 	{
 	}

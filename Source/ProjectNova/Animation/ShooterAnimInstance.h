@@ -57,10 +57,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	float SwaySpeed;
 
-	/** Current units per second the player character is moving*/
-	UPROPERTY(BlueprintReadOnly, Category = "Animation")
-	float MoveSpeed;
-
 	/** Component space position of the right hand effector*/
 	UPROPERTY(BlueprintReadOnly, Category = "Animation")
 	FVector REffectorLocation;
@@ -89,13 +85,9 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Animation")
 	FVector ImpulseLocation;
 
-	/** IK Blending Alpha. 1 when weapon is held, 0 if otherwise*/
+	/** IK Blending Alpha. 1 when weapon is held, 0 if otherwise or when in montage*/
 	UPROPERTY(BlueprintReadOnly, Category = "Animation")
-	float WeaponAlpha;
-
-	/** IK Blending Alpha. 1 when gun is held, 0 if otherwise*/
-	UPROPERTY(BlueprintReadOnly, Category = "Animation")
-	float GunAlpha;
+	float AlphaIK;
 
 	/***	Montage		***/
 

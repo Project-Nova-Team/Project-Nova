@@ -17,7 +17,7 @@ void UShooterAnimInstance::ReceiveWeaponSwitch(const AWeapon* NewWeapon)
 
 	if (NewWeapon)
 	{
-		WeaponAlpha = 1.f;
+		AlphaIK = 1.f;
 
 		NewWeapon->GetMesh()->SetRelativeLocation(NewWeapon->AnimData.AbsoluteLocationOffset);
 		NewWeapon->GetMesh()->SetRelativeRotation(NewWeapon->AnimData.AbsoluteRotationOffset);
@@ -25,16 +25,12 @@ void UShooterAnimInstance::ReceiveWeaponSwitch(const AWeapon* NewWeapon)
 		REffectorLocation = NewWeapon->AnimData.REffectorLocationOffset;
 		RTargetLocation = NewWeapon->AnimData.RTargetLocationOffset;
 		LTargetLocation = NewWeapon->AnimData.LTargetLocationOffset;
-
-		//If we're holding a gun, apply additional IK
-		GunAlpha = Cast<AGun>(NewWeapon) ? 1.f : 0.f;
 	}
 
-	//No gun, no IK
+	//No weapon, no IK
 	else
 	{
-		GunAlpha = 0.f;
-		WeaponAlpha = 0.f;
+		AlphaIK = 0;
 	}
 
 	ELocomotionType Type = NewWeapon ? NewWeapon->AnimData.LocomotionType : LT_Default;
@@ -84,11 +80,22 @@ void UShooterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 {
 	if (Shooter)
 	{
-		MoveSpeed = Shooter->GetShooterMovement()->Velocity.Size2D();
 		bIsFalling = !Shooter->GetShooterMovement()->bIsOnGround;
-		AnalogModifier = Shooter->GetInput()->bIsRunning ? 2.f : 1.f;
 
-		ComputeWeaponSway(DeltaSeconds);
+		if (Shooter->GetInput()->bIsMoving)
+		{
+			AnalogModifier = Shooter->GetInput()->bIsRunning ? 2.f : 1.f;
+		}
+
+		else
+		{
+			AnalogModifier = 0.f;
+		}
+
+		if (AlphaIK > 0.f)
+		{
+			ComputeWeaponSway(DeltaSeconds);
+		}	
 	}
 }
 
@@ -111,24 +118,25 @@ void UShooterAnimInstance::NativeUninitializeAnimation()
 void UShooterAnimInstance::ComputeWeaponSway(const float DeltaSeconds)
 {
 	//Computes rotation for the right hand when a weapon is held
-	if (HeldWeapon)
-	{
-		REffectorRotation.Roll = FMath::FInterpTo(REffectorRotation.Roll, Shooter->GetInput()->MoveX * MoveSwayMultiplier, DeltaSeconds, SwaySpeed);
-		REffectorRotation.Pitch = FMath::FInterpTo(REffectorRotation.Pitch, Shooter->GetInput()->LookY * LookSwayMultiplier, DeltaSeconds, SwaySpeed);
-		REffectorRotation.Yaw = FMath::FInterpTo(REffectorRotation.Yaw, Shooter->GetInput()->LookX * LookSwayMultiplier, DeltaSeconds, SwaySpeed);
+	REffectorRotation.Roll = FMath::FInterpTo(REffectorRotation.Roll, Shooter->GetInput()->MoveX * MoveSwayMultiplier, DeltaSeconds, SwaySpeed);
+	REffectorRotation.Pitch = FMath::FInterpTo(REffectorRotation.Pitch, Shooter->GetInput()->LookY * LookSwayMultiplier, DeltaSeconds, SwaySpeed);
+	REffectorRotation.Yaw = FMath::FInterpTo(REffectorRotation.Yaw, Shooter->GetInput()->LookX * LookSwayMultiplier, DeltaSeconds, SwaySpeed);
 
-		if (GunAlpha > 0.f)
-		{
-			FTransform Transform = HeldWeapon->GetMesh()->GetSocketTransform(UCombatComponent::SecondarySocketName);
-			LEffectorLocation = Transform.GetLocation();
-			LEffectorRotation = Transform.GetRotation().Rotator();
+	HeldWeapon->GetMesh()->SetRelativeLocation(HeldWeapon->AnimData.AbsoluteLocationOffset);
+	HeldWeapon->GetMesh()->SetRelativeRotation(HeldWeapon->AnimData.AbsoluteRotationOffset);
 
-			//Compute impulse
-			ImpulseLocation = FVector(-1.f * HeldWeapon->AnimData.ImpulseOffset, 0.f, 0.f);
+	REffectorLocation = HeldWeapon->AnimData.REffectorLocationOffset;
+	RTargetLocation = HeldWeapon->AnimData.RTargetLocationOffset;
+	LTargetLocation = HeldWeapon->AnimData.LTargetLocationOffset;
 
-			REffectorRotation.Pitch += HeldWeapon->AnimData.ImpulseOffset * HeldWeapon->AnimData.ImpulseKickFactor;
-		}
-	}
+	//Computes IK rotation and position for left effector
+	FTransform Transform = HeldWeapon->GetMesh()->GetSocketTransform(UCombatComponent::SecondarySocketName);
+	LEffectorLocation = Transform.GetLocation();
+	LEffectorRotation = Transform.GetRotation().Rotator();
+
+	//Compute impulse
+	ImpulseLocation = FVector(-1.f * HeldWeapon->AnimData.ImpulseOffset, 0.f, 0.f);
+	REffectorRotation.Pitch += HeldWeapon->AnimData.ImpulseOffset * HeldWeapon->AnimData.ImpulseKickFactor;
 }
 
 void UShooterAnimInstance::ReceiveAimStart()
