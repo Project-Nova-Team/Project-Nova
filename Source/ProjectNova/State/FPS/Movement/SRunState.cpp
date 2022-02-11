@@ -11,13 +11,13 @@ void USRunState::Initialize(UStateMachine* StateMachine, UObject* ContextObject)
 void USRunState::OnEnter()
 {
 	Super::OnEnter();
-	Shooter->GetCombat()->SetIsInAnimation(true);
+	Input->bIsRunning = true;
 }
 
 void USRunState::OnExit()
 {
 	Super::OnExit();
-	Shooter->GetCombat()->SetIsInAnimation(false);
+	Input->bIsRunning = false;
 }
 
 void USRunState::Tick(const float DeltaTime)
