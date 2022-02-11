@@ -1,119 +1,94 @@
 #include "CombatComponent.h"
-#include "Components/SkeletalMeshComponent.h"
-#include "Gun.h"
-#include "MeleeWeapon.h"
+
+FName UCombatComponent::WeaponSocketName = TEXT("Weapon_Socket");
+FName UCombatComponent::SecondarySocketName = TEXT("Secondary_Socket");
 
 UCombatComponent::UCombatComponent()
+	: MaxWeaponCount(4)
+	, bUpdatesHUD(true)
 {
-	NoWeaponBloom = 1.f;
-	NoWeaponRecoilRecovery = 30.f;
-	CurrentWeaponIndex = 0;
-	MaxWeaponCount = 4;
+	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bStartWithTickEnabled = true;
 }
 
-void UCombatComponent::SetUpConstruction(USceneComponent* TraceComponent, USkeletalMeshComponent* MeshComponent, FWeaponInput* Input)
+void UCombatComponent::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
-	TraceOrigin = TraceComponent;
-	WeaponMesh = MeshComponent;
-	OwnerInput = Input;
-}
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-void UCombatComponent::BeginPlay()
-{
-	Super::BeginPlay();
-
-	if (Arsenal.Num() > 0)
+	if (bIsTryingToAttack && !IsActionLocked())
 	{
-		for (AWeapon* Weapon : Arsenal)
-		{
-			Weapon->SetWeaponSceneValues(TraceOrigin, WeaponMesh);
-			OnArsenalAddition.Broadcast(Weapon);
-		}
+		AWeapon* Weapon = GetHeldWeapon();
 
-		WeaponMesh->SetSkeletalMesh(Arsenal[0]->GetSkeletalMesh());
-		bIsSwapping = true;
-		OnSwap.Broadcast();
+		if (Weapon)
+		{
+			Weapon->Attack();
+
+			if (!Weapon->bAttackContinuously)
+			{
+				bIsTryingToAttack = false;
+			}
+		}
 	}
+}
+
+void UCombatComponent::SetUpConstruction(USkeletalMeshComponent* SocketMesh, USceneComponent* TraceComponent, const bool* bRunningFlag)
+{
+	AttachmentMesh = SocketMesh;
+	TraceOrigin = TraceComponent;
+	bIsRunning = bRunningFlag;
 }
 
 void UCombatComponent::PickUpWeapon(AWeapon* NewWeapon)
 {
+	//Perform any necessary set up for the weapon
 	Arsenal.Emplace(NewWeapon);
-	NewWeapon->OwnerInput = OwnerInput;
+
+	NewWeapon->GetMesh()->SetSimulatePhysics(false);
+	NewWeapon->GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	NewWeapon->AttachToComponent(AttachmentMesh, FAttachmentTransformRules::KeepRelativeTransform, WeaponSocketName);
+
+	NewWeapon->SetCombatComponent(this);
 
 	//We are holding too many weapons, drop the currently held one
 	if (Arsenal.Num() > MaxWeaponCount)
 	{
-		OnArsenalRemoval.Broadcast(Arsenal[CurrentWeaponIndex]);
-		Arsenal[CurrentWeaponIndex]->SetWeaponSceneValues(nullptr, nullptr);
+		bIsTryingToAttack = false;
+		Arsenal[CurrentWeaponIndex]->SetCombatComponent(nullptr);
 		Arsenal.SwapMemory(CurrentWeaponIndex, Arsenal.Num() - 1);
 		Arsenal.RemoveAt(Arsenal.Num() - 1);
-		WeaponMesh->SetSkeletalMesh(Arsenal[CurrentWeaponIndex]->GetSkeletalMesh());
-		SwapEvent();
 	}
 
 	//We picked up a new weapon but havent gone over our weapon limit, just swap to it
-	else if(Arsenal.Num() > 1)
-	{		
-		Arsenal[CurrentWeaponIndex]->StopAttack();
+	else if (Arsenal.Num() > 1)
+	{
+		bIsTryingToAttack = false;
+
+		Arsenal[CurrentWeaponIndex]->GetMesh()->SetVisibility(false);
+
 		CurrentWeaponIndex = Arsenal.Num() - 1;
-		WeaponMesh->SetSkeletalMesh(Arsenal[CurrentWeaponIndex]->GetSkeletalMesh());
-		SwapEvent();
 	}
 
-	//We didn't have any weapons before, so we just play a swap animation
+	//We have no weapons, just mark the index
 	else
 	{
-		WeaponMesh->SetSkeletalMesh(Arsenal[CurrentWeaponIndex]->GetSkeletalMesh());
-		SwapEvent();
+		CurrentWeaponIndex = 0;
 	}
 
-	Arsenal[CurrentWeaponIndex]->SetWeaponSceneValues(TraceOrigin, WeaponMesh);
-	OnArsenalAddition.Broadcast(NewWeapon);
+	UpdateHUD();
+	NotifyWeaponChange();
 }
 
-void UCombatComponent::SwapEvent()
-{
-	//Play swapping animation
-	OnSwap.Broadcast();
-	bIsSwapping = true;
-	
-	//Update UI
-	Arsenal[CurrentWeaponIndex]->OnUpdateUI.ExecuteIfBound();
-
-	//Update component offset, the animation bp will take care of the IK offsets
-	WeaponMesh->SetRelativeLocation(Arsenal[CurrentWeaponIndex]->WeaponMeshOffset);
-	WeaponMesh->SetRelativeRotation(Arsenal[CurrentWeaponIndex]->WeaponMeshRotationOffset);
-}
-
-void UCombatComponent::SetIsInAnimation(const bool Value)
-{
-	if (Value)
-	{
-		if (GetHeldWeapon() != nullptr)
-		{
-			GetHeldWeapon()->StopAttack();
-		}
-		
-		//We were previously playing an animation, we need to cancel it
-		if (bIsInAnimation)
-		{
-			OnAnimCancel.Broadcast();
-		}
-	}
-
-	bIsInAnimation = Value;
-}
-
-void UCombatComponent::ReceiveSwap(const int32 Direction)
+void UCombatComponent::SwapWeapon(const int32 Direction)
 {
 	const int32 WeaponCount = Arsenal.Num();
+
 	if (WeaponCount < 2 || IsNonSwapLocked())
 	{
 		return;
 	}
 
-	Arsenal[CurrentWeaponIndex]->StopAttack();
+	bIsTryingToAttack = false;
+	Arsenal[CurrentWeaponIndex]->GetMesh()->SetVisibility(false);
 
 	//If we swap past the last or before the first index, loop to the other end
 	const int32 LastIndex = WeaponCount - 1;
@@ -123,84 +98,71 @@ void UCombatComponent::ReceiveSwap(const int32 Direction)
 
 	CurrentWeaponIndex = NewIndex;
 
-	WeaponMesh->SetSkeletalMesh(Arsenal[CurrentWeaponIndex]->GetSkeletalMesh());
-	SwapEvent();
+	Arsenal[CurrentWeaponIndex]->GetMesh()->SetVisibility(true);
+
+	UpdateHUD();
+	NotifyWeaponChange();
 }
 
-void UCombatComponent::ReceiveSwapComplete()
+AWeapon* UCombatComponent::GetHeldWeapon() const
 {
-	bIsSwapping = false;
+	return Arsenal.Num() < 1 ? nullptr : Arsenal[CurrentWeaponIndex];
 }
 
-void UCombatComponent::ReceiveAttack(const bool bAttackEnabled)
+void UCombatComponent::NotifyWeaponChange()
 {
-	if (IsAttackLocked())
-	{
-		return;
-	}
-
-	if (!bAttackEnabled)
-	{
-		Arsenal[CurrentWeaponIndex]->StopAttack();
-	}
-	
-	else
-	{
-		//lazy
-		if (Arsenal[CurrentWeaponIndex]->IsA(AMeleeWeapon::StaticClass()))
-		{
-			bIsInAnimation = true; // dont use setter here because it would immediatly stop the attk
-		}
-
-		OnAnimCancel.Broadcast();
-		Arsenal[CurrentWeaponIndex]->StartAttack();		
-	}
-}
-
-void UCombatComponent::ReceiveAim()
-{
-	//We only want to aim guns
-	if (IsActionLocked() || !GetHeldWeapon()->IsAimable())
-	{
-		return;
-	}
-
-	bIsAimed = !bIsAimed;
-	Arsenal[CurrentWeaponIndex]->SetAim(bIsAimed);
-
-	bIsInAnimation = true;
-	
-	if (bIsAimed)
-	{	
-		OnAimStart.Broadcast();	
-	}
-
-	else
-	{
-		OnAimStop.Broadcast();
-	}
-}
-
-void UCombatComponent::ReceiveAnimationComplete()
-{
-	bIsInAnimation = false;
+	bIsSwapping = true;
+	OnSwap.ExecuteIfBound();
+	OnLocomotionChange.Broadcast(GetHeldWeapon() ? GetHeldWeapon() : nullptr);
 }
 
 void UCombatComponent::ReceiveReload()
 {
-	//We only want to reload guns
-	if (IsReloadLocked() || !GetHeldWeapon()->IsReloadable())
+	if (!IsReloadLocked() && GetHeldWeapon()->IsReloadable())
 	{
-		return;
+		//Don't want to keep attacking when a reload is requested
+		bIsTryingToAttack = false;
+
+		bIsReloading = true;
+
+		OnReload.ExecuteIfBound();
 	}
-	
-	bIsReloading = true;
+}
 
-	//Play reload animation
-	OnReload.Broadcast();
+void UCombatComponent::ReceiveStartAttack()
+{
+	bIsTryingToAttack = true;
+}
 
-	//Don't want to keep shooting when a reload is requested
-	Arsenal[CurrentWeaponIndex]->StopAttack();
+void UCombatComponent::ReceiveStopAttack()
+{
+	bIsTryingToAttack = false;
+}
+
+void UCombatComponent::ReceiveAimStart()
+{
+	AWeapon* Weapon = GetHeldWeapon();
+
+	if (Weapon && Weapon->IsAimable() && IsActionLocked())
+	{
+		bIsAimed = true;
+		bIsInAnimation = true;
+
+		OnAimStart.ExecuteIfBound();
+	}
+}
+
+void UCombatComponent::ReceiveAimStop()
+{
+	AWeapon* Weapon = GetHeldWeapon();
+
+	if (Weapon && Weapon->IsAimable())
+	{
+		bIsAimed = false;
+		bIsInAnimation = true;
+
+		OnAimStop.ExecuteIfBound();
+	}
 }
 
 void UCombatComponent::ReceiveReloadComplete(const bool bInterrupted)
@@ -213,72 +175,17 @@ void UCombatComponent::ReceiveReloadComplete(const bool bInterrupted)
 	bIsReloading = false;
 }
 
-AGun* UCombatComponent::GetGunOfType(const EGunClass GunClass) const
+void UCombatComponent::ReceiveAnimationComplete()
 {
-	if (Arsenal.Num() < 1)
-	{
-		return nullptr;
-	}
-
-	for (AWeapon* Weapon : Arsenal)
-	{
-		AGun* WeaponAsGun = Cast<AGun>(Weapon);
-
-		if (WeaponAsGun != nullptr && WeaponAsGun->GunClass == GunClass)
-		{
-			return WeaponAsGun;
-		}
-	}
-
-	return nullptr;
+	bIsInAnimation = false;
 }
 
-//FIX - BAD - Weapon should have each of these values
-
-float UCombatComponent::GetWeaponRecoilVelocity() const
-{	
-	AGun* const WeaponAsGun = Cast<AGun>(GetHeldWeapon());
-
-	if (WeaponAsGun != nullptr)
-	{
-		return WeaponAsGun->GetRecoilVelocity();
-	}
-
-	return 0;
+void UCombatComponent::ReceiveSwapComplete()
+{
+	bIsSwapping = false;
 }
 
-float UCombatComponent::GetWeaponRecoilRecovery() const
+void UCombatComponent::UpdateHUD()
 {
-	AGun* const WeaponAsGun = Cast<AGun>(GetHeldWeapon());
-
-	if (WeaponAsGun != nullptr)
-	{
-		return WeaponAsGun->GetRecoilRecovery();
-	}
-
-	return NoWeaponRecoilRecovery;
-}
-
-float UCombatComponent::GetWeaponBloom() const
-{
-	AGun* const WeaponAsGun = Cast<AGun>(GetHeldWeapon());
-
-	if (WeaponAsGun != nullptr)
-	{
-		return WeaponAsGun->GetBloom();
-	}
-
-	return NoWeaponBloom;
-}
-
-float UCombatComponent::GetWeaponRecoilLimit() const
-{
-	AGun* const WeaponAsGun = Cast<AGun>(GetHeldWeapon());
-
-	if (WeaponAsGun != nullptr)
-	{
-		return WeaponAsGun->GetRecoilLimit();
-	}
-
-	return 0;
+	OnUpdateHUD.ExecuteIfBound(GetHeldWeapon()->GetImmutableHUD());
 }

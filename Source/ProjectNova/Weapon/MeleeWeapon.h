@@ -12,5 +12,12 @@ class PROJECTNOVA_API AMeleeWeapon : public AWeapon
 public:	
 	AMeleeWeapon();
 
-	void StartAttack() override;
+	void Attack() override;
+
+	void SetCombatComponent(UCombatComponent* NewOwner) override;
+
+protected:
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon | Damage")
+	float Damage;
 };

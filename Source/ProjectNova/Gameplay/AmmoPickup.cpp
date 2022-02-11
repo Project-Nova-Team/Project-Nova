@@ -14,7 +14,8 @@ AAmmoPickup::AAmmoPickup()
 void AAmmoPickup::InteractionEvent(APawn* EventSender)
 {
 	AShooter* Shooter = Cast<AShooter>(EventSender);
-	
+	 
+	/* @todo figure out better way
 	if (Shooter != nullptr)
 	{
 		switch (GunType)
@@ -35,5 +36,6 @@ void AAmmoPickup::InteractionEvent(APawn* EventSender)
 		}
 
 		RemoveSelf(this);
-	}
+	} 
+	*/
 }
