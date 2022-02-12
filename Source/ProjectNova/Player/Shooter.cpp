@@ -118,7 +118,7 @@ void AShooter::ScanInteractiveObject()
 	QueryParams.AddIgnoredActor(this);
 
 	const FVector TraceStart = Camera->GetComponentLocation();
-	const FVector TraceEnd = TraceStart + Camera->GetForwardVector() * 300.f; //@todo fix hardcoded 
+	const FVector TraceEnd = TraceStart + Camera->GetForwardVector() * ShooterMovement->InteractionDistance;
 	const bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_WorldStatic, QueryParams);
 
 	//We're looking at an object that is interactive
