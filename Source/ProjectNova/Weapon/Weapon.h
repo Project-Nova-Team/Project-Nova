@@ -27,8 +27,8 @@ public:
 		,	ImpulseFallOff(50.f)
 		,	ImpulseRecovery(50.f)	
 		,	ImpulseVelocityMax(10.f)
-		,	ImpulseKickFactor(0.3f)
 		,	ImpulseMax(10.f)
+		,	ImpulseKickFactor(0.3f)
 	{
 	}
 

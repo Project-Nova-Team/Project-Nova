@@ -10,7 +10,7 @@
 ATrigger::ATrigger()
 {
 	TriggerVolume = CreateDefaultSubobject<UBoxComponent>("Trigger");
-	TriggerVolume->SetCollisionProfileName("Trigger");
+	TriggerVolume->SetCollisionProfileName("OverlapOnlyPawn");
 	SetRootComponent(TriggerVolume);
 
 	bIsActive = true;

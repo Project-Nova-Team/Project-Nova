@@ -23,7 +23,7 @@ ADoor::ADoor()
 
 	Trigger = CreateDefaultSubobject<UBoxComponent>("Door Trigger");
 	Trigger->AttachToComponent(Frame, FAttachmentTransformRules::KeepRelativeTransform);
-	Trigger->SetCollisionProfileName("Trigger");
+	Trigger->SetCollisionProfileName("OverlapOnlyPawn");
 
 	NavLink = CreateDefaultSubobject<UNavLinkCustomComponent>("Nav Link");
 	NavLink->SetNavigationRelevancy(true);

@@ -147,7 +147,7 @@ void AShooter::ScanInteractiveObject()
 	}
 
 	// If we were looking at something previously but aren't anymore, clear the HUD
-	if (LastScannedObject == nullptr)
+	if (LastScannedObject != nullptr)
 	{
 		OnInteractionUpdate.ExecuteIfBound(nullptr);
 	}
