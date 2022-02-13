@@ -12,10 +12,13 @@ class PROJECTNOVA_API AShooterController : public APlayerController, public IGen
 {
 	GENERATED_BODY()
 
-private:
+protected:
 
 	/** Cached cast version of MyHUD for ease of use*/
+	UPROPERTY(BlueprintReadOnly)
 	AShooterHUD* ShooterHUD;
+
+private:
 
 	/** Team ID used for AI threat/friend detection*/
 	FGenericTeamId TeamID;

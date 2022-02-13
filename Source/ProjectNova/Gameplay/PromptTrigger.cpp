@@ -5,15 +5,17 @@
 
 APromptTrigger::APromptTrigger()
 {
-	PrefixText = "Press ";
-	SuffixText = " to Crouch";
+	bActivatedByEngi = true;
+	Prompt.Prefix = TEXT("Press ");
+	Prompt.Suffix = TEXT(" to Crouch");
+	Prompt.Name = FString();
 	InputAction = TEXT("Crouch");
 }
 
 void APromptTrigger::EndOverlap(AActor* OverlappedActor, AActor* OtherActor)
 {
 	//The object that exited the trigger was capable of triggering it in the firstplace
-	if (TriggerWhiteList.Contains(OtherActor->GetClass()))
+	if (IsValidActivator(OtherActor))
 	{
 		APawn* Sender = Cast<APawn>(OtherActor);
 		OnTriggerExited.Broadcast(Sender);
@@ -72,25 +74,20 @@ void APromptTrigger::ReceiveStagedInput()
 	}
 }
 
-void APromptTrigger::SetActive(const bool Value)
+void APromptTrigger::SetActiveInternal()
 {
-	if (bIsActive != Value)
+	if (bIsActive)
 	{
-		bIsActive = Value;
+		TriggerVolume->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	}
 
-		if (bIsActive)
+	else
+	{
+		TriggerVolume->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+		if (PromptSatisfier == Prompt_Input && StagedPawn != nullptr)
 		{
-			TriggerVolume->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-		}
-
-		else
-		{
-			TriggerVolume->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
-			if (PromptSatisfier == Prompt_Input && StagedPawn != nullptr) 
-			{
-				StagedPawn->InputComponent->RemoveActionBinding(BindingIndex);
-			}
+			StagedPawn->InputComponent->RemoveActionBinding(BindingIndex);
 		}
 	}
 }

@@ -139,4 +139,7 @@ private:
 
 	UFUNCTION()
 	void ReceiveMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+
+	UFUNCTION()
+	void ReciveMontageStarted(UAnimMontage* Montage);
 };

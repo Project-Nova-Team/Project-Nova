@@ -47,6 +47,8 @@ public:
 	/** Executed when a weapon switch occurs*/
 	FLocomotionEvent OnLocomotionChange;
 
+	void MarkInAnimation() { bIsInAnimation = true; }
+
 protected:
 
 	/** Collection of weapons on this component*/
