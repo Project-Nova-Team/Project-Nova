@@ -6,6 +6,7 @@
 #include "CombatComponent.generated.h"
 
 DECLARE_DELEGATE(FAnimationRequest);
+DECLARE_DELEGATE_OneParam(FWeaponAddEvent, AWeapon*);
 DECLARE_MULTICAST_DELEGATE_OneParam(FLocomotionEvent, const AWeapon*);
 DECLARE_DELEGATE_OneParam(FNotifyWeaponHUD, const FWeaponHUD&);
 
@@ -47,7 +48,13 @@ public:
 	/** Executed when a weapon switch occurs*/
 	FLocomotionEvent OnLocomotionChange;
 
+	/** Executed when a weapon gets added to the arsenal*/
+	FWeaponAddEvent OnWeaponAdd;
+
 	void MarkInAnimation() { bIsInAnimation = true; }
+
+	/** Returns a reference to the first weapon of the provided class in Arsenal or nullptr if not found*/
+	AWeapon* GetWeaponOfType(TSubclassOf<AWeapon> WeaponClass);
 
 protected:
 

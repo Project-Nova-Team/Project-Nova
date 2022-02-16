@@ -7,9 +7,7 @@
 #include "../State/FPS/ShooterStateMachine.h"
 #include "../Gameplay/HealthComponent.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
-#include "../Gameplay/MeleeComponent.h"
-#include "../Weapon/Gun.h"
-#include "../Gameplay/HealthPickup.h"
+#include "ShooterInventory.h"
 
 void FShooterInput::Tick(const float DeltaTime)
 {
@@ -73,6 +71,10 @@ AShooter::AShooter()
 
 	Health = CreateDefaultSubobject<UHealthComponent>(TEXT("Health"));
 	PerceptionSource = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("Stimulus Source"));
+
+	Inventory = CreateDefaultSubobject<UShooterInventory>(TEXT("Inventory"));
+	Inventory->Shooter = this;
+	Inventory->Combat = Combat;
 
 	StartingStateOverride.Empty();
 }
