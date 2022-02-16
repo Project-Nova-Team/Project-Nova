@@ -7,12 +7,12 @@
 FName AGun::BarrelSocketName = TEXT("Barrel_Socket");
 
 AGun::AGun()
-	: bCanFire(true)
-	, BulletsPerFire(1)
+	: BulletsPerFire(1)
+	, bCanFire(true)
 	, AngularSpread(3.f)
 	, Recoil(100)
-	, RecoilFallOff(100)
 	, RecoilRecovery(100)
+	, RecoilFallOff(100)
 	, RecoilLimit(100)
 	, RecoilAimFactor(0.5f)
 {
