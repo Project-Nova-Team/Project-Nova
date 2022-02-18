@@ -51,8 +51,8 @@ void AShooterHUD::ShowDeathDisplay()
 	WeaponDisplayWidget->SetVisibility(ESlateVisibility::Collapsed);
 	ExitConfirmationWidget->SetVisibility(ESlateVisibility::Collapsed);
 	PauseMenuWidget->SetVisibility(ESlateVisibility::Collapsed);
-	SettingsMenuWidget->SetVisibility(ESlateVisibility::Collapsed);
-	ControlsMenuWidget->SetVisibility(ESlateVisibility::Collapsed);
+	//SettingsMenuWidget->SetVisibility(ESlateVisibility::Collapsed);
+	//ControlsMenuWidget->SetVisibility(ESlateVisibility::Collapsed);
 
 	//Show the death screen
 	DeathScreenWidget->SetVisibility(ESlateVisibility::Visible);

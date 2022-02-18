@@ -3,17 +3,19 @@
 #include "Components/BillboardComponent.h"
 #include "UObject/ConstructorHelpers.h"
 
+//This hard restricts these triggers to be project sensitive material but removing this is effectively zero cost
+#include "../Player/Shooter.h"
+#include "../AI/BaseAI.h"
+
 ATrigger::ATrigger()
 {
 	TriggerVolume = CreateDefaultSubobject<UBoxComponent>("Trigger");
-	TriggerVolume->SetCollisionProfileName("OverlapOnlyPawn");
+	TriggerVolume->SetCollisionProfileName("Trigger");
 	SetRootComponent(TriggerVolume);
 
-	bStartActive = true;
 	bIsActive = true;
+	bActivatedByEngi = true;
 
-
-	//Yoinked from source
 #if WITH_EDITORONLY_DATA
 	SpriteComponent = CreateEditorOnlyDefaultSubobject<UBillboardComponent>(TEXT("Sprite"));
 	SpriteComponent->AttachToComponent(TriggerVolume, FAttachmentTransformRules::KeepRelativeTransform);
@@ -47,39 +49,22 @@ ATrigger::ATrigger()
 void ATrigger::BeginPlay()
 {
 	Super::BeginPlay();
-
-	if (TriggerWhiteList.Num() == 0)
-	{
-		FString Log;
-		GetName(Log);
-		Log += TEXT(" does not have any actors attached to the class white list so it will never trigger! Assign pawn subclasses in blueprint");
-		UE_LOG(LogTemp, Error, TEXT("%s"), *Log);
-
-		bStartActive = false;
-	}
-
-	SetActive(bStartActive);
 	
 	OnActorBeginOverlap.AddDynamic(this, &ATrigger::BeginOverlap);
 	OnActorEndOverlap.AddDynamic(this, &ATrigger::EndOverlap);
-
-#if WITH_EDITORONLY_DATA
-	SpriteComponent->SetHiddenInGame(true);
-#endif
 }
 
 void ATrigger::BeginOverlap(AActor* OverlappedActor, AActor* OtherActor)
 {
-	if (bIsActive && TriggerWhiteList.Contains(OtherActor->GetClass()))
+	if (bIsActive && IsValidActivator(OtherActor))
 	{
-		//Forces other actor to be a pawn type. This will cause crashes if other actor is not a pawn
 		ExecuteTrigger(Cast<APawn>(OtherActor));
 	}
 }
 
 void ATrigger::EndOverlap(AActor* OverlappedActor, AActor* OtherActor)
 {
-	if (TriggerWhiteList.Contains(OtherActor->GetClass()))
+	if (IsValidActivator(OtherActor))
 	{
 		OnTriggerExited.Broadcast(Cast<APawn>(OtherActor));
 		TriggerExited(Cast<APawn>(OtherActor));
@@ -99,20 +84,47 @@ void ATrigger::ExecuteTrigger(APawn* Sender)
 	}
 }
 
+bool ATrigger::IsValidActivator(AActor* Activator) const 
+{
+	return (bActivatedByEngi && Activator->IsA(AShooter::StaticClass())) || (bActivatedByAI && Activator->IsA(ABaseAI::StaticClass()));
+}
+
 void ATrigger::SetActive(const bool Value)
 {
 	if (bIsActive != Value)
 	{
 		bIsActive = Value;
 
-		if (bIsActive)
-		{
-			TriggerVolume->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);			
-		}
+		SetActiveInternal();
+	}
+}
 
-		else
+void ATrigger::SetActiveInternal()
+{
+	if (bIsActive)
+	{
+		TriggerVolume->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	}
+
+	else
+	{
+		TriggerVolume->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+}
+
+#if WITH_EDITOR
+void ATrigger::PostEditChangeProperty(FPropertyChangedEvent& Event)
+{
+	Super::PostEditChangeProperty(Event);
+
+	const FName PropName = Event.GetPropertyName();
+
+	if (PropName != NAME_None)
+	{
+		if (PropName == GET_MEMBER_NAME_CHECKED(ATrigger, bIsActive))
 		{
-			TriggerVolume->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			SetActiveInternal();
 		}
 	}
 }
+#endif

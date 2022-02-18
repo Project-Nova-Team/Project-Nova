@@ -73,6 +73,7 @@ void UShooterAnimInstance::NativeInitializeAnimation()
 		Shooter->GetCombat()->OnSwap.BindUObject(this, &UShooterAnimInstance::ReceiveSwap);
 		Shooter->GetCombat()->OnAnimCancel.BindUObject(this, &UShooterAnimInstance::ReceiveAnimStop);
 		OnMontageEnded.AddDynamic(this, &UShooterAnimInstance::ReceiveMontageEnded);
+		OnMontageStarted.AddDynamic(this, &UShooterAnimInstance::ReciveMontageStarted);
 	}
 }
 
@@ -112,6 +113,7 @@ void UShooterAnimInstance::NativeUninitializeAnimation()
 
 		//preferably find a better way to get a handle to a dynamic multicast
 		OnMontageEnded.Remove(this, TEXT("ReceiveMontageEnded"));
+		OnMontageStarted.Remove(this, TEXT("ReciveMontageStarted"));
 	}
 }
 
@@ -162,6 +164,14 @@ void UShooterAnimInstance::ReceiveAnimStop()
 void UShooterAnimInstance::ReceiveSwap()
 {
 	Montage_Play(SwapAnimMontage, 1.0f);
+}
+
+void UShooterAnimInstance::ReciveMontageStarted(UAnimMontage* Montage)
+{
+	if (Montage == MeleeAttackMontage)
+	{
+		Shooter->GetCombat()->MarkInAnimation();
+	}
 }
 
 void UShooterAnimInstance::ReceiveMontageEnded(UAnimMontage* Montage, bool bInterrupted)
