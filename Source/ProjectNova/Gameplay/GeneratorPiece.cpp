@@ -1,7 +1,7 @@
 #include "GeneratorPiece.h"
 #include "HealthComponent.h"
 #include "Components/StaticMeshComponent.h"
-#include "../Player/Shooter.h"
+#include "../Weapon/MeleeWeapon.h"
 
 AGeneratorPiece::AGeneratorPiece()
 {
@@ -19,10 +19,7 @@ void AGeneratorPiece::BeginPlay()
 
 void AGeneratorPiece::OnOverlap(AActor* OvelappedActor, AActor* OtherActor)
 {
-	//Introducing this hard dependency because realistically nothing else is ever going to repair the generator
-	//This can be better adapted by first correcting the crappy melee component to be attached to a weapon instead of a pawn
-	//This would make the depedency tied to a weapon class instead which is far more appropriate
-	if (!bIsRepaired && OtherActor->IsA(AShooter::StaticClass()))
+	if (!bIsRepaired && OtherActor->IsA(AMeleeWeapon::StaticClass()))
 	{
 		bIsRepaired = true;
 		OnGeneratorPieceRepair.Broadcast();

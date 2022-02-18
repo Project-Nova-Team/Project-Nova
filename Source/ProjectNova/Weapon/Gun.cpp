@@ -1,360 +1,228 @@
 #include "Gun.h"
-#include "Bullet.h"
-#include "Components/SkeletalMeshComponent.h"
-#include "Engine/SkeletalMeshSocket.h"
-#include "../Player/WeaponInput.h"
 
-FGunUIData AGun::GetGunUI() const
-{
-	FGunUIData Data;
-	Data.AmmoInClip = CurrentAmmo;
-	Data.ExcessAmmo = ExccessAmmo;
-	Data.ClipSize = ClipSize;
+#if WITH_EDITOR
+#include "DrawDebugHelpers.h"
+#endif
 
-	return Data;
-}
+FName AGun::BarrelSocketName = TEXT("Barrel_Socket");
 
 AGun::AGun()
+	: BulletsPerFire(1)
+	, bCanFire(true)
+	, AngularSpread(3.f)
+	, Recoil(100)
+	, RecoilRecovery(100)
+	, RecoilFallOff(100)
+	, RecoilLimit(100)
+	, RecoilAimFactor(0.5f)
 {
 	PrimaryActorTick.bCanEverTick = true;
-
-	StartingPoolSize = 3;
-	ProjectileSpeed = 3000.f;
-
-	AimFOV = 60.f;
-	BarrelSocketName = "barrel";
-
-	ClipSize = 100;
-	MaxHeldAmmo = 100;
-	MaxFireRange = 10000.f;
-
-	BodyMultiplier = 1.f;
-	HeadMultiplier = 2.f;
-	LimbMultiplier = 0.5f;
-
-	FireRate = 0.15f;
-	Recoil = 40.f;
-	RecoilAimFactor = 0.5f;
-	RecoilFallOff = 300.f;
-	RecoilRecovery = 20.f;
 	RecoilAngularLimit = 10.f;
-
-	Impulse = 200.f;
-	ImpulseFallOff = 500.f;
-	ImpulseRecovery = 200.f;
-	ImpulseVelocityMax = 50.f;
-	ImpulseMax = 10.f;
-
-	BloomMax = 90.f;
-	Bloom = 5.f;
-	BloomFallOff = 20.f;
-	BloomWalkBase = 15.f;
-	BloomCrouchBase = 5.f;
-	BloomProneBase = 2.5f;
-	BloomBaseMovementMultiplier = 3.f;
-
-	ProjectilePredictionDot = .98f;
-}
-
-
-void AGun::BeginPlay()
-{
-	Super::BeginPlay();
-	BloomMin = BloomWalkBase;
-
-	PrimaryActorTick.SetTickFunctionEnable(false);
-
-	/** Generate initial object pool*/
-	for (int i = 0; i < StartingPoolSize; i++)
-	{
-		AActor* NewActor = GetWorld()->SpawnActor(BulletTemplate->GetDefaultObject()->GetClass());
-		ABullet* NewBullet = Cast<ABullet>(NewActor);
-		NewBullet->InitializeOwner(this, BaseDamage, MaxFireRange, ProjectileSpeed);
-		BulletPool.Add(NewBullet);
-	}	
 }
 
 void AGun::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	SetBloomMin();
-
+	//First count down our fire cooldown if we need to
 	if (!bCanFire)
 	{
-		FireTimer += DeltaTime;
+		const float TimeNow = GetWorld()->GetTimeSeconds();
 
-		if (FireTimer >= FireRate)
+		if (TimeNow - LastFireTimeStamp > FireRate)
 		{
 			bCanFire = true;
-			FireTimer = 0.f;
 		}
 	}
 
-	else if (bAttacking)
+	//If theres any active recoil we need to decrease the impulse
+	if (ActiveRecoil > 0.f)
 	{
-		if (bIsAimed)
-		{
-			FireStraight();
-		}
-
-		else
-		{
-			FireWithNoise();
-		}
+		ActiveRecoil -= DeltaTime * RecoilFallOff;
+		ActiveRecoil = FMath::Min(ActiveRecoil, RecoilLimit);
 	}
 
-	if (RecoilVelocity > 0)
+	if (AnimData.ImpulseVelocity > 0)
 	{
-		const float RecoilBleed = RecoilFallOff * DeltaTime;
-		AddRecoilVelocity(-RecoilBleed);
+		AnimData.ImpulseVelocity -= AnimData.ImpulseFallOff * DeltaTime;
+		AnimData.ImpulseVelocity = FMath::Max(AnimData.ImpulseVelocity, 0.f);
+
+		AnimData.ImpulseOffset += AnimData.ImpulseVelocity * DeltaTime;
+		AnimData.ImpulseOffset = FMath::Min(AnimData.ImpulseOffset, AnimData.ImpulseMax);
 	}
 
-	if (ImpulseVelocity > 0)
+	else if (AnimData.ImpulseOffset != 0)
 	{
-		const float ImpulseBleed = ImpulseFallOff * DeltaTime;
-		AddImpulseVelocity(-ImpulseBleed);
-		ImpulsePosition += ImpulseVelocity * DeltaTime;
-		ImpulsePosition = FMath::Clamp(ImpulsePosition, 0.f, ImpulseMax);
+		AnimData.ImpulseOffset -= AnimData.ImpulseRecovery * DeltaTime;
+		AnimData.ImpulseOffset = FMath::Max(AnimData.ImpulseOffset, 0.f);
 	}
-
-	else if(ImpulsePosition != 0)
-	{
-		ImpulsePosition -= ImpulseRecovery * DeltaTime;
-		ImpulsePosition = FMath::Clamp(ImpulsePosition, 0.f, ImpulseMax);
-	}
-
-	if (CurrentBloom != BloomMin)
-	{
-		const float BloomBleed = BloomFallOff * DeltaTime;
-		AddBloom(-BloomBleed);
-	}
-}
-
-bool AGun::IsReloadable()
-{
-	return (ExccessAmmo > 0) && (CurrentAmmo < ClipSize);
-}
-
-void AGun::FireStraight()
-{
-	OnWeaponAttack.Broadcast();
-
-	if (CurrentAmmo == 0)
-	{
-		StopAttack();
-		return;
-	}
-
-	SetBloomMin();
-
-	CurrentAmmo--;
-	bCanFire = false;
-
-	OnUpdateUI.ExecuteIfBound();
-
-	const FVector TraceStart = TraceOrigin->GetComponentLocation();
-	const FVector ProjectileStart = BulletOrigin->GetSocketLocation(ProjectileOriginMesh);
-	const FVector TraceDirection = TraceOrigin->GetForwardVector();
-
-	//Compute the projectile travel vector
-	//Here we assume the projectile will end up exactly where a hitscan says it will
-	//its possible it misses (the target moved out of the way) in which case the projectile will be far off!
-	//potential solution, check if the bullet distance traveled is greater than ProjectileStart and ProjectileEndGuess
-	//and correct the path if it is and hasn't collided yet
-	//Lets playtest and find out
-	FHitResult Hit;
-	const FVector TraceEnd = TraceStart + (TraceDirection * MaxFireRange);
-	const bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_Pawn, QueryParams);
-	const FVector ProjectileEndGuess = bHit ? Hit.ImpactPoint : TraceEnd;
-
-	FVector ProjectileDirection = (ProjectileEndGuess - ProjectileStart).GetSafeNormal();
-	if ((ProjectileDirection | TraceDirection) < ProjectilePredictionDot)
-	{
-		ProjectileDirection = TraceDirection;
-	}
-	const FQuat ProjectileRotation = ProjectileDirection.ToOrientationQuat();
-
-	//Get a bullet from the pool and send it off
-	ABullet* Bullet = GetAvailableBullet();
-	Bullet->SetActorLocationAndRotation(ProjectileStart, ProjectileRotation);
-	Bullet->SetTrajectory(TraceStart, TraceDirection, ProjectileDirection);
-
-	//Apply recoil/Impulse
-	AddRecoilVelocity(Recoil * RecoilAimFactor);
-	AddImpulseVelocity(Impulse);
-
-	if (WeaponFireType == EWeaponFireType::FT_Semi)
-	{
-		StopAttack();
-	}
-}
-
-void AGun::FireWithNoise()
-{
-	OnWeaponAttack.Broadcast();
-
-	if (CurrentAmmo == 0)
-	{
-		StopAttack();
-		return;
-	}
-
-	CurrentAmmo--;
-	bCanFire = false;
-
-	OnUpdateUI.ExecuteIfBound();
-
-	const FVector TraceStart = TraceOrigin->GetComponentLocation();
-	const FVector ProjectileStart = BulletOrigin->GetSocketLocation(ProjectileOriginMesh);
-	FVector TraceDirection = TraceOrigin->GetForwardVector();
-
-	//Apply bloom
-	const float HorizontalRandom = FMath::FRandRange(-CurrentBloom, CurrentBloom) / 180.f;
-	const float VerticalRandom = FMath::FRandRange(-CurrentBloom, CurrentBloom) / 180.f;
-
-	const FVector TraceXY = FMath::Lerp(TraceDirection, TraceOrigin->GetRightVector(), HorizontalRandom);
-	const FVector TraceZ = FMath::Lerp(TraceDirection, TraceOrigin->GetUpVector(), VerticalRandom);
-	TraceDirection = (TraceXY + TraceZ).GetSafeNormal();
-
-	AddBloom(Bloom);
-	
-	//Compute the projectile travel vector
-	//Here we assume the projectile will end up exactly where a hitscan says it will
-	//its possible it misses (the target moved out of the way) in which case the projectile will be far off!
-	//potential solution, check if the bullet distance traveled is greater than ProjectileStart and ProjectileEndGuess
-	//and correct the path if it is and hasn't collided yet
-	//Lets playtest and find out
-	FHitResult Hit;
-	const FVector TraceEnd = TraceStart + (TraceDirection * MaxFireRange);
-	const bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_Pawn, QueryParams);
-	const FVector ProjectileEndGuess = bHit ? Hit.ImpactPoint : TraceEnd;
-
-	FVector ProjectileDirection = (ProjectileEndGuess - ProjectileStart).GetSafeNormal();
-
-	if ((ProjectileDirection | TraceDirection) < ProjectilePredictionDot)
-	{
-		ProjectileDirection = TraceDirection;
-	}
-	const FQuat ProjectileRotation = ProjectileDirection.ToOrientationQuat();
-
-	//Get a bullet from the pool and send it off
-	ABullet* Bullet = GetAvailableBullet();
-	Bullet->SetActorLocationAndRotation(ProjectileStart, ProjectileRotation);
-	Bullet->SetTrajectory(TraceStart, TraceDirection, ProjectileDirection);
-
-	AddRecoilVelocity(Recoil);
-	AddImpulseVelocity(Impulse);
-
-	if (WeaponFireType == EWeaponFireType::FT_Semi)
-	{
-		StopAttack();
-	}
-}
-
-ABullet* AGun::GetAvailableBullet()
-{
-	//Search through the pool for the first active bullet
-	for (int i = 0; i < BulletPool.Num(); i++)
-	{
-		if (!BulletPool[i]->GetIsActive())
-		{
-			return BulletPool[i];
-		}
-	}
-
-	//We don't have any available bullets in the pool, create a new one then return it
-	AActor* NewActor = GetWorld()->SpawnActor(BulletTemplate->GetDefaultObject()->GetClass());
-	ABullet* NewBullet = Cast<ABullet>(NewActor);
-	NewBullet->InitializeOwner(this, BaseDamage, MaxFireRange, ProjectileSpeed);
-	NewBullet->SetBulletQueryParams(QueryParams);
-	BulletPool.Add(NewBullet);
-
-	return NewBullet;
 }
 
 void AGun::Reload()
 {
-	const uint16 AmmoDifference = ClipSize - CurrentAmmo;
-	const uint16 AmmoToRestore = FMath::Min(AmmoDifference, ExccessAmmo);
+	const int32 AmmoDifference = MaxAmmo - LoadedAmmo;
+	const int32 AmmoToRestore = FMath::Min(AmmoDifference, ExcessAmmo);
 
-	CurrentAmmo += AmmoToRestore;
-	ExccessAmmo -= AmmoToRestore;
+	LoadedAmmo += AmmoToRestore;
+	ExcessAmmo -= AmmoToRestore;
 
-	OnUpdateUI.ExecuteIfBound();
+	NotifyHUD();
 }
 
-void AGun::AddExcessAmmo(int AmmoAddAmount)
+void AGun::AddAmmo(int32 Amount)
 {
-	ExccessAmmo += AmmoAddAmount;
-	OnUpdateUI.ExecuteIfBound();
+	ExcessAmmo = FMath::Min(ExcessAmmo + Amount, MaxExcessAmmo);
+	NotifyHUD();
 }
 
-void AGun::AddRecoilVelocity(const float Velocity)
+void AGun::Attack()
 {
-	RecoilVelocity += Velocity;
-	RecoilVelocity = FMath::Clamp(RecoilVelocity, 0.f, Recoil);
-}
-
-void AGun::AddBloom(const float BloomAmount)
-{
-	CurrentBloom += BloomAmount;
-	CurrentBloom = FMath::Clamp(CurrentBloom, BloomMin, BloomMax);
-}
-
-void AGun::AddImpulseVelocity(const float Velocity)
-{
-	ImpulseVelocity += Velocity;
-	ImpulseVelocity = FMath::Clamp(ImpulseVelocity, 0.f, ImpulseVelocityMax);
-}
-
-void AGun::SetBloomMin()
-{
-	float Base = 0.f;
-
-	switch (OwnerInput->Stance)
+	if (!bCanFire)
 	{
-	case WFS_Standing:
-		Base = BloomWalkBase;
-		break;
-	case WFS_Crouching:
-		Base = BloomCrouchBase;
-		break;
-	case WFS_Proning:
-		Base = BloomProneBase;
-		break;
+		return;
 	}
 
-	const float Multiplier = OwnerInput->bIsMoving ? BloomBaseMovementMultiplier : 1.f;
-	BloomMin = Base * Multiplier;
+	ReceiveAttack();
+
+	if (LoadedAmmo < 1)
+	{
+		return;
+	}
+
+	--LoadedAmmo;
+	bCanFire = false;
+	LastFireTimeStamp = GetWorld()->GetTimeSeconds();
+
+	Fire();
+	AddRecoilVelocity();
+	AddImpulseVelocity();
+	NotifyHUD();
 }
 
-void AGun::SetWeaponSceneValues(USceneComponent* TraceOriginComponent, USkeletalMeshComponent* ProjectileOrigin)
+void AGun::Fire()
 {
-	Super::SetWeaponSceneValues(TraceOriginComponent, ProjectileOrigin);
+	//Build query params once
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(TraceOrigin->GetOwner());
 
-	//Pawn picked the weapon up
-	if (TraceOriginComponent != nullptr)
+	//If we're only shooting one bullet we can perform a faster test
+	if (BulletsPerFire == 1)
 	{
-		//Don't shoot ourselves
-		QueryParams.ClearIgnoredActors();
-		//not perfect, fire location may not be directly attached to the actor we want to avoid hurting
-		QueryParams.AddIgnoredActor(TraceOriginComponent->GetOwner());
-		QueryParams.AddIgnoredActor(this);
+		FHitResult Hit;
 
-		for (ABullet* Bullet : BulletPool)
+		const float HorizontalRandom = FMath::FRandRange(-AngularSpread, AngularSpread) / 180.f;
+		const float VerticalRandom = FMath::FRandRange(-AngularSpread, AngularSpread) / 180.f;
+		const FVector TraceXY = FMath::Lerp(TraceOrigin->GetForwardVector(), TraceOrigin->GetRightVector(), HorizontalRandom);
+		const FVector TraceZ = FMath::Lerp(TraceOrigin->GetForwardVector(), TraceOrigin->GetUpVector(), VerticalRandom);
+
+		const FVector TraceStart = TraceOrigin->GetComponentLocation();
+		const FVector TraceEnd = TraceStart + ((TraceXY + TraceZ).GetSafeNormal() * MaxFireRange);
+
+		const bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_Pawn, Params);
+
+		AActor* const HitActor = Hit.GetActor();
+
+		if (bHit && HitActor != nullptr)
 		{
-			Bullet->SetBulletQueryParams(QueryParams);
+			AActor* const OwningActor = TraceOrigin->GetOwner();
+			HitActor->TakeDamage(DamagePerBullet, FDamageEvent(), OwningActor->GetInstigatorController(), OwningActor);
 		}
 
-		BulletOrigin = ProjectileOrigin->GetSocketByName(BarrelSocketName);
-		PrimaryActorTick.SetTickFunctionEnable(true);
+		ReceiveProjectileFired(Mesh->GetSocketLocation(BarrelSocketName), bHit ? Hit.ImpactPoint : TraceEnd);
+
+#if WITH_EDITOR
+		if (bDrawFireTraces)
+		{
+			DrawDebugLine(GetWorld(), Mesh->GetSocketLocation(BarrelSocketName), bHit ? Hit.ImpactPoint : TraceEnd, FColor::Red, false, 3.f);
+		}
+#endif
 	}
 
-	//Pawn dropped the weapon, stop ticking
 	else
 	{
-		BulletOrigin = nullptr;
-		PrimaryActorTick.SetTickFunctionEnable(false);
-	}	
+		/** Rather than report a hit event every time an actor is struck by an individual bullet
+		 *  We are going to sum the number of bullets that hit a given actor and report the damage
+		 *  event after that occurs. This is signifcantly more performant because there is a lot
+		 *  of pipeline stuff that occurs when reporting a damage event. Additionally, this means
+		 *  Blueprint events that do things like play sound will only be called once instead many times
+		 */
+		TArray<AActor*> Actors;
+		TArray<int32> Hits;
+
+		for (int32 i = 0; i < BulletsPerFire; ++i)
+		{
+			FHitResult Hit;
+
+			const float HorizontalRandom = FMath::FRandRange(-AngularSpread, AngularSpread) / 180.f;
+			const float VerticalRandom = FMath::FRandRange(-AngularSpread, AngularSpread) / 180.f;
+			const FVector TraceXY = FMath::Lerp(TraceOrigin->GetForwardVector(), TraceOrigin->GetRightVector(), HorizontalRandom);
+			const FVector TraceZ = FMath::Lerp(TraceOrigin->GetForwardVector(), TraceOrigin->GetUpVector(), VerticalRandom);
+
+			const FVector TraceStart = TraceOrigin->GetComponentLocation();
+			const FVector TraceEnd = TraceStart + ((TraceXY + TraceZ).GetSafeNormal() * MaxFireRange);
+
+			const bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_Pawn, Params);
+
+			AActor* const HitActor = Hit.GetActor();
+
+			if (bHit && HitActor != nullptr)
+			{
+				//Although this operation is O(n), this array is likely to only ever hit 4/5 enemies max.
+				//We realistically don't have to worry about perfomance implications in that regard
+				int32 HitIndex = Actors.IndexOfByKey(HitActor);
+
+				if (HitIndex != INDEX_NONE)
+				{
+					++Hits[HitIndex];
+				}
+
+				//We have not hit this actor before, add it
+				else
+				{
+					Actors.Add(HitActor);
+					Hits.Add(1);
+				}
+			}
+
+			ReceiveProjectileFired(Mesh->GetSocketLocation(BarrelSocketName), bHit ? Hit.ImpactPoint : TraceEnd);
+
+#if WITH_EDITOR
+			if (bDrawFireTraces)
+			{
+				DrawDebugLine(GetWorld(), Mesh->GetSocketLocation(BarrelSocketName), bHit ? Hit.ImpactPoint : TraceEnd, FColor::Red, false, 3.f);
+			}
+#endif
+		}
+
+		AActor* const OwningActor = TraceOrigin->GetOwner();
+
+		//Ok now lets sum the damage from each bullet and deal the damage
+		for (int32 i = 0; i < Actors.Num(); ++i)
+		{
+			float Damage = Hits[i] * DamagePerBullet;
+			Actors[i]->TakeDamage(Damage, FDamageEvent(), OwningActor->GetInstigatorController(), OwningActor);
+		}
+	}
+}
+
+void AGun::AddRecoilVelocity()
+{
+	const float Multiplier = bIsAimed ? RecoilAimFactor : 1.f;
+	ActiveRecoil += Recoil * Multiplier;
+	ActiveRecoil = FMath::Min(ActiveRecoil, RecoilLimit);
+}
+
+void AGun::AddImpulseVelocity()
+{
+	AnimData.ImpulseVelocity += AnimData.Impulse;
+	AnimData.ImpulseVelocity = FMath::Min(AnimData.ImpulseVelocity, AnimData.ImpulseVelocityMax);
+}
+
+void AGun::NotifyHUD()
+{
+	HUDData.LoadedAmmo = LoadedAmmo;
+	HUDData.ExcessAmmo = ExcessAmmo;
+	HUDData.MaxAmmo = MaxAmmo;
+
+	Super::NotifyHUD();
 }

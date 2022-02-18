@@ -2,23 +2,42 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
+#include "GenericTeamAgentInterface.h"
 #include "ShooterController.generated.h"
 
 class AShooterHUD;
 
 UCLASS()
-class PROJECTNOVA_API AShooterController : public APlayerController
+class PROJECTNOVA_API AShooterController : public APlayerController, public IGenericTeamAgentInterface
 {
 	GENERATED_BODY()
 
+protected:
+
+	/** Cached cast version of MyHUD for ease of use*/
+	UPROPERTY(BlueprintReadOnly)
+	AShooterHUD* ShooterHUD;
+
+private:
+
+	/** Team ID used for AI threat/friend detection*/
+	FGenericTeamId TeamID;
+
 public:
-	AShooterController() { }
+
+	void ReceivePause();
+
+	/// Begin APawn Interface ///
 
 	void OnUnPossess() override;
 	void OnPossess(APawn* InPawn) override;
 
+	void SetGenericTeamId(const FGenericTeamId& NewTeamID) override;
+	FGenericTeamId GetGenericTeamId() const override { return TeamID; }
+
+
 private:
 
-	/** Load order for controller/hud/gamemode is complicated so we just use this to check if its the first load sequence*/
-	uint8 bHUDInit : 1;
+	/** Handle to pause input bind*/
+	int32 BindingHandle;
 };
