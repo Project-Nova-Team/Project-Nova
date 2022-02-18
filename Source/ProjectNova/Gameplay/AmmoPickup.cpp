@@ -1,11 +1,13 @@
 #include "AmmoPickup.h"
 #include "GameFramework/Pawn.h"
 #include "../Player/Shooter.h"
+#include "../Player/ShooterInventory.h"
+#include "../Weapon/CombatComponent.h"
 #include "Components/StaticMeshComponent.h"
 
 AAmmoPickup::AAmmoPickup()
 {
-	AmmoAmount = 10;
+	Package.AmmoAmount = 10;
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>("Mesh");
 	SetRootComponent(Mesh);
 }
@@ -13,29 +15,14 @@ AAmmoPickup::AAmmoPickup()
 
 void AAmmoPickup::InteractionEvent(APawn* EventSender)
 {
-	AShooter* Shooter = Cast<AShooter>(EventSender);
-	 
-	/* @todo figure out better way
-	if (Shooter != nullptr)
+	if (AShooter* Shooter = Cast<AShooter>(EventSender))
 	{
-		switch (GunType)
+		if (Package.GunClass.Get() != nullptr)
 		{
-		case WC_Pistol:
-			Shooter->GetInventory()->PistolAmmo += AmmoAmount;
-			break;
-		case WC_Shotgun:
-			Shooter->GetInventory()->ShotgunAmmo += AmmoAmount;
-			break;
-		case WC_Rifle:
-			Shooter->GetInventory()->RifleAmmo += AmmoAmount;
+			Shooter->GetInventory()->AddPack(Package);
 		}
 
-		if (Shooter->HasGunOfType(GunType))
-		{
-			Shooter->LoadAmmoOnPickup(GunType);
-		}
-
-		RemoveSelf(this);
-	} 
-	*/
+		Mesh->SetVisibility(false);
+		Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
 }

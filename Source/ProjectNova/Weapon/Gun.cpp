@@ -69,6 +69,12 @@ void AGun::Reload()
 	NotifyHUD();
 }
 
+void AGun::AddAmmo(int32 Amount)
+{
+	ExcessAmmo = FMath::Min(ExcessAmmo + Amount, MaxExcessAmmo);
+	NotifyHUD();
+}
+
 void AGun::Attack()
 {
 	if (!bCanFire)

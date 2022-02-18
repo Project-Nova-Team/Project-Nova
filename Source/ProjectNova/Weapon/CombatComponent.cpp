@@ -38,6 +38,20 @@ void UCombatComponent::SetUpConstruction(USkeletalMeshComponent* SocketMesh, USc
 	bIsRunning = bRunningFlag;
 }
 
+
+AWeapon* UCombatComponent::GetWeaponOfType(TSubclassOf<AWeapon> WeaponClass)
+{
+	for (AWeapon* Weapon : Arsenal)
+	{
+		if (Weapon->GetClass() == WeaponClass.Get())
+		{
+			return Weapon;
+		}
+	}
+
+	return nullptr;
+}
+
 void UCombatComponent::PickUpWeapon(AWeapon* NewWeapon)
 {
 	//Perform any necessary set up for the weapon
@@ -48,6 +62,7 @@ void UCombatComponent::PickUpWeapon(AWeapon* NewWeapon)
 	NewWeapon->AttachToComponent(AttachmentMesh, FAttachmentTransformRules::KeepRelativeTransform, WeaponSocketName);
 
 	NewWeapon->SetCombatComponent(this);
+	OnWeaponAdd.ExecuteIfBound(NewWeapon);
 
 	//We are holding too many weapons, drop the currently held one
 	if (Arsenal.Num() > MaxWeaponCount)
