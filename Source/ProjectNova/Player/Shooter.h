@@ -11,6 +11,7 @@
 class UCapsuleComponent;
 class UShooterStateMachine;
 class UHealthComponent;
+class UShooterInventory;
 class UAIPerceptionStimuliSourceComponent;
 
 DECLARE_DELEGATE_OneParam(FScan, IInteractiveObject*);
@@ -121,6 +122,8 @@ public:
 	/** Returns State Machine. Maybe consider moving this to shooter movement component?*/
 	FORCEINLINE UShooterStateMachine* GetStateMachine() { return StateMachine; }
 
+	FORCEINLINE UShooterInventory* GetInventory() { return Inventory; }
+
 	/** Draws debug traces for a variety of position tests if enabled*/
 	UPROPERTY(Category = Pawn, EditAnywhere)
 	uint8 bTraceDebug : 1;
@@ -186,6 +189,9 @@ private:
 
 	UPROPERTY(Transient)
 	UShooterStateMachine* StateMachine;
+
+	UPROPERTY()
+	UShooterInventory* Inventory;
 	
 	/**Contains all relevant information of the input state*/
 	FShooterInput InputState;

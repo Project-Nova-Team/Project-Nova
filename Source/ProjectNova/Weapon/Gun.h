@@ -111,6 +111,8 @@ public:
 	virtual void Attack() override;
 	virtual void Reload() override;
 
+	void AddAmmo(int32 Amount);
+
 protected:
 
 	virtual void NotifyHUD() override;
