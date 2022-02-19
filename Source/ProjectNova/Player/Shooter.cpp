@@ -7,9 +7,7 @@
 #include "../State/FPS/ShooterStateMachine.h"
 #include "../Gameplay/HealthComponent.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
-#include "../Gameplay/MeleeComponent.h"
-#include "../Weapon/Gun.h"
-#include "../Gameplay/HealthPickup.h"
+#include "ShooterInventory.h"
 
 void FShooterInput::Tick(const float DeltaTime)
 {
@@ -54,12 +52,10 @@ AShooter::AShooter()
 	CameraAnchor = CreateDefaultSubobject<USceneComponent>(TEXT("Anchor"));
 	Camera = CreateDefaultSubobject<UFirstPersonCameraComponent>(TEXT("Camera"));
 	ShooterMovement = CreateDefaultSubobject<UShooterMovementComponent>(TEXT("Movement"));
-	Melee = CreateDefaultSubobject<UMeleeComponent>(TEXT("Melee"));
 
 	SetRootComponent(Collider);
 	CameraAnchor->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 	Camera->AttachToComponent(CameraAnchor, FAttachmentTransformRules::KeepRelativeTransform);
-	Melee->AttachToComponent(Camera, FAttachmentTransformRules::KeepRelativeTransform);
 
 	Collider->SetCollisionProfileName("Pawn");
 	Collider->SetCapsuleHalfHeight(ShooterMovement->StandingHeight);
@@ -70,14 +66,15 @@ AShooter::AShooter()
 	ShooterSkeletalMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Arms"));
 	ShooterSkeletalMesh->AttachToComponent(Camera, FAttachmentTransformRules::KeepRelativeTransform);
 
-	WeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh"));
-	WeaponMesh->SetupAttachment(ShooterSkeletalMesh, TEXT("WeaponSocket"));
-
 	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("Combat"));
-	Combat->SetUpConstruction(Camera, WeaponMesh, &InputState);
+	Combat->SetUpConstruction(ShooterSkeletalMesh, Camera, &InputState.bIsRunning);
 
 	Health = CreateDefaultSubobject<UHealthComponent>(TEXT("Health"));
 	PerceptionSource = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("Stimulus Source"));
+
+	Inventory = CreateDefaultSubobject<UShooterInventory>(TEXT("Inventory"));
+	Inventory->Shooter = this;
+	Inventory->Combat = Combat;
 
 	StartingStateOverride.Empty();
 }
@@ -103,11 +100,8 @@ void AShooter::BeginPlay()
 		SetStateOverride(StartingStateOverride);
 	}
 
-	OnStateLoadComplete.Broadcast();
-
 	InputState.Owner = this;
 
-	Combat->OnArsenalAddition.AddUObject(this, &AShooter::LoadAmmoOnWeaponGet);
 	Health->OnDeath.AddDynamic(this, &AShooter::HandleDeath);
 }
 
@@ -126,44 +120,41 @@ void AShooter::ScanInteractiveObject()
 	QueryParams.AddIgnoredActor(this);
 
 	const FVector TraceStart = Camera->GetComponentLocation();
-	const FVector TraceEnd = TraceStart + Camera->GetForwardVector() * FMath::Min(ShooterMovement->StandingHeight * 2.f, ShooterMovement->InteractionDistance);
-	const bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_Camera, QueryParams);
+	const FVector TraceEnd = TraceStart + Camera->GetForwardVector() * ShooterMovement->InteractionDistance;
+	const bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_WorldStatic, QueryParams);
 
 	//We're looking at an object that is interactive
-	if (bHit && Hit.Actor != nullptr && Hit.Actor->Implements<UInteractiveObject>())
+	if (bHit && Hit.GetActor() != nullptr && Hit.GetActor()->Implements<UInteractiveObject>())
 	{
-		//HACK THIS
-		if (Hit.Actor->IsA(AHealthPickup::StaticClass()) && Health->bIsFullHealth)
-		{
-			return;
-		}
-
-		IInteractiveObject* InteractiveObject = Cast<IInteractiveObject>(Hit.Actor);
+		IInteractiveObject* InteractiveObject = Cast<IInteractiveObject>(Hit.GetActor());
 
 		if (InteractiveObject->CanInteract())
 		{
-			//Lets us do UI things in blueprint
-			OnScanHit.Broadcast(InteractiveObject->GetInteractionPrompt());
+			//We are looking at a new object, inform the HUD
+			if (InteractiveObject != LastScannedObject)
+			{
+				OnInteractionUpdate.ExecuteIfBound(InteractiveObject);
+			}
+
+			LastScannedObject = InteractiveObject;
 
 			if (InputState.bIsTryingToInteract)
 			{
 				InteractiveObject->InteractionEvent(this);
 				InputState.bIsTryingToInteract = false;
 			}
-		}
 
-		else if (!bIsPrompted)
-		{
-			FInteractionPrompt Empty;
-			OnScanMiss.Broadcast(Empty);
+			return;
 		}
 	}
 
-	else if(!bIsPrompted)
+	// If we were looking at something previously but aren't anymore, clear the HUD
+	if (LastScannedObject != nullptr)
 	{
-		FInteractionPrompt Empty;
-		OnScanMiss.Broadcast(Empty);
+		OnInteractionUpdate.ExecuteIfBound(nullptr);
 	}
+
+	LastScannedObject = nullptr;
 }
 
 void AShooter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -188,30 +179,6 @@ void AShooter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	InputComponent->BindAction("Sprint", IE_Released, this, &AShooter::SprintRelease);
 	InputComponent->BindAction("Reload", IE_Pressed, this, &AShooter::ReloadPress);
 	InputComponent->BindAction("Reload", IE_Released, this, &AShooter::ReloadRelease);
-	// bind pause to game mode because pausing is not a shooter behavior
-	InputComponent->BindAction("Pause", IE_Pressed, GetWorld()->GetAuthGameMode<AShooterGameMode>(), &AShooterGameMode::PauseGame)
-		.bExecuteWhenPaused = true;
-}
-
-void AShooter::ShooterMakeNoise(FVector Location, float Volume)
-{
-	OnMakeNoise.Broadcast(Location, Volume);
-}
-
-void AShooter::MakeSound(const float Volume)
-{
-	FHitResult SoundHit;
-	FCollisionQueryParams QueryParams;
-	QueryParams.AddIgnoredActor(this);
-
-	const FVector TraceStart = Camera->GetComponentLocation();
-	const FVector TraceEnd = TraceStart + Camera->GetForwardVector() * 10000.f;
-	const bool bHit = GetWorld()->LineTraceSingleByChannel(SoundHit, TraceStart, TraceEnd, ECC_Camera, QueryParams);
-
-	if (bHit)
-	{
-		ShooterMakeNoise(SoundHit.ImpactPoint, Volume);
-	}
 }
 
 void AShooter::HandleDeath()
@@ -222,35 +189,4 @@ void AShooter::HandleDeath()
 bool AShooter::CanVault()
 {
 	return bIsInsideVaultTrigger && bIsLookingAtVaultObject;
-}
-
-void AShooter::LoadAmmoOnPickup(const EGunClass GunType)
-{
-	LoadAmmoOnWeaponGet(Combat->GetGunOfType(GunType));
-}
-
-void AShooter::LoadAmmoOnWeaponGet(AWeapon* NewWeapon)
-{
-	AGun* WeaponAsGun = Cast<AGun>(NewWeapon);
-
-	if (WeaponAsGun != nullptr)
-	{
-		switch (WeaponAsGun->GunClass)
-		{
-		case WC_Pistol:
-			WeaponAsGun->AddExcessAmmo(Inventory.PistolAmmo);
-			Inventory.PistolAmmo = 0;
-		case WC_Shotgun:
-			WeaponAsGun->AddExcessAmmo(Inventory.ShotgunAmmo);
-			Inventory.ShotgunAmmo = 0;
-		case WC_Rifle:
-			WeaponAsGun->AddExcessAmmo(Inventory.RifleAmmo);
-			Inventory.RifleAmmo = 0;
-		}
-	}
-}
-
-bool AShooter::HasGunOfType(const EGunClass GunType) const
-{
-	return Combat->GetGunOfType(GunType) != nullptr;
 }
