@@ -140,18 +140,6 @@ public:
 	/** Invoked when the state machine finishes initialization*/
 	FStateLoadEvent OnStateLoadComplete;
 
-	/** Set when player overlaps or unoverlaps vault trigger*/
-	UPROPERTY(BlueprintReadOnly)
-	uint8 bIsInsideVaultTrigger : 1;
-
-	/** Is player looking at a vault object?*/
-	UPROPERTY(BlueprintReadWrite)
-	uint8 bIsLookingAtVaultObject : 1;
-
-	/** Returns whether player is in vault trigger and is looking at vault object*/
-	UFUNCTION(BlueprintCallable)
-	bool CanVault();
-
 	/** Moves ammo from the shooter inventory into the the approrpiate weapon, if the shooter has it*/
 	void LoadAmmoOnPickup(const EGunClass GunType);
 
@@ -174,6 +162,8 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
 	FString StartingStateOverride;
+
+	IInteractiveObject *GetLastScannedObject() { return LastScannedObject; }
 
 protected:
 	virtual void BeginPlay() override;
@@ -231,6 +221,8 @@ private:
 	void HandleVault(AVaultObject* Obj);
 
 	bool bCanScanObject;
+
+	bool bClampCamera;
 
 	IInteractiveObject* LastScannedObject;
 

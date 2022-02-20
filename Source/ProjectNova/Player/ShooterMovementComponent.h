@@ -43,12 +43,20 @@ public:
 	float CameraSensitivity;
 
 	/** The max angle in degrees the camera can look up with respect to the XY plane*/
-	UPROPERTY(EditAnywhere, Category = "Control | Camera", meta = (ClampMin = "0.1", ClampMax = "89.9"))
-	float CameraMaxAngle;
+	UPROPERTY(EditAnywhere, Category = "Control | Camera", meta = (PitchClampMin = "0.1", PitchClampMax = "89.9"))
+	float CameraPitchMaxAngle;
 
 	/** The min angle in degrees the camera can look down with respect to the XY plane*/
-	UPROPERTY(EditAnywhere, Category = "Control | Camera", meta = (ClampMin = "-89.9", ClampMax = "-0.1"))
-	float CameraMinAngle;
+	UPROPERTY(EditAnywhere, Category = "Control | Camera", meta = (PitchClampMin = "-89.9", PitchClampMax = "-0.1"))
+	float CameraPitchMinAngle;
+
+	/** The max angle in degrees the camera can look up with respect to the XY plane*/
+	UPROPERTY(EditAnywhere, Category = "Control | Camera", meta = (YawClampMin = "0.1", YawClampMax = "89.9"))
+	float CameraYawMaxAngle;
+
+	/** The min angle in degrees the camera can look down with respect to the XY plane*/
+	UPROPERTY(EditAnywhere, Category = "Control | Camera", meta = (YawClampMin = "-89.9", YawClampMax = "-0.1"))
+	float CameraYawMinAngle;
 
 	/** The relative height at which the camera joint rests on the collider */
 	UPROPERTY(EditAnywhere, Category = "Control | Camera")

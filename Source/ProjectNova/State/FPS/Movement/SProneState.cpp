@@ -13,6 +13,7 @@ void USProneState::Initialize(UStateMachine* StateMachine, UObject* ContextObjec
 void USProneState::OnEnter()
 {
 	Super::OnEnter();
+	UE_LOG(LogTemp, Warning, TEXT("Prone Enter"));
 	Input->Stance = WFS_Proning;
 }
 

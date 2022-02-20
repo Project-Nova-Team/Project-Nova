@@ -23,7 +23,6 @@ void USRunState::OnExit()
 void USRunState::Tick(const float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	CheckForVault();
 	CheckForWalkState();
 	//CheckForDiveState();
 }

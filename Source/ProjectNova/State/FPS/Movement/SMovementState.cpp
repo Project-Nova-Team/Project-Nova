@@ -43,14 +43,6 @@ FVector USMovementState::ConvertInputRelativeToCamera() const
 	return RelativeInput;
 }
 
-void USMovementState::CheckForVault()
-{
-	if (Input->bIsTryingToVault && Movement->bIsOnGround && Shooter->CanVault())
-	{
-		FlagTransition("Vaulting", 10);
-	}
-}
-
 void USMovementState::CalculateVelocity(const float DeltaTime) const
 {
 	//If we're airborne we want our input to be scaled by the air control factor
@@ -168,11 +160,21 @@ void USMovementState::RotateCameraFromInput(const float DeltaTime)
 	const bool bRecoilActive = RecoilVelocity > 0.f;
 
 	FRotator AnchorRotation = Shooter->GetAnchor()->GetComponentRotation();
-	AnchorRotation.Yaw += (Input->LookX * Movement->CameraSensitivity * DeltaTime);
+
+	if (bClampCameraYaw)
+	{
+		AnchorRotation.Yaw = FMath::Clamp(
+			AnchorRotation.Yaw + (Input->LookX * Movement->CameraSensitivity * DeltaTime),
+			Movement->CameraYawMinAngle,
+			Movement->CameraYawMaxAngle);
+	}
+	else
+		AnchorRotation.Yaw += (Input->LookX * Movement->CameraSensitivity * DeltaTime);
+
 	AnchorRotation.Pitch = FMath::Clamp(
 		AnchorRotation.Pitch + (Input->LookY * Movement->CameraSensitivity * DeltaTime),
-		Movement->CameraMinAngle,
-		Movement->CameraMaxAngle);
+		Movement->CameraPitchMinAngle,
+		Movement->CameraPitchMaxAngle);
 
 	Shooter->GetAnchor()->SetWorldRotation(AnchorRotation);
 	const FRotator RelativeLook = Shooter->GetCamera()->GetRelativeRotation();
@@ -184,9 +186,9 @@ void USMovementState::RotateCameraFromInput(const float DeltaTime)
 		const float AngularLimit = Shooter->GetCombat()->GetWeaponRecoilLimit();
 
 		//The new recoil pitch would have us look further upwards than we allow, clamp it
-		if (NewPitch + AnchorRotation.Pitch > Movement->CameraMaxAngle)
+		if (NewPitch + AnchorRotation.Pitch > Movement->CameraPitchMaxAngle)
 		{
-			NewPitch = Movement->CameraMaxAngle - AnchorRotation.Pitch;
+			NewPitch = Movement->CameraPitchMaxAngle - AnchorRotation.Pitch;
 		}
 
 		//Recoil has pushed us past the maximum vertical effect, clamp it

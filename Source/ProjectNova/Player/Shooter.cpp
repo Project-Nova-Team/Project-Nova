@@ -9,6 +9,7 @@
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "../Gameplay/MeleeComponent.h"
 #include "../Weapon/Gun.h"
+#include "../State/State.h"
 #include <ProjectNova/Gameplay/VaultObject.h>
 #include "../Gameplay/HealthPickup.h"
 
@@ -181,7 +182,6 @@ void AShooter::Interact(IInteractiveObject* Object, FScanEvent ScanDelegate)
 		}
 	}
 
-
 	/* Vault is handled in the shooter because vault object does not impose the vault.
 	Any action that the shooter needs to impose needs to be done in this method */ 
 	if (InputState.bIsTryingToVault)
@@ -192,7 +192,9 @@ void AShooter::Interact(IInteractiveObject* Object, FScanEvent ScanDelegate)
 			UE_LOG(LogTemp, Warning, TEXT("%s Vault Object not null, Vault Initiated"), *TempVaultObject->GetInteractionMappingName().ToString());
 			HandleVault(TempVaultObject);
 		}
-		
+
+		//StateMachine->SetState("Vault"); crashes
+
 		InputState.bIsTryingToVault = false;
 	}
 }
@@ -248,11 +250,6 @@ void AShooter::MakeSound(const float Volume)
 void AShooter::HandleDeath()
 {
 	StateMachine->SetState("Death");
-}
-
-bool AShooter::CanVault()
-{
-	return bIsInsideVaultTrigger && bIsLookingAtVaultObject;
 }
 
 void AShooter::LoadAmmoOnPickup(const EGunClass GunType)

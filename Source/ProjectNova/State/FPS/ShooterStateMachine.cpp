@@ -6,6 +6,7 @@
 #include "Movement/SDiveState.h"
 #include "Event/SVaultState.h"
 #include "Event/SDeathState.h"
+#include "Event/SVentState.h"
 #include "Event/SLookState.h"
 
 void UShooterStateMachine::Initialize(UObject* Context)
@@ -19,6 +20,7 @@ void UShooterStateMachine::Initialize(UObject* Context)
 	this->AddState<USVaultState>(Context, "Vaulting");
 	this->AddState<USDeathState>(Context, "Death");
 	this->AddState<USLookState>(Context, "Look");
+	this->AddState<USVentState>(Context, "Venting");
 	this->AddState<USDiveState>(Context, "Diving", false);
 
 	this->SetInitialState("Walking");

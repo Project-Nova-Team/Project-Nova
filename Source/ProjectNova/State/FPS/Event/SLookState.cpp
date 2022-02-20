@@ -26,8 +26,8 @@ void USLookState::RotateCameraFromInput(const float DeltaTime)
 	AnchorRotation.Yaw += (Input->LookX * Movement->CameraSensitivity * DeltaTime);
 	AnchorRotation.Pitch = FMath::Clamp(
 		AnchorRotation.Pitch + (Input->LookY * Movement->CameraSensitivity * DeltaTime),
-		Movement->CameraMinAngle,
-		Movement->CameraMaxAngle);
+		Movement->CameraPitchMinAngle,
+		Movement->CameraPitchMaxAngle);
 
 	Shooter->GetAnchor()->SetWorldRotation(AnchorRotation);
 }
