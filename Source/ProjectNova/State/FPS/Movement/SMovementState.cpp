@@ -161,20 +161,12 @@ void USMovementState::RotateCameraFromInput(const float DeltaTime)
 
 	FRotator AnchorRotation = Shooter->GetAnchor()->GetComponentRotation();
 
-	if (bClampCameraYaw)
-	{
-		AnchorRotation.Yaw = FMath::Clamp(
-			AnchorRotation.Yaw + (Input->LookX * Movement->CameraSensitivity * DeltaTime),
-			Movement->CameraYawMinAngle,
-			Movement->CameraYawMaxAngle);
-	}
-	else
-		AnchorRotation.Yaw += (Input->LookX * Movement->CameraSensitivity * DeltaTime);
+	AnchorRotation.Yaw += (Input->LookX * Movement->CameraSensitivity * DeltaTime);
 
 	AnchorRotation.Pitch = FMath::Clamp(
 		AnchorRotation.Pitch + (Input->LookY * Movement->CameraSensitivity * DeltaTime),
-		Movement->CameraPitchMinAngle,
-		Movement->CameraPitchMaxAngle);
+		Movement->CameraMinAngle,
+		Movement->CameraMaxAngle);
 
 	Shooter->GetAnchor()->SetWorldRotation(AnchorRotation);
 	const FRotator RelativeLook = Shooter->GetCamera()->GetRelativeRotation();
@@ -186,9 +178,9 @@ void USMovementState::RotateCameraFromInput(const float DeltaTime)
 		const float AngularLimit = Shooter->GetCombat()->GetWeaponRecoilLimit();
 
 		//The new recoil pitch would have us look further upwards than we allow, clamp it
-		if (NewPitch + AnchorRotation.Pitch > Movement->CameraPitchMaxAngle)
+		if (NewPitch + AnchorRotation.Pitch > Movement->CameraMaxAngle)
 		{
-			NewPitch = Movement->CameraPitchMaxAngle - AnchorRotation.Pitch;
+			NewPitch = Movement->CameraMaxAngle - AnchorRotation.Pitch;
 		}
 
 		//Recoil has pushed us past the maximum vertical effect, clamp it

@@ -49,6 +49,8 @@ void AVent::InteractionEvent(APawn* EventSender)
 	AShooter* Shooter = Cast<AShooter>(EventSender);
 
 	Shooter->GetStateMachine()->SetState("Venting");
+
+	DisableGrateForDuration();
 }
 
 void AVent::RecieveLookedAt(APawn* EventSender)
@@ -68,13 +70,14 @@ void AVent::RecieveLookedAway(APawn* EventSender, int32 MappingIndexToRemove)
 
 void AVent::BeginPlay()
 {
-
 	bCanInteract = true; // temp
 
 	Super::BeginPlay();
 	Health->OnDeath.AddDynamic(this, &AVent::DisableGrateForDuration);
-	OnActorBeginOverlap.AddDynamic(this, &AVent::ActorBeginOverlap);
-	OnActorEndOverlap.AddDynamic(this, &AVent::ActorEndOverlap);
+	LeftGrateTrigger->OnComponentBeginOverlap.AddDynamic(this, &AVent::ComponentBeginOverlap);
+	LeftGrateTrigger->OnComponentEndOverlap.AddDynamic(this, &AVent::ComponentEndOverlap);
+	RightGrateTrigger->OnComponentBeginOverlap.AddDynamic(this, &AVent::ComponentBeginOverlap);
+	RightGrateTrigger->OnComponentEndOverlap.AddDynamic(this, &AVent::ComponentEndOverlap);
 }
 
 void AVent::DisableGrateForDuration()
@@ -112,17 +115,44 @@ void AVent::ReEnableGrate()
 	OnVentEnabled.Broadcast();
 }
 
-void AVent::ActorEndOverlap(AActor* OverlappedActor, AActor* OtherActor)
+void AVent::ComponentEndOverlap(class UPrimitiveComponent* HitComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 	OverlappedPawns--;
-
-	if (ShouldEnable())
+	if (Cast<AShooter>(OtherActor))
 	{
-		ReEnableGrate();
+		if (ShouldEnable())
+		{
+			ReEnableGrate();
+		}
+
+		if (Cast<UBoxComponent>(HitComp) == LeftGrateTrigger)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("UnOverlap Left"));
+			//bIsOverlappingLeftTrigger = false;
+		}
+		else if (Cast<UBoxComponent>(HitComp) == RightGrateTrigger)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("UnOverlap Right"));
+			//bIsOverlappingRightTrigger = false;
+		}
 	}
 }
 
-void AVent::ActorBeginOverlap(AActor* OverlappedActor, AActor* OtherActor)
+void AVent::ComponentBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	OverlappedPawns++;
+
+	if (Cast<AShooter>(OtherActor))
+	{
+		if (Cast<UBoxComponent>(OverlappedComp) == LeftGrateTrigger)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Overlap Left"));
+			bIsOverlappingLeftTrigger = true;
+		}
+		else if (Cast<UBoxComponent>(OverlappedComp) == RightGrateTrigger)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Overlap Right"));
+			bIsOverlappingRightTrigger = true;
+		}
+	}
 }

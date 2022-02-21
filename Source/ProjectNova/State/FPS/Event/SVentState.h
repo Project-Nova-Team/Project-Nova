@@ -6,6 +6,8 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "SVentState.generated.h"
 
+class AVent;
+
 UCLASS()
 class PROJECTNOVA_API USVentState : public USProneState
 {
@@ -25,4 +27,16 @@ protected:
 	USplineComponent* Spline;
 
 	float Progress;
+
+	AVent* Vent;
+
+	uint8 bIsDirectionPositive : 1;
+
+	FVector LocationAlongSpline;
+
+	float SpeedAlongSpline;
+
+	float ProgressMax;
+
+	void MoveToCrawlPosition(FVector StartPosition, FVector EndPosition);
 };

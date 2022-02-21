@@ -40,8 +40,6 @@ protected:
 	/** The maximum magnitude of velocity that can be applied to the shooter from input*/
 	float MaxAppliedInputSpeed;
 
-	bool bClampCameraYaw;
-
 	/** Converts movement input relative to camera direction and adds movement vector*/
 	virtual FVector ConvertInputRelativeToCamera() const;
 

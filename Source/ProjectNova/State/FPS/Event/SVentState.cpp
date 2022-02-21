@@ -2,7 +2,7 @@
 
 #include "SVentState.h"
 #include "../../../State/FPS/ShooterStateMachine.h"
-#include"../../../Gameplay/Vent.h"
+#include "../../../Gameplay/Vent.h"
 #include <ProjectNova/State/FPS/Movement/SProneState.h>
 
 void USVentState::Initialize(UStateMachine* StateMachine, UObject* ContextObject)
@@ -15,7 +15,7 @@ void USVentState::OnEnter()
 	UE_LOG(LogTemp, Warning, TEXT("Vent State Enter"));
 	Super::OnEnter();
 
-	AVent* Vent = Cast<AVent>(Shooter->GetLastScannedObject());
+	Vent = Cast<AVent>(Shooter->GetLastScannedObject());
 
 	if (Vent)
 	{
@@ -23,24 +23,29 @@ void USVentState::OnEnter()
 		{			
 			Spline = Vent->GetSpline();
 		}
+
+		ProgressMax = Spline->GetSplineLength();
+
+		if (Vent->bIsOverlappingLeftTrigger)
+		{
+			bIsDirectionPositive = true;
+			Progress = 0;
+		}
+		else if (Vent->bIsOverlappingRightTrigger)
+		{
+			bIsDirectionPositive = false;
+			Progress = ProgressMax;
+		}
+
+		SpeedAlongSpline = Vent->CrawlSpeed;
+
+		Handle = GetDelayedActionManager()->StartOverTimeAction(
+			this,
+			&USVentState::MoveToCrawlPosition, 
+			2.f,
+			Shooter->GetActorLocation(),
+			Spline->GetLocationAtDistanceAlongSpline(ProgressMax, ESplineCoordinateSpace::World));
 	}
-
-	UE_LOG(LogTemp, Warning, TEXT("%s"), *Spline->GetForwardVector().ToString());
-	Shooter->GetAnchor()->SetWorldRotation(Spline->GetForwardVector().Rotation());
-
-	Movement->CameraYawMaxAngle = Shooter->GetAnchor()->GetComponentRotation().Yaw;
-	Movement->CameraYawMinAngle = Shooter->GetAnchor()->GetComponentRotation().Yaw;
-
-	Movement->CameraPitchMaxAngle = Shooter->GetAnchor()->GetComponentRotation().Yaw;
-	Movement->CameraPitchMinAngle = Shooter->GetAnchor()->GetComponentRotation().Yaw;
-
-	UE_LOG(LogTemp, Warning, TEXT("max %f"), Movement->CameraYawMaxAngle);
-	UE_LOG(LogTemp, Warning, TEXT("min %f"), Movement->CameraYawMinAngle);
-
-	//Movement->CameraPitchMinAngle /= 7;
-	//Movement->CameraPitchMaxAngle /= 7;
-	//Movement->CameraYawMinAngle /= 2;
-	//Movement->CameraYawMaxAngle /= 2;
 }
 
 void USVentState::OnExit()
@@ -50,15 +55,45 @@ void USVentState::OnExit()
 
 void USVentState::Tick(const float DeltaTime) 
 {
-	Super::Tick(DeltaTime); // change this
-	Movement->bIsInTuckTransition = true;
+	if (Handle && Handle->bIsComplete)
+	{
+		Progress = FMath::Clamp(Progress, 0.f, ProgressMax);
 
-	bClampCameraYaw = true;
+		if (bIsDirectionPositive)
+		{
+			if (Progress == ProgressMax)
+			{
+				Shooter->GetStateMachine()->SetState("Walking");
+			}
 
-	//UE_LOG(LogTemp, Warning, TEXT("%f"), Movement->CameraYawMaxAngle);
-	
-	Progress += Input->MoveY * 5;
-	FVector Loc = FVector(Spline->GetLocationAtDistanceAlongSpline(Progress, ESplineCoordinateSpace::World));
+			Progress += Input->MoveY * SpeedAlongSpline;
+			LocationAlongSpline = (Spline->GetLocationAtDistanceAlongSpline(Progress, ESplineCoordinateSpace::World));
+			Shooter->GetAnchor()->SetWorldRotation(Spline->GetDirectionAtDistanceAlongSpline(Progress, ESplineCoordinateSpace::World).Rotation());
+		}
+		else
+		{
+			if (Progress == 0)
+			{
+				Shooter->GetStateMachine()->SetState("Walking");
+			}
 
-	Shooter->SetActorLocation(Loc);
+			Progress -= Input->MoveY * SpeedAlongSpline;
+			LocationAlongSpline = (Spline->GetLocationAtDistanceAlongSpline(Progress, ESplineCoordinateSpace::World));
+			Shooter->GetAnchor()->SetWorldRotation((-1 * Spline->GetDirectionAtDistanceAlongSpline(Progress, ESplineCoordinateSpace::World)).Rotation());
+		}
+		Shooter->SetActorLocation(LocationAlongSpline);
+	}
+}
+
+void USVentState::MoveToCrawlPosition(FVector StartPosition, FVector EndPosition)
+{
+	if (Handle->CurrentActionProgress >= 1.f)
+	{
+		Handle->bIsComplete;
+	}
+	/*UE_LOG(LogTemp, Warning, TEXT("%s"), *StartPosition.ToString());
+	UE_LOG(LogTemp, Warning, TEXT("%s"), *EndPosition.ToString());*/
+	const FVector NewLocation = FMath::Lerp(StartPosition, EndPosition, Handle->CurrentActionProgress);
+	Shooter->SetActorLocation(NewLocation);
+
 }

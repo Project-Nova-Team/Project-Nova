@@ -44,19 +44,11 @@ public:
 
 	/** The max angle in degrees the camera can look up with respect to the XY plane*/
 	UPROPERTY(EditAnywhere, Category = "Control | Camera", meta = (PitchClampMin = "0.1", PitchClampMax = "89.9"))
-	float CameraPitchMaxAngle;
+	float CameraMaxAngle;
 
 	/** The min angle in degrees the camera can look down with respect to the XY plane*/
 	UPROPERTY(EditAnywhere, Category = "Control | Camera", meta = (PitchClampMin = "-89.9", PitchClampMax = "-0.1"))
-	float CameraPitchMinAngle;
-
-	/** The max angle in degrees the camera can look up with respect to the XY plane*/
-	UPROPERTY(EditAnywhere, Category = "Control | Camera", meta = (YawClampMin = "0.1", YawClampMax = "89.9"))
-	float CameraYawMaxAngle;
-
-	/** The min angle in degrees the camera can look down with respect to the XY plane*/
-	UPROPERTY(EditAnywhere, Category = "Control | Camera", meta = (YawClampMin = "-89.9", YawClampMax = "-0.1"))
-	float CameraYawMinAngle;
+	float CameraMinAngle;
 
 	/** The relative height at which the camera joint rests on the collider */
 	UPROPERTY(EditAnywhere, Category = "Control | Camera")

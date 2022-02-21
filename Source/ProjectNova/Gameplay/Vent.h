@@ -22,7 +22,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Spline")
 	USplineComponent* SplineComponent;
 
-	bool CanInteract() const override { return bCanInteract; }
+	bool CanInteract() const override { return !bIsDisabled && OverlappedPawns > 0; }
 
 	FInteractionPrompt& GetInteractionPrompt() override { return Prompt; }
 
@@ -35,6 +35,15 @@ public:
 	void RecieveLookedAway(APawn* EventSender, int32 MappingIndexToRemove) override;
 
 	USplineComponent* GetSpline() { return Spline; }
+
+	/** How fast the player moves along the vent spline. 5-10 feels good. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	float CrawlSpeed;
+
+	/** These bools are used for ventstate to determine which side of the spline to start from */
+	uint8 bIsOverlappingLeftTrigger : 1;
+
+	uint8 bIsOverlappingRightTrigger : 1;
 
 protected:
 	virtual void BeginPlay() override;
@@ -91,10 +100,10 @@ protected:
 	void MaybeReEnableGrate();
 
 	UFUNCTION()
-	void ActorBeginOverlap(AActor* OverlappedActor, AActor* OtherActor);
+	void ComponentBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 	UFUNCTION()
-	void ActorEndOverlap(AActor* OverlappedActor, AActor* OtherActor);
+	void ComponentEndOverlap(class UPrimitiveComponent* HitComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 	UPROPERTY(BlueprintAssignable)
 	FVentEvent OnVentEnabled;

@@ -5,10 +5,8 @@ UShooterMovementComponent::UShooterMovementComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 	
 	CameraSensitivity = 200.f;
-	CameraPitchMaxAngle = 89.f;
-	CameraPitchMinAngle = -89.f;
-	CameraYawMaxAngle = 89.f;
-	CameraYawMinAngle = -89.f;
+	CameraMaxAngle = 89.f;
+	CameraMinAngle = -89.f;
 	CameraHeight = 60.f;
 	InteractionDistance = 300.f;
 
