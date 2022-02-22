@@ -171,11 +171,22 @@ void UShooterAnimInstance::ReciveMontageStarted(UAnimMontage* Montage)
 	if (Montage == MeleeAttackMontage)
 	{
 		Shooter->GetCombat()->MarkInAnimation();
+		AlphaIK = 0;
+	}
+
+	else if (Montage == SwapAnimMontage)
+	{
+		AlphaIK = 0;
 	}
 }
 
 void UShooterAnimInstance::ReceiveMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
+	if (Shooter->GetCombat()->GetHeldWeapon())
+	{
+		AlphaIK = 1;
+	}
+	
 	if (Montage == VaultAnimMontage)
 	{
 

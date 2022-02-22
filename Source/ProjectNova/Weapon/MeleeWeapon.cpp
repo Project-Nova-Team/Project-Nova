@@ -1,6 +1,7 @@
 #include "MeleeWeapon.h"
 #include "Weapon.h"
 #include "Components/SphereComponent.h"
+#include "DamageTypeMelee.h"
 
 AMeleeWeapon::AMeleeWeapon()
 {
@@ -49,7 +50,7 @@ void AMeleeWeapon::ReceiveOverlap(AActor* Self, AActor* OtherActor)
 {
 	if (OtherActor != OwnerActor && !HitActors.Contains(OtherActor))
 	{
-		OtherActor->TakeDamage(Damage, FDamageEvent(), OwnerActor->GetInstigatorController(), OwnerActor);
+		OtherActor->TakeDamage(Damage, FDamageEvent(UDamageTypeMelee::StaticClass()), OwnerActor->GetInstigatorController(), OwnerActor);
 
 		ReceiveHitActor(OtherActor);
 		HitActors.Add(OtherActor);	

@@ -16,6 +16,9 @@ public:
 
 	UShooterAnimInstance();
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
+	UAnimMontage* MeleeAttackMontage;
+
 protected:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Animation")
@@ -105,9 +108,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
 	UAnimMontage* AimStopAnimMontage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
-	UAnimMontage* MeleeAttackMontage;
 
 private:
 

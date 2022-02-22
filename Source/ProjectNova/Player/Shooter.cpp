@@ -8,6 +8,7 @@
 #include "../Gameplay/HealthComponent.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "ShooterInventory.h"
+#include "../Animation/ShooterAnimInstance.h"
 
 void FShooterInput::Tick(const float DeltaTime)
 {
@@ -184,6 +185,16 @@ void AShooter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 void AShooter::HandleDeath()
 {
 	StateMachine->SetState("Death");
+}
+
+bool AShooter::IsAttacking()
+{
+	if (UShooterAnimInstance* ShooterAnim = Cast<UShooterAnimInstance>(ShooterSkeletalMesh->AnimScriptInstance))
+	{
+		return ShooterAnim->Montage_IsPlaying(ShooterAnim->MeleeAttackMontage);
+	}
+
+	return false;
 }
 
 bool AShooter::CanVault()

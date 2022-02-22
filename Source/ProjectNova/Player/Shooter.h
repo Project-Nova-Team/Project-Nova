@@ -136,6 +136,10 @@ public:
 	UPROPERTY(BlueprintReadWrite)
 	uint8 bIsLookingAtVaultObject : 1;
 
+	/** Returns true if the shooter is currently in the middle of swinging a melee attack*/
+	UFUNCTION(BlueprintCallable)
+	bool IsAttacking();
+
 	/** Returns whether player is in vault trigger and is looking at vault object*/
 	UFUNCTION(BlueprintCallable)
 	bool CanVault();
