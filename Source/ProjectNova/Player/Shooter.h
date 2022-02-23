@@ -3,7 +3,6 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
 #include "ShooterMovementComponent.h"
-#include "WeaponInput.h"
 #include "FirstPersonCameraComponent.h"
 #include "../Weapon/CombatComponent.h"
 #include "../Gameplay/InteractiveObject.h"
@@ -11,23 +10,19 @@
 
 class UCapsuleComponent;
 class UShooterStateMachine;
-class UMeleeComponent;
 class UHealthComponent;
+class UShooterInventory;
 class UAIPerceptionStimuliSourceComponent;
-class AGun;
-enum EGunClass;
 
-DECLARE_MULTICAST_DELEGATE(FStateLoadEvent);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FScanEvent, const FInteractionPrompt&, PromptData);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FShooterMakeNoise, FVector, Location, float, Volume);
+DECLARE_DELEGATE_OneParam(FScan, IInteractiveObject*);
 
-struct FShooterInput : public FWeaponInput
+struct FShooterInput
 {
 	FShooterInput() { }
 
 	/** 
 	* Runs within the shooter's Tick to handle any input states that need to be watched 
-	* @param	DeltaTime				Time slice
+	* @param	DeltaTime				Time slice 
 	*/
 	void Tick(const float DeltaTime);
 
@@ -39,7 +34,7 @@ struct FShooterInput : public FWeaponInput
 
 	/** How long crouch has been held for since the last release*/
 	float CurrentCrouchHoldTime;
-
+	
 	/** Whether or not the player is pressing the jump button*/
 	uint8 bIsTryingToVault : 1;
 
@@ -60,6 +55,24 @@ struct FShooterInput : public FWeaponInput
 
 	/** Whether or not the player is pressing the sprint button*/
 	uint8 bIsTryingToSprint : 1;
+
+	/** Is velocity applied to the shooter*/
+	uint8 bIsMoving : 1;
+
+	/** X-axis movement input*/
+	float MoveX;
+
+	/** Y-axis movement input*/
+	float MoveY;
+
+	/** X-axis look input*/
+	float LookX;
+
+	/** Y-axis look input*/
+	float LookY;
+
+	/** @todo move this somewhere better*/
+	bool bIsRunning;
 };
 
 UCLASS()
@@ -73,8 +86,6 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	friend struct FShooterInput;
-
-	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const { return WeaponMesh; }
 
 	/** Returns the capsule component attached to this shooter*/
 	FORCEINLINE UCapsuleComponent* GetCollider() const { return Collider; }
@@ -99,20 +110,11 @@ public:
 	/** Returns the input state. Note: contents are mutable*/
 	FORCEINLINE FShooterInput* GetInput() { return &InputState; }
 
-	FORCEINLINE FShooterInventory* GetInventory() { return &Inventory; }
-
-	/** Returns the input state. Note: contents are mutable*/
-	UFUNCTION(BlueprintCallable)
-	FORCEINLINE FWeaponInput GetInputRaw() { return FWeaponInput(InputState); }
-
 	/** Returns the Skeletal Mesh component of this shooter*/
 	FORCEINLINE USkeletalMeshComponent* GetSkeletalMeshComponent() const { return ShooterSkeletalMesh; }
 
 	/** Returns the Shooter Movement component attached to this shooter*/
 	FORCEINLINE UShooterMovementComponent* GetShooterMovement() const { return ShooterMovement; }
-
-	/** Returns the Melee component attached to this shooter*/
-	FORCEINLINE UMeleeComponent* GetMelee() const { return Melee; }
 
 	/** Returns the Perception Source component which enables AI to sense stimulus produced by this actor*/
 	FORCEINLINE UAIPerceptionStimuliSourceComponent* GetPerceptionSource() const { return PerceptionSource; }
@@ -120,24 +122,11 @@ public:
 	/** Returns State Machine. Maybe consider moving this to shooter movement component?*/
 	FORCEINLINE UShooterStateMachine* GetStateMachine() { return StateMachine; }
 
+	FORCEINLINE UShooterInventory* GetInventory() { return Inventory; }
+
 	/** Draws debug traces for a variety of position tests if enabled*/
 	UPROPERTY(Category = Pawn, EditAnywhere)
 	uint8 bTraceDebug : 1;
-
-	/** Invoked when the shooter is looking at an object that can be interacted with (a weapon/button)*/
-	UPROPERTY(BlueprintAssignable)
-	FScanEvent OnScanHit;
-
-	/** Invoked when the shooter is not looking at an object that can be interacted with (a weapon/button)*/
-	UPROPERTY(BlueprintAssignable)
-	FScanEvent OnScanMiss;
-
-	/** Invoked when the shooter shooter makes a sound*/
-	UPROPERTY(BlueprintAssignable)
-	FShooterMakeNoise OnMakeNoise;
-
-	/** Invoked when the state machine finishes initialization*/
-	FStateLoadEvent OnStateLoadComplete;
 
 	/** Set when player overlaps or unoverlaps vault trigger*/
 	UPROPERTY(BlueprintReadOnly)
@@ -151,17 +140,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	bool CanVault();
 
-	/** Moves ammo from the shooter inventory into the the approrpiate weapon, if the shooter has it*/
-	void LoadAmmoOnPickup(const EGunClass GunType);
-
-	UFUNCTION(BlueprintCallable)
-	void ShooterMakeNoise(FVector Location, float Volume);
-
 	/** Sets the death state in the state machine when the shooter dies*/
 	UFUNCTION()
 	void HandleDeath();
-
-	bool HasGunOfType(const EGunClass GunType) const;
 
 	/** Is the shooter currently in a UI prompt event*/
 	UPROPERTY(BlueprintReadWrite)
@@ -174,6 +155,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
 	FString StartingStateOverride;
 
+	/** Delegate executed when scan detects a change and we should update UI prompt*/
+	FScan OnInteractionUpdate;
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -181,9 +165,6 @@ private:
 
 	UPROPERTY(Category = Mesh, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	USkeletalMeshComponent* ShooterSkeletalMesh;
-
-	UPROPERTY(Category = Mesh, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	USkeletalMeshComponent* WeaponMesh;
 
 	UPROPERTY(Category = Shooter, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	UShooterMovementComponent* ShooterMovement;
@@ -198,9 +179,6 @@ private:
 	UFirstPersonCameraComponent* Camera;
 
 	UPROPERTY(Category = Shooter, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	UMeleeComponent* Melee;
-
-	UPROPERTY(Category = Shooter, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	UCombatComponent* Combat;
 
 	UPROPERTY(Category = Shooter, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
@@ -211,18 +189,18 @@ private:
 
 	UPROPERTY(Transient)
 	UShooterStateMachine* StateMachine;
+
+	UPROPERTY()
+	UShooterInventory* Inventory;
 	
 	/**Contains all relevant information of the input state*/
 	FShooterInput InputState;
 
-	/** Inventory for ammo*/
-	FShooterInventory Inventory;
+	/** Look result from previous Tick*/
+	IInteractiveObject* LastScannedObject;
 
 	/** Casts a trace from the camera to see if there is an object nearby we can interact with*/	
 	void ScanInteractiveObject();
-
-	/** Called when a weapon is added to the combat arsenal, we immediatly put all the ammo from the inventory into the gun*/
-	void LoadAmmoOnWeaponGet(AWeapon* NewWeapon);
 
 	///		 Begin Input Bindings	   ///
 	void MoveInputX(const float Value)	{ InputState.MoveX = Value; }
@@ -233,27 +211,16 @@ private:
 	void VaultRelease()					{ InputState.bIsTryingToVault = false; }
 	void CrouchPress()					{ InputState.bIsHoldingCrouch = true; }
 	void CrouchRelease()				{ InputState.bIsHoldingCrouch = false; }
-	void ShootPress()					{ Combat->ReceiveAttack(true); }
-	void ShootRelease()					{ Combat->ReceiveAttack(false); }
-	void AimPress()						{ Combat->ReceiveAim(); }
-	void AimRelease()					{  }
+	void ShootPress()					{ Combat->ReceiveStartAttack(); }
+	void ShootRelease()					{ Combat->ReceiveStopAttack(); }
+	void AimPress()						{ Combat->ReceiveAimStart(); }
+	void AimRelease()					{ Combat->ReceiveAimStop(); }
 	void InteractPress()				{ InputState.bIsTryingToInteract = true; }
 	void InteractRelease()				{ InputState.bIsTryingToInteract = false; }
-	void SwapPressUp()					{ Combat->ReceiveSwap(-1); }
-	void SwapPressDown()				{ Combat->ReceiveSwap(1); }
+	void SwapPressUp()					{ Combat->SwapWeapon(-1); }
+	void SwapPressDown()				{ Combat->SwapWeapon(1); }
 	void SprintPress()					{ InputState.bIsTryingToSprint = true; }
 	void SprintRelease()				{ InputState.bIsTryingToSprint = false; }
 	void ReloadPress()					{ Combat->ReceiveReload(); }
 	void ReloadRelease()				{  }
-
-	//TODO delete all of this
-//#if WITH_EDITOR
-	UPROPERTY(EditAnywhere, Category = "SOUND TEST")
-	float NoiseAmount;
-
-	float NoiseIntensity;
-
-	void MakeSound(const float Volume);
-	
-//#endif
 };

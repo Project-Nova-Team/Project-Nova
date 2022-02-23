@@ -3,7 +3,6 @@
 #include "ShooterController.h"
 #include "ShooterHUD.h"
 #include "Player/Shooter.h"
-#include "AI/AICell.h"
 #include "Gameplay/HealthComponent.h"
 
 AShooterGameMode::AShooterGameMode()
@@ -12,8 +11,6 @@ AShooterGameMode::AShooterGameMode()
 
 	PlayerControllerClass = AShooterController::StaticClass();
 	HUDClass = AShooterHUD::StaticClass();
-
-	
 }
 
 void AShooterGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
@@ -24,29 +21,8 @@ void AShooterGameMode::InitGame(const FString& MapName, const FString& Options, 
 	DelayedActionManager = NewObject<UDelayedActionManager>();
 	DelayedActionManager->Initialize();
 
-	//TODO - I HATE using this function EVER. Ensure serialization in final builds/levels
-//#if WITH_EDITOR
-	if (Player == nullptr)
-	{
-		Player = FindActor<AShooter>(GetWorld());
-	}
-
-	if (AICells.Num() == 0)
-	{
-		FindAllActors<AAICell>(GetWorld(), AICells);
-	}
-//#endif
-
-	for (AAICell* Cell : AICells)
-	{
-		Cell->SetPlayer(Player);
-	}
-
-	//HACK
-	DelayedActionManager->StartDelayedAction(this, &AShooterGameMode::LoadCells, 0.0001);
-
-	Player->GetHealth()->OnDeath.AddDynamic(this, &AShooterGameMode::PlayerDeath);
-	GEngine->bSuppressMapWarnings = true;
+	//If we can't figure out why "lighting needs rebuild" warnings wont go away, we can set this flag for builds
+	//GEngine->bSuppressMapWarnings = true;
 }
 
 void AShooterGameMode::Tick(float DeltaTime)
@@ -55,21 +31,12 @@ void AShooterGameMode::Tick(float DeltaTime)
 	DelayedActionManager->TickRunningActions(DeltaTime);
 }
 
-void AShooterGameMode::PlayerDeath()
+void AShooterGameMode::PostLogin(APlayerController* NewPlayer)
 {
-	//Do reset pipeline stuff here when player dies
-	Cast<AShooterHUD>(Cast<APlayerController>(Player->GetController())->MyHUD)->ShowDeathScreen();
-}
+	ShooterController = Cast<AShooterController>(NewPlayer);
 
-void AShooterGameMode::PauseGame()
-{
-	OnPause.Broadcast();
-}
-
-void AShooterGameMode::LoadCells()
-{
-	for (AAICell* Cell : AICells)
+	if (ShooterController != nullptr)
 	{
-		Cell->SetAIUnits();
+		Shooter = ShooterController->GetPawn<AShooter>();
 	}
 }

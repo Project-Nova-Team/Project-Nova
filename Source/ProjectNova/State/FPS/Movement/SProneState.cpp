@@ -13,15 +13,11 @@ void USProneState::Initialize(UStateMachine* StateMachine, UObject* ContextObjec
 void USProneState::OnEnter()
 {
 	Super::OnEnter();
-	Input->Stance = WFS_Proning;
 }
 
 void USProneState::OnExit()
 {
 	Super::OnExit();
-
-	//even if we end up in crouch, crouches OnEnter will fix this
-	Input->Stance = WFS_Standing;
 }
 
 void USProneState::Tick(const float DeltaTime)

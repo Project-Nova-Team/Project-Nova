@@ -9,7 +9,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTriggerEvent, APawn*, Sender);
 class UBoxComponent;
 class UBillboardComponent;
 
-UCLASS()
+UCLASS(HideCategories=("Collision", "Physics", "Navigation", "Rendering", "Tags", "Cooking", "Replication", "Input", "HLOD", "Mobile", "Asset User Data"))
 class PROJECTNOVA_API ATrigger : public AActor
 {
 	GENERATED_BODY()
@@ -17,32 +17,34 @@ class PROJECTNOVA_API ATrigger : public AActor
 public:	
 	ATrigger();
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintSetter)
 	virtual void SetActive(const bool Value);
 
-	UPROPERTY(BlueprintAssignable)
 	FTriggerEvent OnTriggerActivated;
 
-	UPROPERTY(BlueprintAssignable)
 	FTriggerEvent OnTriggerExited;
+
+#if WITH_EDITOR
+	void PostEditChangeProperty(FPropertyChangedEvent& Event) override;
+#endif
 
 protected:
 
-	/** True if this trigger can be activated when entered*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Trigger")
+	/** When enabled, this trigger will execute its logic when a valid actor enters it*/
+	UPROPERTY(EditAnywhere, BlueprintSetter = SetActive, Category = "Trigger | General")
 	uint8 bIsActive : 1;
 
-	/** If true, this trigger will start as active*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trigger")
-	uint8 bStartActive : 1;
-
 	/** If true, this trigger will activate everytime it is entered*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trigger")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trigger | General")
 	uint8 bTriggerMoreThanOnce : 1;
 
-	/** This trigger will only activate if the overlapping pawn is a of type that exists in this white list*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trigger")
-	TArray<TSubclassOf<APawn>> TriggerWhiteList;
+	/** This trigger will activate when Engi enters it while it is enabled*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trigger | Activation")
+	uint8 bActivatedByEngi: 1;
+
+	/** This trigger will activate when Gorms or the Big Guy enter it while it is enabled*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trigger | Activation")
+	uint8 bActivatedByAI : 1;
 
 	/** Collision volume that acts as the trigger region*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collider")
@@ -53,6 +55,10 @@ protected:
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void TriggerExited(APawn* Activator);
+
+	bool IsValidActivator(AActor* Activator) const;
+
+	virtual void SetActiveInternal();
 
 #if WITH_EDITORONLY_DATA
 	/** Simple editor sprite to help designers see trigger locations*/
@@ -70,5 +76,4 @@ protected:
 
 	UFUNCTION()
 	virtual void EndOverlap(AActor* OverlappedActor, AActor* OtherActor);
-
 };

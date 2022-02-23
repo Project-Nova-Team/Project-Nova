@@ -1,156 +1,72 @@
 #include "ShooterHUD.h"
 #include "ShooterController.h"
 #include "Player/Shooter.h"
-#include "./Weapon/Gun.h"
-#include "Gameplay/GeneratorPiece.h"
-#include "ShooterGameMode.h"
+#include "Gameplay/HealthComponent.h"
 #include "Blueprint/UserWidget.h"
-#include "Weapon/CombatComponent.h"
 
-AShooterHUD::AShooterHUD()
-{
-	bShowHUD = false;
-}
 
 void AShooterHUD::Initialize()
 {
-	APawn* Pawn = PlayerOwner->GetPawn();
+	Shooter = Cast<AShooter>(PlayerOwner->GetPawn());
 
-	if (Pawn->IsA(AShooter::StaticClass()))
+	if (Shooter != nullptr)
 	{
-		Shooter = Cast<AShooter>(Pawn);
+		BuildBlueprintWidgets();
+
+		//Get HUD update events for interaction prompts
+		Shooter->OnInteractionUpdate.BindUObject(this, &AShooterHUD::ReceiveInteractionUpdate);
+		Shooter->GetHealth()->OnDeath.AddDynamic(this, &AShooterHUD::ShowDeathDisplay);
+
+		// Fire the blueprint event when the combat component informs us we should update
 		Combat = Shooter->GetCombat();
-	}
-
-	//Temp fix. Causes crashes in levels where the player is not auto-possesed because the HUD auto-posses the default pawn instead
-	if (Combat != nullptr)
-	{
-		Combat->OnArsenalAddition.AddUObject(this, &AShooterHUD::ReceiveWeapon);
-		Combat->OnArsenalRemoval.AddUObject(this, &AShooterHUD::ReleaseWeapon);
-
-		if (GetWorld()->GetAuthGameMode<AShooterGameMode>())
-			GetWorld()->GetAuthGameMode<AShooterGameMode>()->OnPause.AddUObject(this, &AShooterHUD::ShowPauseMenu);
-
-		Shooter->OnScanHit.AddDynamic(this, &AShooterHUD::ShowInteractionPrompt);
-		Shooter->OnScanMiss.AddDynamic(this, &AShooterHUD::HideInteractionPrompt);
-	}	
-}
-
-void AShooterHUD::Tick(float DeltaTime)
-{
-	if (Combat != nullptr)
-	{
-		Super::Tick(DeltaTime);
-		Bloom = Combat->GetWeaponBloom();
+		Combat->OnUpdateHUD.BindUObject(this, &AShooterHUD::ReceiveWeaponUpdate);
 	}
 }
 
-void AShooterHUD::ReceiveWeapon(AWeapon* NewWeapon)
+void AShooterHUD::SetPauseDisplay(const bool bShowPauseMenu)
 {
-	NewWeapon->OnUpdateUI.BindUObject(this, &AShooterHUD::InternalUpdate);
-	InternalUpdate();
-}
-
-void AShooterHUD::ReleaseWeapon(AWeapon* NewWeapon)
-{
-	NewWeapon->OnUpdateUI.Unbind();
-	InternalUpdate();
-}
-
-void AShooterHUD::InternalUpdate()
-{
-	Bloom = Combat->GetWeaponBloom();
-
-	AGun* HeldAsGun = Cast<AGun>(Combat->GetHeldWeapon());
-	bPlayerHasGun = HeldAsGun != nullptr;
-
-	if (HeldAsGun != nullptr)
+	if (bShowPauseMenu)
 	{
-		const FGunUIData Data = HeldAsGun->GetGunUI();
-		MaxAmmoInWeapon = Data.ClipSize;
-		AmmoInWeapon = Data.AmmoInClip;
-		ExcessAmmo = Data.ExcessAmmo;
-
-		//TODO set FWeaponUIData fields here as well
+		PauseMenuWidget->SetVisibility(ESlateVisibility::Visible);
+		PlayerOwner->bShowMouseCursor = true;
 	}
 
 	else
 	{
-		MaxAmmoInWeapon = 0;
-		AmmoInWeapon = 0;
-		ExcessAmmo = 0;
-	}
+		PlayerOwner->bShowMouseCursor = false;
 
-	OnUpdate.Broadcast();
-}
-
-
-void AShooterHUD::ShowPauseMenu()
-{
-	if (!bIsPaused)
-	{
-		if (PauseMenuWidget->Visibility != ESlateVisibility::Visible)
-		{
-			PauseMenuWidget->SetVisibility(ESlateVisibility::Visible);
-
-			if (Shooter->GetController<APlayerController>())
-			{
-				Shooter->GetController<APlayerController>()->SetPause(true);
-				Shooter->GetController<APlayerController>()->bShowMouseCursor = true;
-			}
-
-			bIsPaused = true;
-		}
-	}
-	else
-	{
-		HideUI();
-		bIsPaused = false;
+		ExitConfirmationWidget->SetVisibility(ESlateVisibility::Collapsed);
+		PauseMenuWidget->SetVisibility(ESlateVisibility::Collapsed);
+		SettingsMenuWidget->SetVisibility(ESlateVisibility::Collapsed);
+		ControlsMenuWidget->SetVisibility(ESlateVisibility::Collapsed);
 	}
 }
 
-void AShooterHUD::ShowDeathScreen()
+void AShooterHUD::ShowDeathDisplay()
 {
-	DeathScreenWidget->SetVisibility(ESlateVisibility::Visible);
-	Shooter->GetController<APlayerController>()->SetPause(true);
-	Shooter->GetController<APlayerController>()->bShowMouseCursor = true;
-}
+	PlayerOwner->bShowMouseCursor = true;
 
-void AShooterHUD::HideUI()
-{
-	if (Shooter->GetController<APlayerController>())
-	{
-		Shooter->GetController<APlayerController>()->bShowMouseCursor = false;
-		Shooter->GetController<APlayerController>()->SetPause(false);
-	}
-
-	// eventually add method that checks for any open widgets and closes them
+	//Hide everything else
+	InteractionPromptWidget->SetVisibility(ESlateVisibility::Collapsed);
+	WeaponDisplayWidget->SetVisibility(ESlateVisibility::Collapsed);
 	ExitConfirmationWidget->SetVisibility(ESlateVisibility::Collapsed);
 	PauseMenuWidget->SetVisibility(ESlateVisibility::Collapsed);
-	SettingsMenuWidget->SetVisibility(ESlateVisibility::Collapsed);
-	ControlsMenuWidget->SetVisibility(ESlateVisibility::Collapsed);
+	//SettingsMenuWidget->SetVisibility(ESlateVisibility::Collapsed);
+	//ControlsMenuWidget->SetVisibility(ESlateVisibility::Collapsed);
+
+	//Show the death screen
+	DeathScreenWidget->SetVisibility(ESlateVisibility::Visible);
 }
 
-void AShooterHUD::ShowInteractionPrompt(const FInteractionPrompt& Hit)
+void AShooterHUD::ReceiveInteractionUpdate(IInteractiveObject* Info)
 {
-	if (!bInteractionPromptActive)
+	if (Info == nullptr)
 	{
-		bInteractionPromptActive = true;
-		InteractionPromptWidget->SetVisibility(ESlateVisibility::HitTestInvisible);		
+		InteractionPromptRevoke();
 	}
 
-	if (Hit != LastScan)
+	else
 	{
-		LastScan = Hit;
-		OnInteractionPromptChange.Broadcast();	
-	}
-}
-
-void AShooterHUD::HideInteractionPrompt(const FInteractionPrompt& Hit)
-{
-	if (bInteractionPromptActive)
-	{
-		bInteractionPromptActive = false;
-		InteractionPromptWidget->SetVisibility(ESlateVisibility::Collapsed);
+		InteractionPromptProvided(Info->GetInteractionPrompt());
 	}
 }

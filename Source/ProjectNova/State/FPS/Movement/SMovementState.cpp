@@ -164,8 +164,7 @@ void USMovementState::ApplyFrictionToVelocity(FVector& InVelocity, const float M
 
 void USMovementState::RotateCameraFromInput(const float DeltaTime)
 {
-	const float RecoilVelocity = Shooter->GetCombat()->GetWeaponRecoilVelocity();
-	const bool bRecoilActive = RecoilVelocity > 0.f;
+	//First apply camera rotations from user input
 
 	FRotator AnchorRotation = Shooter->GetAnchor()->GetComponentRotation();
 	AnchorRotation.Yaw += (Input->LookX * Movement->CameraSensitivity * DeltaTime);
@@ -177,11 +176,15 @@ void USMovementState::RotateCameraFromInput(const float DeltaTime)
 	Shooter->GetAnchor()->SetWorldRotation(AnchorRotation);
 	const FRotator RelativeLook = Shooter->GetCamera()->GetRelativeRotation();
 
+	//Now lets change based on effects like weapon recoil
 	//Weapon was fired, apply recoil impulse
-	if (RecoilVelocity > 0.f)
+
+	AGun* Gun = Cast<AGun>(Shooter->GetCombat()->GetHeldWeapon());
+
+	if (Gun && Gun->ActiveRecoil > 0.f)
 	{	
-		float NewPitch = RelativeLook.Pitch + RecoilVelocity * DeltaTime;
-		const float AngularLimit = Shooter->GetCombat()->GetWeaponRecoilLimit();
+		float NewPitch = RelativeLook.Pitch + Gun->ActiveRecoil * DeltaTime;
+		const float AngularLimit = Gun->RecoilAngularLimit;
 
 		//The new recoil pitch would have us look further upwards than we allow, clamp it
 		if (NewPitch + AnchorRotation.Pitch > Movement->CameraMaxAngle)
@@ -203,7 +206,8 @@ void USMovementState::RotateCameraFromInput(const float DeltaTime)
 	//Weapon impulse ended, reset towards the anchors forward
 	else if (RelativeLook.Pitch > 0.f)
 	{
-		const float Delta = Shooter->GetCombat()->GetWeaponRecoilRecovery() * DeltaTime;
+		const float Recovery = Gun ? Gun->RecoilRecovery : 100.f; //@todo hard coded
+		const float Delta = Recovery * DeltaTime;
 		float NewPitch = RelativeLook.Pitch - Delta;
 
 		//Don't rotate further down than where we started
