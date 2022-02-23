@@ -9,6 +9,7 @@
 class AShooter;
 class UCombatComponent;
 class UUserWidget;
+class UQuickTimeWidget;
 
 UCLASS()
 class PROJECTNOVA_API AShooterHUD : public AHUD
@@ -21,6 +22,8 @@ public:
 
 	/** Displays pause menu widget */
 	void SetPauseDisplay(const bool bShowPauseMenu);
+
+	UQuickTimeWidget* GetQTWidget() const { return QuickTimeWidget; }
 
 protected:
 
@@ -42,6 +45,9 @@ protected:
 
 	UPROPERTY(BlueprintReadWrite, Category = "HUD")
 	UUserWidget* DeathScreenWidget;
+
+	UPROPERTY(BlueprintReadWrite, Category = "HUD")
+	UQuickTimeWidget* QuickTimeWidget;
 
 	// Pause Screen Related Widgets //
 

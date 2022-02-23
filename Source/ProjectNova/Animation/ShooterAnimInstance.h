@@ -28,6 +28,12 @@ protected:
 	UPROPERTY(BlueprintReadWrite, Category = "Animation")
 	uint8 bReportEvents : 1;
 
+#if WITH_EDITOR
+	/** When true, the IK bone offset will be recomputed every anim update, enabling live editing of gun positioning*/
+	UPROPERTY(BlueprintReadWrite, Category = "Animation")
+	uint8 bLiveUpdates : 1;
+#endif
+
 
 	/***	Locomotion		***/
 

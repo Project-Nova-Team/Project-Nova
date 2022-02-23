@@ -77,6 +77,8 @@ AShooter::AShooter()
 	Inventory->Shooter = this;
 	Inventory->Combat = Combat;
 
+	bInputEnabled = true;
+
 	StartingStateOverride.Empty();
 }
 
@@ -180,6 +182,62 @@ void AShooter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	InputComponent->BindAction("Sprint", IE_Released, this, &AShooter::SprintRelease);
 	InputComponent->BindAction("Reload", IE_Pressed, this, &AShooter::ReloadPress);
 	InputComponent->BindAction("Reload", IE_Released, this, &AShooter::ReloadRelease);
+}
+
+void AShooter::ShootPress()
+{ 
+	if (bInputEnabled)
+	{
+		Combat->ReceiveStartAttack();
+	}
+}
+
+void AShooter::ShootRelease()
+{ 
+	if (bInputEnabled)
+	{
+		Combat->ReceiveStopAttack();
+	}
+}
+
+void AShooter::AimPress()
+{ 
+	if (bInputEnabled)
+	{
+		//Combat->ReceiveAimStart(); 
+	}
+}
+
+void AShooter::AimRelease()
+{ 
+	if (bInputEnabled)
+	{
+		//Combat->ReceiveAimStop(); 
+	}
+}
+
+void AShooter::SwapPressUp()
+{
+	if (bInputEnabled)
+	{
+		Combat->SwapWeapon(-1);
+	}
+}
+
+void AShooter::SwapPressDown()
+{ 
+	if (bInputEnabled)
+	{
+		Combat->SwapWeapon(1);
+	}
+}
+
+void AShooter::ReloadPress()
+{ 
+	if (bInputEnabled)
+	{
+		Combat->ReceiveReload();
+	}	
 }
 
 void AShooter::HandleDeath()

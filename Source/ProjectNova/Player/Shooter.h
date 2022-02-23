@@ -124,6 +124,22 @@ public:
 
 	FORCEINLINE UShooterInventory* GetInventory() { return Inventory; }
 
+	/**
+	 * Executed upon receiving a notice than a QuickTime action was complete
+	 *
+	 * @param	bSucceeded				Was the Shooter victorious in this QT Action
+	 * @param	bCompleted				Was this the final action in this QT Event
+	 * @param	SuccessCount			Number of times in a given event the shooter has succeeded
+	 */
+	UFUNCTION(BlueprintImplementableEvent)
+	void QuickTimeActionComplete(bool bSucceeded, bool bCompleted, int32 SuccessCount);
+
+	/** Fires when a quick time begins*/
+	UFUNCTION(BlueprintImplementableEvent)
+	void QuickTimeEventStarted(AActor* InstigatingAI);
+
+	void SetInputEnabled(const bool bNewInputEnabled) { bInputEnabled = bNewInputEnabled; }
+
 	/** Draws debug traces for a variety of position tests if enabled*/
 	UPROPERTY(Category = Pawn, EditAnywhere)
 	uint8 bTraceDebug : 1;
@@ -163,7 +179,12 @@ public:
 	FScan OnInteractionUpdate;
 
 protected:
+
 	virtual void BeginPlay() override;
+
+	/** True if input is enabled*/
+	UPROPERTY(BlueprintReadWrite)
+	uint8 bInputEnabled : 1;
 
 private:
 
@@ -207,6 +228,14 @@ private:
 	void ScanInteractiveObject();
 
 	///		 Begin Input Bindings	   ///
+
+	void ShootPress();
+	void ShootRelease();
+	void AimPress();
+	void AimRelease();
+	void SwapPressUp();
+	void SwapPressDown();
+	void ReloadPress();
 	void MoveInputX(const float Value)	{ InputState.MoveX = Value; }
 	void MoveInputY(const float Value)	{ InputState.MoveY = Value; }
 	void LookInputX(const float Value)	{ InputState.LookX = Value; }
@@ -215,16 +244,9 @@ private:
 	void VaultRelease()					{ InputState.bIsTryingToVault = false; }
 	void CrouchPress()					{ InputState.bIsHoldingCrouch = true; }
 	void CrouchRelease()				{ InputState.bIsHoldingCrouch = false; }
-	void ShootPress()					{ Combat->ReceiveStartAttack(); }
-	void ShootRelease()					{ Combat->ReceiveStopAttack(); }
-	void AimPress()						{ Combat->ReceiveAimStart(); }
-	void AimRelease()					{ Combat->ReceiveAimStop(); }
 	void InteractPress()				{ InputState.bIsTryingToInteract = true; }
 	void InteractRelease()				{ InputState.bIsTryingToInteract = false; }
-	void SwapPressUp()					{ Combat->SwapWeapon(-1); }
-	void SwapPressDown()				{ Combat->SwapWeapon(1); }
 	void SprintPress()					{ InputState.bIsTryingToSprint = true; }
 	void SprintRelease()				{ InputState.bIsTryingToSprint = false; }
-	void ReloadPress()					{ Combat->ReceiveReload(); }
 	void ReloadRelease()				{  }
 };

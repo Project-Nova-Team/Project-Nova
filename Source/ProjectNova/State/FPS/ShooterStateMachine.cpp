@@ -7,6 +7,7 @@
 #include "Event/SVaultState.h"
 #include "Event/SDeathState.h"
 #include "Event/SLookState.h"
+#include "Event/SExitShipState.h"
 
 void UShooterStateMachine::Initialize(UObject* Context)
 {
@@ -19,6 +20,7 @@ void UShooterStateMachine::Initialize(UObject* Context)
 	this->AddState<USVaultState>(Context, "Vaulting");
 	this->AddState<USDeathState>(Context, "Death");
 	this->AddState<USLookState>(Context, "Look");
+	this->AddState<USExitShipState>(Context, "Empty"); //todo rename this class, this is just an empty state, no movement
 	this->AddState<USDiveState>(Context, "Diving", false);
 
 	this->SetInitialState("Walking");
