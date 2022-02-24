@@ -128,12 +128,12 @@ void AVent::ComponentEndOverlap(class UPrimitiveComponent* HitComp, class AActor
 		if (Cast<UBoxComponent>(HitComp) == LeftGrateTrigger)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("UnOverlap Left"));
-			//bIsOverlappingLeftTrigger = false;
+			bIsOverlappingLeftTrigger = false;
 		}
 		else if (Cast<UBoxComponent>(HitComp) == RightGrateTrigger)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("UnOverlap Right"));
-			//bIsOverlappingRightTrigger = false;
+			bIsOverlappingRightTrigger = false;
 		}
 	}
 }

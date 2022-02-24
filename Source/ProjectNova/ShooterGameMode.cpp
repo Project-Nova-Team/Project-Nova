@@ -12,8 +12,6 @@ AShooterGameMode::AShooterGameMode()
 
 	PlayerControllerClass = AShooterController::StaticClass();
 	HUDClass = AShooterHUD::StaticClass();
-
-	
 }
 
 void AShooterGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)

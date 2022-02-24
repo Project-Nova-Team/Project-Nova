@@ -33,14 +33,21 @@ void USVentState::OnEnter()
 
 		Handle->GetAction()->StopAction();
 
-		TargetRotation = Spline->GetRotationAtDistanceAlongSpline(Progress, ESplineCoordinateSpace::World);
-
 		if (Vent->bIsOverlappingLeftTrigger)
 		{
 			bIsDirectionPositive = true;
 			Progress = 0;
 
-			UE_LOG(LogTemp, Warning, TEXT("Left Setup"));				
+			UE_LOG(LogTemp, Warning, TEXT("Left Setup"));
+
+			Handle = GetDelayedActionManager()->StartOverTimeAction(
+				this,
+				&USVentState::MoveToCrawlPosition,
+				2.f,
+				Shooter->GetActorLocation(),
+				Spline->GetLocationAtDistanceAlongSpline(Progress, ESplineCoordinateSpace::World),
+				Shooter->GetAnchor()->GetComponentRotation(),
+				Spline->GetRotationAtDistanceAlongSpline(Progress, ESplineCoordinateSpace::World));
 		}
 		else if (Vent->bIsOverlappingRightTrigger)
 		{
@@ -49,19 +56,15 @@ void USVentState::OnEnter()
 
 			UE_LOG(LogTemp, Warning, TEXT("Right Setup"));
 
-			TargetRotation *= -1; // flip rotation for right to left
+			Handle = GetDelayedActionManager()->StartOverTimeAction(
+				this,
+				&USVentState::MoveToCrawlPosition,
+				2.f,
+				Shooter->GetActorLocation(),
+				Spline->GetLocationAtDistanceAlongSpline(Progress, ESplineCoordinateSpace::World),
+				Shooter->GetAnchor()->GetComponentRotation(),
+				-1 * Spline->GetRotationAtDistanceAlongSpline(Progress, ESplineCoordinateSpace::World));
 		}
-
-		TargetLocation = Spline->GetLocationAtDistanceAlongSpline(Progress, ESplineCoordinateSpace::World);
-
-		Handle = GetDelayedActionManager()->StartOverTimeAction(
-			this,
-			&USVentState::MoveToCrawlPosition,
-			2.f,
-			Shooter->GetActorLocation(),
-			TargetLocation,
-			Shooter->GetAnchor()->GetComponentRotation(),
-			TargetRotation);
 	}
 }
 

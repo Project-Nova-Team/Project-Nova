@@ -34,10 +34,6 @@ protected:
 
 	FVector LocationAlongSpline;
 
-	FVector TargetLocation;
-
-	FRotator TargetRotation;
-
 	float SpeedAlongSpline;
 
 	float ProgressMax;
