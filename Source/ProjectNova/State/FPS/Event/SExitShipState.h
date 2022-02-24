@@ -9,5 +9,5 @@ UCLASS()
 class PROJECTNOVA_API USExitShipState : public USEventState
 {
 	GENERATED_BODY()
-	
+
 };

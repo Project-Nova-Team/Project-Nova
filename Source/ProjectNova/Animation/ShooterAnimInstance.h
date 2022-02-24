@@ -16,6 +16,9 @@ public:
 
 	UShooterAnimInstance();
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
+	UAnimMontage* MeleeAttackMontage;
+
 protected:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Animation")
@@ -24,6 +27,12 @@ protected:
 	/** Kind of hacky, set as true to enable event reporting (use this on the arms only*/
 	UPROPERTY(BlueprintReadWrite, Category = "Animation")
 	uint8 bReportEvents : 1;
+
+#if WITH_EDITOR
+	/** When true, the IK bone offset will be recomputed every anim update, enabling live editing of gun positioning*/
+	UPROPERTY(BlueprintReadWrite, Category = "Animation")
+	uint8 bLiveUpdates : 1;
+#endif
 
 
 	/***	Locomotion		***/
@@ -105,9 +114,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
 	UAnimMontage* AimStopAnimMontage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
-	UAnimMontage* MeleeAttackMontage;
 
 private:
 

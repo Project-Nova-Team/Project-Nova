@@ -4,6 +4,8 @@
 #include "ShooterHUD.h"
 #include "Player/Shooter.h"
 #include "Gameplay/HealthComponent.h"
+#include "Gameplay/QuickTimeManager.h"
+#include "UObject/ConstructorHelpers.h"
 
 AShooterGameMode::AShooterGameMode()
 {
@@ -11,6 +13,9 @@ AShooterGameMode::AShooterGameMode()
 
 	PlayerControllerClass = AShooterController::StaticClass();
 	HUDClass = AShooterHUD::StaticClass();
+
+	static ConstructorHelpers::FClassFinder<AQuickTimeManager> ManagerClass(TEXT("/Game/Blueprints/Systems/BP_QuickTimeManager"));
+	QuickTimeManagerClass = ManagerClass.Class;
 }
 
 void AShooterGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
@@ -21,6 +26,10 @@ void AShooterGameMode::InitGame(const FString& MapName, const FString& Options, 
 	DelayedActionManager = NewObject<UDelayedActionManager>();
 	DelayedActionManager->Initialize();
 
+	FActorSpawnParameters Params;
+	Params.Name = TEXT("Quick Time Manager");
+	QuickTimeManager = GetWorld()->SpawnActor<AQuickTimeManager>(QuickTimeManagerClass, Params);
+	
 	//If we can't figure out why "lighting needs rebuild" warnings wont go away, we can set this flag for builds
 	//GEngine->bSuppressMapWarnings = true;
 }
@@ -36,7 +45,8 @@ void AShooterGameMode::PostLogin(APlayerController* NewPlayer)
 	ShooterController = Cast<AShooterController>(NewPlayer);
 
 	if (ShooterController != nullptr)
-	{
+	{	
 		Shooter = ShooterController->GetPawn<AShooter>();
+		QuickTimeManager->Init();
 	}
 }

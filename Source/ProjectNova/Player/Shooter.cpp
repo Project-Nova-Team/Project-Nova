@@ -8,6 +8,7 @@
 #include "../Gameplay/HealthComponent.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "ShooterInventory.h"
+#include "../Animation/ShooterAnimInstance.h"
 
 void FShooterInput::Tick(const float DeltaTime)
 {
@@ -75,6 +76,8 @@ AShooter::AShooter()
 	Inventory = CreateDefaultSubobject<UShooterInventory>(TEXT("Inventory"));
 	Inventory->Shooter = this;
 	Inventory->Combat = Combat;
+
+	bInputEnabled = true;
 
 	StartingStateOverride.Empty();
 }
@@ -181,9 +184,75 @@ void AShooter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	InputComponent->BindAction("Reload", IE_Released, this, &AShooter::ReloadRelease);
 }
 
+void AShooter::ShootPress()
+{ 
+	if (bInputEnabled)
+	{
+		Combat->ReceiveStartAttack();
+	}
+}
+
+void AShooter::ShootRelease()
+{ 
+	if (bInputEnabled)
+	{
+		Combat->ReceiveStopAttack();
+	}
+}
+
+void AShooter::AimPress()
+{ 
+	if (bInputEnabled)
+	{
+		//Combat->ReceiveAimStart(); 
+	}
+}
+
+void AShooter::AimRelease()
+{ 
+	if (bInputEnabled)
+	{
+		//Combat->ReceiveAimStop(); 
+	}
+}
+
+void AShooter::SwapPressUp()
+{
+	if (bInputEnabled)
+	{
+		Combat->SwapWeapon(-1);
+	}
+}
+
+void AShooter::SwapPressDown()
+{ 
+	if (bInputEnabled)
+	{
+		Combat->SwapWeapon(1);
+	}
+}
+
+void AShooter::ReloadPress()
+{ 
+	if (bInputEnabled)
+	{
+		Combat->ReceiveReload();
+	}	
+}
+
 void AShooter::HandleDeath()
 {
 	StateMachine->SetState("Death");
+}
+
+bool AShooter::IsAttacking()
+{
+	if (UShooterAnimInstance* ShooterAnim = Cast<UShooterAnimInstance>(ShooterSkeletalMesh->AnimScriptInstance))
+	{
+		return ShooterAnim->Montage_IsPlaying(ShooterAnim->MeleeAttackMontage);
+	}
+
+	return false;
 }
 
 bool AShooter::CanVault()
