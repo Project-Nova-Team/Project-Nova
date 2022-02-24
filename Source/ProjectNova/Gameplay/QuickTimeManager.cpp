@@ -40,7 +40,6 @@ bool AQuickTimeManager::StartQuickTime(class ABaseAI* InstigatingAI, int32 Event
 
 	Shooter->SetStateOverride("Empty");
 	Shooter->QuickTimeEventStarted(AI);
-	Shooter->SetInputEnabled(false);
 
 	//Select the first input type, random if this is a one shot quick time, first index if otherwise
 	ActiveIndex = EventCount == 1 ? FMath::RandRange(0, QuickTimeInputs.Num() - 1) : 0;
@@ -85,7 +84,6 @@ void AQuickTimeManager::FinishQuickTimeEvent()
 	ShooterSuccesses = 0;
 
 	Shooter->SetStateOverride("Walking");
-	Shooter->SetInputEnabled(true);
 
 	//this tells the AI BT the task is done
 	OnQuickTimeComplete.Broadcast();
