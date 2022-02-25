@@ -14,7 +14,7 @@
 
 APatrolPath::APatrolPath()
 {
-#if WITH_EDITOR
+#if WITH_EDITORONLY_DATA
 
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.bStartWithTickEnabled = true;
@@ -135,12 +135,12 @@ void APatrolPath::SetPathMode(const EPathMode NewMode)
 {
 	Mode = NewMode;
 
-#if WITH_EDITOR
+#if WITH_EDITORONLY_DATA
 	SetPathModeImpl();
 #endif
 }
 
-#if WITH_EDITOR
+#if WITH_EDITORONLY_DATA
 void APatrolPath::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);

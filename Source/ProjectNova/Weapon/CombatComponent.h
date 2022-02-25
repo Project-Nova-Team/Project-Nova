@@ -128,13 +128,17 @@ public:
 
 	/** Returns the weapon currently being held. Returns null if there are none*/
 	UFUNCTION(BlueprintCallable, Category = "Combat")
-	FORCEINLINE AWeapon* GetHeldWeapon() const;
+	AWeapon* GetHeldWeapon() const;
 
 	/** Returns component responsible for mesh traces*/
 	FORCEINLINE USceneComponent* GetTraceOrigin() const { return TraceOrigin; }
 
 	/** Returns whether or not this component updates it's owner's HUD*/
 	FORCEINLINE bool GetUpdatesHUD() const { return bUpdatesHUD; }
+
+protected:
+
+	void BeginPlay() override;
 
 private:
 

@@ -25,6 +25,7 @@ private:
 
 public:
 
+	UFUNCTION(BlueprintCallable)
 	void ReceivePause();
 
 	/// Begin APawn Interface ///

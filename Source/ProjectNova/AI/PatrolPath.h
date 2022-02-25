@@ -49,7 +49,7 @@ protected:
 	UFUNCTION(BlueprintSetter)
 	void SetPathMode(const EPathMode NewMode);
 
-#if WITH_EDITOR
+#if WITH_EDITORONLY_DATA
 
 public:
 

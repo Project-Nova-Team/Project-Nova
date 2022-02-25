@@ -38,7 +38,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Patrol Point")
 	float WaitDuration;
 
-#if WITH_EDITOR
+#if WITH_EDITORONLY_DATA
 
 public:
 

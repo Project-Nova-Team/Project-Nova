@@ -2,10 +2,9 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
-#include "../Weapon/Weapon.h"
 #include "ShooterAnimInstance.generated.h"
 
-class AGun;
+class AWeapon;
 
 UCLASS()
 class PROJECTNOVA_API UShooterAnimInstance : public UAnimInstance
@@ -28,9 +27,9 @@ protected:
 	UPROPERTY(BlueprintReadWrite, Category = "Animation")
 	uint8 bReportEvents : 1;
 
-#if WITH_EDITOR
+#if WITH_EDITORONLY_DATA
 	/** When true, the IK bone offset will be recomputed every anim update, enabling live editing of gun positioning*/
-	UPROPERTY(BlueprintReadWrite, Category = "Animation")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	uint8 bLiveUpdates : 1;
 #endif
 
@@ -131,6 +130,14 @@ public:
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 	virtual void NativeUninitializeAnimation() override;
 
+protected:
+
+	UFUNCTION()
+	void ReceiveMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+
+	UFUNCTION()
+	void ReciveMontageStarted(UAnimMontage* Montage);
+
 private:
 
 	void ReceiveWeaponSwitch(const AWeapon* NewWeapon);
@@ -142,10 +149,4 @@ private:
 	void ReceiveSwap();
 
 	void ComputeWeaponSway(const float DeltaSeconds);
-
-	UFUNCTION()
-	void ReceiveMontageEnded(UAnimMontage* Montage, bool bInterrupted);
-
-	UFUNCTION()
-	void ReciveMontageStarted(UAnimMontage* Montage);
 };

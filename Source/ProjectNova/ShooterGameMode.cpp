@@ -31,7 +31,7 @@ void AShooterGameMode::InitGame(const FString& MapName, const FString& Options, 
 	QuickTimeManager = GetWorld()->SpawnActor<AQuickTimeManager>(QuickTimeManagerClass, Params);
 	
 	//If we can't figure out why "lighting needs rebuild" warnings wont go away, we can set this flag for builds
-	//GEngine->bSuppressMapWarnings = true;
+	GEngine->bSuppressMapWarnings = true;
 }
 
 void AShooterGameMode::Tick(float DeltaTime)
@@ -47,6 +47,10 @@ void AShooterGameMode::PostLogin(APlayerController* NewPlayer)
 	if (ShooterController != nullptr)
 	{	
 		Shooter = ShooterController->GetPawn<AShooter>();
-		QuickTimeManager->Init();
+
+		if (Shooter)
+		{
+			QuickTimeManager->Init();
+		}
 	}
 }

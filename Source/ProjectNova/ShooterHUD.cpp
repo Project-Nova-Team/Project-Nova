@@ -37,8 +37,8 @@ void AShooterHUD::SetPauseDisplay(const bool bShowPauseMenu)
 
 		ExitConfirmationWidget->SetVisibility(ESlateVisibility::Collapsed);
 		PauseMenuWidget->SetVisibility(ESlateVisibility::Collapsed);
-		SettingsMenuWidget->SetVisibility(ESlateVisibility::Collapsed);
-		ControlsMenuWidget->SetVisibility(ESlateVisibility::Collapsed);
+		//SettingsMenuWidget->SetVisibility(ESlateVisibility::Collapsed);
+		//ControlsMenuWidget->SetVisibility(ESlateVisibility::Collapsed);
 	}
 }
 

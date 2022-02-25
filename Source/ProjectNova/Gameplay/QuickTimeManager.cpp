@@ -38,7 +38,7 @@ bool AQuickTimeManager::StartQuickTime(class ABaseAI* InstigatingAI, int32 Event
 	RequiredActions = EventCount;
 	bActive = true;
 
-	Shooter->SetStateOverride("Empty");
+	Shooter->SetStateOverride("Cutscene");
 	Shooter->QuickTimeEventStarted(AI);
 
 	//Select the first input type, random if this is a one shot quick time, first index if otherwise

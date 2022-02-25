@@ -7,7 +7,7 @@ AMeleeWeapon::AMeleeWeapon()
 {
 	Damage = 20.f;
 	
-	if (!OnActorBeginOverlap.Contains(this, TEXT("ReciveOverlap")))
+	if (!OnActorBeginOverlap.Contains(this, TEXT("ReceiveOverlap")))
 	{
 		OnActorBeginOverlap.AddDynamic(this, &AMeleeWeapon::ReceiveOverlap);
 	}
