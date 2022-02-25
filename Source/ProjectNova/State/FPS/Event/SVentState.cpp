@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "SVentState.h"
 #include "../../../State/FPS/ShooterStateMachine.h"
 #include "../../../Gameplay/Vent.h"
@@ -13,7 +11,6 @@ void USVentState::Initialize(UStateMachine* StateMachine, UObject* ContextObject
 
 void USVentState::OnEnter()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Vent State Enter"));
 	Super::OnEnter();
 
 	Vent = Cast<AVent>(Shooter->GetLastScannedObject());
@@ -27,78 +24,56 @@ void USVentState::OnEnter()
 
 		ProgressMax = Spline->GetSplineLength();
 
-		SpeedAlongSpline = Vent->CrawlSpeed;
+		CrawlSpeed = Vent->CrawlSpeed;
 
-		bMovingToCrawl = true;
+		bLerpingToCrawlPosition = true;
 
 		Handle->GetAction()->StopAction();
 
-		TargetRotation = Spline->GetRotationAtDistanceAlongSpline(Progress, ESplineCoordinateSpace::World);
+		TargetLerpRotation = Spline->GetRotationAtDistanceAlongSpline(Progress, ESplineCoordinateSpace::World);
 
 		if (Vent->bIsOverlappingLeftTrigger)
 		{
-			bIsDirectionPositive = true;
-			Progress = 0;
+			CrawlDirection = ECrawlDirection::CD_Right;
 
-			UE_LOG(LogTemp, Warning, TEXT("Left Setup"));				
+			Progress = 0;
 		}
 		else if (Vent->bIsOverlappingRightTrigger)
 		{
-			bIsDirectionPositive = false;
-			Progress = ProgressMax;
+			CrawlDirection = ECrawlDirection::CD_Left;
 
-			UE_LOG(LogTemp, Warning, TEXT("Right Setup"));
+			Progress = ProgressMax; // start at the end if going from left to right
 
-			TargetRotation *= -1; // flip rotation for right to left
+			TargetLerpRotation *= -1; // flip rotation for right to left
 		}
 
-		TargetLocation = Spline->GetLocationAtDistanceAlongSpline(Progress, ESplineCoordinateSpace::World);
+		TargetLerpLocation = Spline->GetLocationAtDistanceAlongSpline(Progress, ESplineCoordinateSpace::World);
 
 		Handle = GetDelayedActionManager()->StartOverTimeAction(
 			this,
 			&USVentState::MoveToCrawlPosition,
 			2.f,
 			Shooter->GetActorLocation(),
-			TargetLocation,
+			TargetLerpLocation,
 			Shooter->GetAnchor()->GetComponentRotation(),
-			TargetRotation);
+			TargetLerpRotation);
 	}
 }
 
 void USVentState::OnExit()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Vent State Exit"));
+	Movement->bIsInTuckTransition = false; // so that we can crouch again
+	Super::OnExit();
 }
 
 void USVentState::Tick(const float DeltaTime) 
 {
-	if (!bMovingToCrawl)
+	if (!bLerpingToCrawlPosition)
 	{
 		Progress = FMath::Clamp(Progress, 0.f, ProgressMax);
 
-		if (bIsDirectionPositive)
-		{
-			if (Progress == ProgressMax)
-			{
-				Shooter->GetStateMachine()->SetState("Walking");
-			}
-
-			Progress += Input->MoveY * SpeedAlongSpline;
-			LocationAlongSpline = (Spline->GetLocationAtDistanceAlongSpline(Progress, ESplineCoordinateSpace::World));
-			Shooter->GetAnchor()->SetWorldRotation(Spline->GetDirectionAtDistanceAlongSpline(Progress, ESplineCoordinateSpace::World).Rotation());
-		}
-		else
-		{
-			if (Progress == 0)
-			{
-				Shooter->GetStateMachine()->SetState("Walking");
-			}
-			Progress -= Input->MoveY * SpeedAlongSpline;
-			LocationAlongSpline = (Spline->GetLocationAtDistanceAlongSpline(Progress, ESplineCoordinateSpace::World));
-			Shooter->GetAnchor()->SetWorldRotation((-1 * Spline->GetDirectionAtDistanceAlongSpline(Progress, ESplineCoordinateSpace::World)).Rotation());
-		}
-
-		Shooter->SetActorLocation(LocationAlongSpline);
+		MoveAlongSpline(CrawlDirection);
+		RotateAlongSpline(CrawlDirection);
 	}
 }
 
@@ -106,9 +81,39 @@ void USVentState::MoveToCrawlPosition(FVector StartingPosition, FVector EndPosit
 {
 	if (Handle->CurrentActionProgress > .999f)
 	{
-		bMovingToCrawl = false;
+		bLerpingToCrawlPosition = false;
 	}
 
 	Shooter->SetActorLocation(FMath::Lerp(StartingPosition, EndPosition, Handle->CurrentActionProgress));
 	Shooter->GetAnchor()->SetWorldRotation(FMath::Lerp(StartingRotation, EndRotation, Handle->CurrentActionProgress));
+}
+
+void USVentState::MoveAlongSpline(ECrawlDirection Direction)
+{
+	if (Direction == ECrawlDirection::CD_Right)
+	{
+		if (Progress == ProgressMax)
+		{
+			Shooter->GetStateMachine()->SetState("Walking");
+		}
+		Progress += Input->MoveY * CrawlSpeed;		// progress going right is positive
+	}
+	else
+	{
+		if (Progress == 0)
+		{
+			Shooter->GetStateMachine()->SetState("Walking");
+		}
+		Progress -= Input->MoveY * CrawlSpeed;		
+	}
+
+	LocationAtDistanceAlongSpline = Spline->GetLocationAtDistanceAlongSpline
+	(Progress, ESplineCoordinateSpace::World);
+
+	Shooter->SetActorLocation(LocationAtDistanceAlongSpline);
+}
+
+void USVentState::RotateAlongSpline(ECrawlDirection Direction)
+{
+	Shooter->GetAnchor()->SetWorldRotation(TargetLerpRotation);
 }

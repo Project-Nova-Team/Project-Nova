@@ -9,12 +9,6 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FInteractionEvent, APawn*);
 
 DECLARE_DELEGATE_OneParam(FShooterBindingEvent, APawn*)
 
-UENUM()
-enum EInputActionMappings
-{
-	IM_None
-};
-
 USTRUCT(BlueprintType)
 struct FInteractionPrompt
 {

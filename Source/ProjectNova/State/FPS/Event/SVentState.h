@@ -8,6 +8,13 @@
 
 class AVent;
 
+UENUM()
+enum ECrawlDirection
+{
+	CD_Left,
+	CD_Right
+};
+
 UCLASS()
 class PROJECTNOVA_API USVentState : public USProneState
 {
@@ -24,27 +31,45 @@ public:
 
 protected:
 
+	/** Spline Reference*/
 	USplineComponent* Spline;
 
-	float Progress;
-
+	/** Vent Reference*/
 	AVent* Vent;
 
-	uint8 bIsDirectionPositive : 1;
+	/** Progress of movement along spline between 0 and the length of the spline*/
+	float Progress;
 
-	FVector LocationAlongSpline;
-
-	FVector TargetLocation;
-
-	FRotator TargetRotation;
-
-	float SpeedAlongSpline;
-
+	/** the length of the spline*/
 	float ProgressMax;
 
+	/** How fast the player moves while crawling*/
+	float CrawlSpeed;
+
+	/** Vector location at a progress*/
+	FVector LocationAtDistanceAlongSpline;
+
+	/** Lerp target vector for location*/
+	FVector TargetLerpLocation;
+
+	/** Target Lerp rotation*/
+	FRotator TargetLerpRotation;
+
+	/** Direction at progress for rotation*/
+	FVector DirectionAtDistanceAlongSpline;
+
+	/** Enum denoting which direction we need to face*/
+	ECrawlDirection CrawlDirection;
+
+	/** is the handle finished lerping to the crawl position*/
+	uint8 bLerpingToCrawlPosition : 1;
+
+	/** The method that lerps the player from standing to crawl*/
 	void MoveToCrawlPosition(FVector StartPosition, FVector EndPosition, FRotator StartRotation, FRotator EndRotation);
 
-	uint8 bMovingToCrawl : 1;
+	/** The method that moves the player along the spline*/
+	void MoveAlongSpline(ECrawlDirection Direction);
 
-	float time;
+	/** Rotates the player along the spline while moving*/
+	void RotateAlongSpline(ECrawlDirection Direction);
 };
