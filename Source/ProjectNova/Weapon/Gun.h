@@ -80,7 +80,7 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Weapon | Recoil")
 	float RecoilAimFactor;
 
-#if WITH_EDITOR
+#if WITH_EDITORONLY_DATA
 	UPROPERTY(EditAnywhere, Category = "Weapon | Debug")
 	uint8 bDrawFireTraces : 1;
 #endif
@@ -110,6 +110,8 @@ public:
 
 	virtual void Attack() override;
 	virtual void Reload() override;
+
+	void AddAmmo(int32 Amount);
 
 protected:
 

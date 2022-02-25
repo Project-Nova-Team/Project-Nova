@@ -5,6 +5,7 @@
 #include "HealthComponent.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FHealthEvent);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FDamagedEvent, const class UDamageType*, DamageType);
 
 UCLASS( ClassGroup=(Custom), HideCategories=(Tags, AssetUserData, Activation, Collision, Cooking), meta=(BlueprintSpawnableComponent))
 class PROJECTNOVA_API UHealthComponent : public UActorComponent
@@ -33,9 +34,9 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FHealthEvent OnDeath;
 
-	/** Delegate executed when this components actor reaches 0 health*/
+	/** Delegate executed when this components actor takes non lethal damage*/
 	UPROPERTY(BlueprintAssignable)
-	FHealthEvent OnDamaged;
+	FDamagedEvent OnDamaged;
 
 	/** Delegate executed anytime this component's actor revives*/
 	UPROPERTY(BlueprintAssignable)

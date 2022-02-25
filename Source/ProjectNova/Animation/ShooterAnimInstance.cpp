@@ -9,6 +9,10 @@ UShooterAnimInstance::UShooterAnimInstance()
 	LookSwayMultiplier = 10.f;
 	MoveSwayMultiplier = 10.f;
 	SwaySpeed = 5.f;
+
+#if WITH_EDITORONLY_DATA
+	bLiveUpdates = true;
+#endif 
 }
 
 void UShooterAnimInstance::ReceiveWeaponSwitch(const AWeapon* NewWeapon)
@@ -30,7 +34,7 @@ void UShooterAnimInstance::ReceiveWeaponSwitch(const AWeapon* NewWeapon)
 	//No weapon, no IK
 	else
 	{
-		AlphaIK = 0;
+		AlphaIK = 0.f;
 	}
 
 	ELocomotionType Type = NewWeapon ? NewWeapon->AnimData.LocomotionType : LT_Default;
@@ -124,12 +128,17 @@ void UShooterAnimInstance::ComputeWeaponSway(const float DeltaSeconds)
 	REffectorRotation.Pitch = FMath::FInterpTo(REffectorRotation.Pitch, Shooter->GetInput()->LookY * LookSwayMultiplier, DeltaSeconds, SwaySpeed);
 	REffectorRotation.Yaw = FMath::FInterpTo(REffectorRotation.Yaw, Shooter->GetInput()->LookX * LookSwayMultiplier, DeltaSeconds, SwaySpeed);
 
-	HeldWeapon->GetMesh()->SetRelativeLocation(HeldWeapon->AnimData.AbsoluteLocationOffset);
-	HeldWeapon->GetMesh()->SetRelativeRotation(HeldWeapon->AnimData.AbsoluteRotationOffset);
+#if WITH_EDITORONLY_DATA
+	if (bLiveUpdates)
+	{
+		HeldWeapon->GetMesh()->SetRelativeLocation(HeldWeapon->AnimData.AbsoluteLocationOffset);
+		HeldWeapon->GetMesh()->SetRelativeRotation(HeldWeapon->AnimData.AbsoluteRotationOffset);
 
-	REffectorLocation = HeldWeapon->AnimData.REffectorLocationOffset;
-	RTargetLocation = HeldWeapon->AnimData.RTargetLocationOffset;
-	LTargetLocation = HeldWeapon->AnimData.LTargetLocationOffset;
+		REffectorLocation = HeldWeapon->AnimData.REffectorLocationOffset;
+		RTargetLocation = HeldWeapon->AnimData.RTargetLocationOffset;
+		LTargetLocation = HeldWeapon->AnimData.LTargetLocationOffset;
+	}
+#endif	
 
 	//Computes IK rotation and position for left effector
 	FTransform Transform = HeldWeapon->GetMesh()->GetSocketTransform(UCombatComponent::SecondarySocketName);
@@ -171,11 +180,22 @@ void UShooterAnimInstance::ReciveMontageStarted(UAnimMontage* Montage)
 	if (Montage == MeleeAttackMontage)
 	{
 		Shooter->GetCombat()->MarkInAnimation();
+		AlphaIK = 0;
+	}
+
+	else if (Montage == SwapAnimMontage)
+	{
+		AlphaIK = 0.f;
 	}
 }
 
 void UShooterAnimInstance::ReceiveMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
+	if (Shooter->GetCombat()->GetHeldWeapon() != nullptr)
+	{
+		AlphaIK = 1.f;
+	}
+	
 	if (Montage == VaultAnimMontage)
 	{
 

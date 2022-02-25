@@ -26,6 +26,10 @@ void AWeapon::SetCombatComponent(UCombatComponent* NewOwner)
 		TraceOrigin = NewOwner->GetTraceOrigin();
 
 		bReportHUDEvents = NewOwner->GetUpdatesHUD();
+		if (bReportHUDEvents)
+		{
+			NotifyHUD();
+		}
 	}
 
 	//A pawn has dropped the weapon

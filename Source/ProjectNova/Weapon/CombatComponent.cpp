@@ -11,6 +11,20 @@ UCombatComponent::UCombatComponent()
 	PrimaryComponentTick.bStartWithTickEnabled = true;
 }
 
+void UCombatComponent::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (Arsenal.Num() > 0)
+	{
+		for (AWeapon* Weapon : Arsenal)
+		{
+			Arsenal.Remove(Weapon);
+			PickUpWeapon(Weapon);
+		}
+	}
+}
+
 void UCombatComponent::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
@@ -38,8 +52,27 @@ void UCombatComponent::SetUpConstruction(USkeletalMeshComponent* SocketMesh, USc
 	bIsRunning = bRunningFlag;
 }
 
+
+AWeapon* UCombatComponent::GetWeaponOfType(TSubclassOf<AWeapon> WeaponClass)
+{
+	for (AWeapon* Weapon : Arsenal)
+	{
+		if (Weapon->GetClass() == WeaponClass.Get())
+		{
+			return Weapon;
+		}
+	}
+
+	return nullptr;
+}
+
 void UCombatComponent::PickUpWeapon(AWeapon* NewWeapon)
 {
+	if (NewWeapon == nullptr)
+	{
+		return;
+	}
+
 	//Perform any necessary set up for the weapon
 	Arsenal.Emplace(NewWeapon);
 
@@ -48,6 +81,7 @@ void UCombatComponent::PickUpWeapon(AWeapon* NewWeapon)
 	NewWeapon->AttachToComponent(AttachmentMesh, FAttachmentTransformRules::KeepRelativeTransform, WeaponSocketName);
 
 	NewWeapon->SetCombatComponent(this);
+	OnWeaponAdd.ExecuteIfBound(NewWeapon);
 
 	//We are holding too many weapons, drop the currently held one
 	if (Arsenal.Num() > MaxWeaponCount)
