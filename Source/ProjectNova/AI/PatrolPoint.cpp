@@ -1,6 +1,6 @@
 #include "PatrolPoint.h"
 
-#if WITH_EDITOR
+#if WITH_EDITORONLY_DATA
 	#include "Components/BillboardComponent.h"
 	#include "Components/ArrowComponent.h" 
 	#include "UObject/ConstructorHelpers.h"
@@ -10,7 +10,7 @@ APatrolPoint::APatrolPoint()
 	: bUseLookDirection(true)
 	, WaitDuration(5.f)
 {
-#if WITH_EDITOR
+#if WITH_EDITORONLY_DATA
 	struct FConstructorStatics
 	{
 		ConstructorHelpers::FObjectFinderOptional<UTexture2D> SpriteTexture;
@@ -66,11 +66,14 @@ void APatrolPoint::SetUseLookDirection(const bool bValue)
 	if (bUseLookDirection != bValue)
 	{
 		bUseLookDirection = bValue;
+
+#if WITH_EDITORONLY_DATA
 		UpdateArrowVisibility();
+#endif
 	}
 }
 
-#if WITH_EDITOR
+#if WITH_EDITORONLY_DATA
 
 void APatrolPoint::UpdateArrowVisibility()
 {

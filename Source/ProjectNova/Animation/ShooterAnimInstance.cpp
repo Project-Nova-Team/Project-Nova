@@ -9,6 +9,10 @@ UShooterAnimInstance::UShooterAnimInstance()
 	LookSwayMultiplier = 10.f;
 	MoveSwayMultiplier = 10.f;
 	SwaySpeed = 5.f;
+
+#if WITH_EDITORONLY_DATA
+	bLiveUpdates = true;
+#endif 
 }
 
 void UShooterAnimInstance::ReceiveWeaponSwitch(const AWeapon* NewWeapon)
@@ -124,7 +128,7 @@ void UShooterAnimInstance::ComputeWeaponSway(const float DeltaSeconds)
 	REffectorRotation.Pitch = FMath::FInterpTo(REffectorRotation.Pitch, Shooter->GetInput()->LookY * LookSwayMultiplier, DeltaSeconds, SwaySpeed);
 	REffectorRotation.Yaw = FMath::FInterpTo(REffectorRotation.Yaw, Shooter->GetInput()->LookX * LookSwayMultiplier, DeltaSeconds, SwaySpeed);
 
-#if WITH_EDITOR
+#if WITH_EDITORONLY_DATA
 	if (bLiveUpdates)
 	{
 		HeldWeapon->GetMesh()->SetRelativeLocation(HeldWeapon->AnimData.AbsoluteLocationOffset);
@@ -187,7 +191,7 @@ void UShooterAnimInstance::ReciveMontageStarted(UAnimMontage* Montage)
 
 void UShooterAnimInstance::ReceiveMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
-	if (Shooter->GetCombat()->GetHeldWeapon())
+	if (Shooter->GetCombat()->GetHeldWeapon() != nullptr)
 	{
 		AlphaIK = 1.f;
 	}
