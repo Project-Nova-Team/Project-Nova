@@ -44,11 +44,11 @@ protected:
 
 	/** This function is called when the AI dies. It disables all perception and the behavior tree*/
 	UFUNCTION()
-	void OwnerDeath();
+	virtual void OwnerDeath();
 
 	/** This function is called when the AI revives. It re-enables perception and the BT*/
 	UFUNCTION()
-	void OwnerRevive();
+	virtual void OwnerRevive();
 
 
 	///Perception Related Functions///

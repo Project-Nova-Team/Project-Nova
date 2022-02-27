@@ -7,14 +7,14 @@
 FName AGun::BarrelSocketName = TEXT("Barrel_Socket");
 
 AGun::AGun()
-	: BulletsPerFire(1)
-	, bCanFire(true)
+	: RecoilRecovery(100)
+	, BulletsPerFire(1)
 	, AngularSpread(3.f)
 	, Recoil(100)
-	, RecoilRecovery(100)
 	, RecoilFallOff(100)
 	, RecoilLimit(100)
 	, RecoilAimFactor(0.5f)
+	, bCanFire(true)
 {
 	PrimaryActorTick.bCanEverTick = true;
 	RecoilAngularLimit = 10.f;

@@ -54,6 +54,11 @@ AWeapon* UCombatComponent::GetWeaponOfType(TSubclassOf<AWeapon> WeaponClass)
 
 void UCombatComponent::PickUpWeapon(AWeapon* NewWeapon)
 {
+	if (NewWeapon == nullptr)
+	{
+		return;
+	}
+
 	//Perform any necessary set up for the weapon
 	Arsenal.Emplace(NewWeapon);
 

@@ -55,6 +55,16 @@ protected:
 
 public:
 
+	/**
+	 * Executed upon receiving a notice than a QuickTime action was complete 
+	 * 
+	 * @param	bSucceeded				Was this AI victorious in this QT Action
+	 * @param	bCompleted				Was this the final action in this QT Event
+	 * @param	SuccessCount			Number of times in a given event this AI has succeeded
+	 */
+	UFUNCTION(BlueprintImplementableEvent)
+	void QuickTimeActionComplete(bool bSucceeded, bool bCompleted, int32 SuccessCount);
+
 	/** Gets health component*/
 	FORCEINLINE UHealthComponent* GetHealth() const { return Health; }
 
