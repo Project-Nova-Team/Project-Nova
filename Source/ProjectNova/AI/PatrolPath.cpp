@@ -224,7 +224,7 @@ FReply APatrolPath::AddPoint()
 	
 	if (Client == nullptr)
 	{
-		return FReply::Handled(); //bad error handling
+		FReply::Handled(); //bad error handling
 	}
 
 	const FViewportCameraTransform& Transform = Client->GetViewTransform();
@@ -235,7 +235,7 @@ FReply APatrolPath::AddPoint()
 	FHitResult Hit;
 
 	//Trace from the camera to see where we should attempt to place the point
-	bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, Location, Forward * MAX_CAST_DISTANCE, ECC_Pawn);
+	bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, Location, Forward * MAX_CAST_DISTANCE, ECC_WorldStatic);
 	const FVector SpawnLocation = bHit ? Hit.ImpactPoint + Hit.ImpactNormal * 100.f : Location + (Forward * 100.f);
 
 	bool bNeedsFirstSplinePoint = Points.Num() == 1;
