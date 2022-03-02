@@ -214,8 +214,6 @@ private:
 	/** Casts a trace from the camera to see if there is an object nearby we can interact with*/	
 	void ScanInteractiveObject();
 
-	IInteractiveObject* LastScannedObject;
-
 	///		 Begin Input Bindings	   ///
 
 	void ShootPress();

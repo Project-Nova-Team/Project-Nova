@@ -145,6 +145,10 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Control | Crouch")
 	float CrouchTime;
 
+	/** The number of units the shooter moves each each second while proning*/
+	UPROPERTY(EditAnywhere, Category = "Control | Prone")
+	float CrawlSpeed;
+
 	/** The number of units the shooter accelerates each second while proning*/
 	UPROPERTY(EditAnywhere, Category = "Control | Prone")
 	float ProneAcceleration;

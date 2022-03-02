@@ -26,19 +26,9 @@ public:
 
 	FInteractionPrompt& GetInteractionPrompt() override { return Prompt; }
 
-	FName& GetInteractionMappingName() override { return ActionMappingName; }
-
 	void InteractionEvent(APawn* EventSender) override;
 
-	void RecieveLookedAt(APawn* EventSender);
-
-	void RecieveLookedAway(APawn* EventSender, int32 MappingIndexToRemove) override;
-
 	USplineComponent* GetSpline() { return Spline; }
-
-	/** How fast the player moves along the vent spline. 5-10 feels good. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
-	float CrawlSpeed;
 
 	/** These bools are used for ventstate to determine which side of the spline to start from */
 	uint8 bIsOverlappingLeftTrigger : 1;

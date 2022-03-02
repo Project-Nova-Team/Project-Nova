@@ -38,10 +38,6 @@ public:
 
 	FInteractionPrompt& GetInteractionPrompt() override { return Prompt; }
 
-	FName& GetInteractionMappingName() override { return ActionMappingName; }
-
-	void RecieveLookedAt(APawn* EventSender) override;
-
 	/** Sets the lock status of this Button*/
 	UFUNCTION(BlueprintSetter)
 	void SetIsLocked(const bool Value);
@@ -54,18 +50,16 @@ public:
 
 	uint8 bIsInteracted : 1;
 
-	void RecieveLookedAway(APawn* EventSender, int32 MappingIndexToRemove) override;
-
 protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
-		UStaticMeshComponent* Panel;
+	UStaticMeshComponent* Panel;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
-		UStaticMeshComponent* Button;
+	UStaticMeshComponent* Button;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
-		UArrowComponent* Arrow;
+	UArrowComponent* Arrow;
 
 	UMaterialInstanceDynamic* EmissiveMaterial;
 
@@ -93,11 +87,11 @@ protected:
 
 	/** How far this button retracts into the panel*/
 	UPROPERTY(EditAnywhere)
-		float PushDepth;
+	float PushDepth;
 
 	/** How long it takes for the button to retract*/
 	UPROPERTY(EditAnywhere)
-		float ButtonTransitionTime;
+	float ButtonTransitionTime;
 
 	/** Whether or not the button is currently locked*/
 	UPROPERTY(EditAnywhere, BlueprintSetter = SetIsLocked, Category = "Button")
@@ -105,10 +99,10 @@ protected:
 
 	/**This is mesh of button, not panel*/
 	UPROPERTY(BlueprintReadWrite)
-		UStaticMeshComponent* Mesh;
+	UStaticMeshComponent* Mesh;
 
 	UPROPERTY(Editanywhere, BlueprintReadWrite, Category = "Interactable")
-		FInteractionPrompt Prompt;
+	FInteractionPrompt Prompt;
 
 	/** Live state of this door*/
 	TEnumAsByte<EButtonState> State;
@@ -120,8 +114,4 @@ protected:
 	void OverTimeTransition(const EButtonState TargetState);
 
 	uint8 bIsMoving : 1;
-
-	/** Is set to interact by default. See Edit->ProjectSettings->Input for list of action mapping names.*/
-	UPROPERTY(EditAnywhere, Category = "Interaction")
-	FName ActionMappingName;
 };

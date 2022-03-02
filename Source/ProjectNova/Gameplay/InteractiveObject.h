@@ -7,8 +7,6 @@
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FInteractionEvent, APawn*);
 
-DECLARE_DELEGATE_OneParam(FShooterBindingEvent, APawn*)
-
 USTRUCT(BlueprintType)
 struct FInteractionPrompt
 {
@@ -57,22 +55,24 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "On Interact"))
 	void BlueprintInteract(APawn* EventSender);
 
-	virtual void RecieveLookedAt(APawn* EventSender) = 0;
+	virtual void ReceiveLookedAt(APawn* EventSender);
 
-	virtual void RecieveLookedAway(APawn* EventSender, int32 MappingIndexToRemove) = 0;
+	virtual void ReceiveLookedAway(APawn* EventSender);
 
-	virtual void InteractionEvent(APawn* EventSender) { OnInteract.Broadcast(EventSender); }
+	virtual void InteractionEvent(APawn* EventSender);
 
-	FInteractionEvent OnInteract;
+	virtual bool CanInteract() const;
 
-	virtual bool CanInteract() const { return true; }
+	/** Returns the input action name this interactive object uses*/
+	virtual const FName GetActionName() const;
 
 	/** Forces classes that inherit from this to provide prompt data*/
 	virtual FInteractionPrompt& GetInteractionPrompt() = 0;
 
-	/** Forces classes that inherit from this to provide mapping data*/
-	virtual FName& GetInteractionMappingName() = 0;
-	
-	/** Used for removing bindings on ScanMiss*/
+	FInteractionEvent OnInteract;
+
+protected:
+
+	/** Index of input action binding which is used to unhook input action events*/
 	int32 BindingIndex;
 };

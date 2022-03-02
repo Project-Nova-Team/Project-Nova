@@ -20,17 +20,7 @@ AInteractiveButton::AInteractiveButton()
 	Arrow = CreateDefaultSubobject<UArrowComponent>("Arrow");
 	Arrow->AttachToComponent(Button, FAttachmentTransformRules::KeepRelativeTransform);
 
-	ActionMappingName = "Interact";
 	//Dynamic Material for Button is being set in BP
-}
-
-void AInteractiveButton::RecieveLookedAt(APawn* EventSender)
-{
-	if (CanInteract())
-	{
-		BindingIndex = EventSender->InputComponent->BindAction<FShooterBindingEvent>(ActionMappingName,
-			IE_Pressed, this, &AInteractiveButton::InteractionEvent, EventSender).GetHandle();
-	}
 }
 
 void AInteractiveButton::SetIsLocked(const bool Value)
@@ -40,12 +30,6 @@ void AInteractiveButton::SetIsLocked(const bool Value)
 		SetIsLockedImpl(Value);
 		bIsLocked = Value;
 	}
-}
-
-void AInteractiveButton::RecieveLookedAway(APawn* EventSender, int32 MappingIndexToRemove)
-{
-	// Remove the delegate tied to the this object's desired ActionMapping
-	EventSender->InputComponent->RemoveActionBindingForHandle(MappingIndexToRemove);
 }
 
 void AInteractiveButton::SetIsLockedImpl(const bool Value)

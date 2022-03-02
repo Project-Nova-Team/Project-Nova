@@ -38,34 +38,15 @@ AVent::AVent()
 	Health = CreateDefaultSubobject<UHealthComponent>("Health");
 	
 	DisableDuration = 10.f;
-
-	ActionMappingName = "Interact";
 }
 
 void AVent::InteractionEvent(APawn* EventSender)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Vent Interact"));
-
-	AShooter* Shooter = Cast<AShooter>(EventSender);
-
-	Shooter->GetStateMachine()->SetState("Venting");
-
-	DisableGrateForDuration();
-}
-
-void AVent::RecieveLookedAt(APawn* EventSender)
-{
-	if (CanInteract())
+	if (AShooter* Shooter = Cast<AShooter>(EventSender))
 	{
-		BindingIndex = EventSender->InputComponent->BindAction<FShooterBindingEvent>(ActionMappingName,
-			IE_Pressed, this, &AVent::InteractionEvent, EventSender).GetHandle();
+		Shooter->GetStateMachine()->SetState("Venting");
+		DisableGrateForDuration();
 	}
-}
-
-void AVent::RecieveLookedAway(APawn* EventSender, int32 MappingIndexToRemove)
-{
-	// Remove the delegate tied to the this object's desired ActionMapping
-	EventSender->InputComponent->RemoveActionBindingForHandle(MappingIndexToRemove);
 }
 
 void AVent::BeginPlay()
@@ -105,7 +86,6 @@ void AVent::MaybeReEnableGrate()
 
 void AVent::ReEnableGrate()
 {
-	//bCanInteract = false; // cannot interact while grate is up
 	Health->Revive();
 	LeftGrate->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	RightGrate->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
@@ -127,12 +107,10 @@ void AVent::ComponentEndOverlap(class UPrimitiveComponent* HitComp, class AActor
 
 		if (Cast<UBoxComponent>(HitComp) == LeftGrateTrigger)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("UnOverlap Left"));
 			bIsOverlappingLeftTrigger = false;
 		}
 		else if (Cast<UBoxComponent>(HitComp) == RightGrateTrigger)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("UnOverlap Right"));
 			bIsOverlappingRightTrigger = false;
 		}
 	}
@@ -146,12 +124,10 @@ void AVent::ComponentBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* O
 	{
 		if (Cast<UBoxComponent>(OverlappedComp) == LeftGrateTrigger)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Overlap Left"));
 			bIsOverlappingLeftTrigger = true;
 		}
 		else if (Cast<UBoxComponent>(OverlappedComp) == RightGrateTrigger)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Overlap Right"));
 			bIsOverlappingRightTrigger = true;
 		}
 	}

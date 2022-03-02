@@ -17,13 +17,9 @@ public:
 
 	FInteractionPrompt& GetInteractionPrompt() override { return Prompt; }
 
-	FName& GetInteractionMappingName() override { return ActionMappingName; }
+	const FName GetActionName() const override { return ActionMappingName; }
 
 	void InteractionEvent(APawn* EventSender) override;
-
-	void RecieveLookedAt(APawn* EventSender);
-
-	void RecieveLookedAway(APawn* EventSender, int32 MappingIndexToRemove) override;
 
 protected:
 

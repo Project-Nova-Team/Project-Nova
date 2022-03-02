@@ -1,8 +1,6 @@
 #include "SVentState.h"
 #include "../../../State/FPS/ShooterStateMachine.h"
 #include "../../../Gameplay/Vent.h"
-#include <ProjectNova/State/FPS/Movement/SProneState.h>
-#include <time.h>
 
 void USVentState::Initialize(UStateMachine* StateMachine, UObject* ContextObject)
 {
@@ -23,8 +21,6 @@ void USVentState::OnEnter()
 		}
 
 		ProgressMax = Spline->GetSplineLength();
-
-		CrawlSpeed = Vent->CrawlSpeed;
 
 		bLerpingToCrawlPosition = true;
 
@@ -72,7 +68,7 @@ void USVentState::Tick(const float DeltaTime)
 	{
 		Progress = FMath::Clamp(Progress, 0.f, ProgressMax);
 
-		MoveAlongSpline(CrawlDirection);
+		MoveAlongSpline(CrawlDirection, DeltaTime);
 		RotateAlongSpline(CrawlDirection);
 	}
 }
@@ -88,7 +84,7 @@ void USVentState::MoveToCrawlPosition(FVector StartingPosition, FVector EndPosit
 	Shooter->GetAnchor()->SetWorldRotation(FMath::Lerp(StartingRotation, EndRotation, Handle->CurrentActionProgress));
 }
 
-void USVentState::MoveAlongSpline(ECrawlDirection Direction)
+void USVentState::MoveAlongSpline(ECrawlDirection Direction, float DeltaTime)
 {
 	if (Direction == ECrawlDirection::CD_Right)
 	{
@@ -96,7 +92,7 @@ void USVentState::MoveAlongSpline(ECrawlDirection Direction)
 		{
 			Shooter->GetStateMachine()->SetState("Walking");
 		}
-		Progress += Input->MoveY * CrawlSpeed;		// progress going right is positive
+		Progress += Input->MoveY * Movement->CrawlSpeed * DeltaTime;		// progress going right is positive
 	}
 	else
 	{
@@ -104,7 +100,7 @@ void USVentState::MoveAlongSpline(ECrawlDirection Direction)
 		{
 			Shooter->GetStateMachine()->SetState("Walking");
 		}
-		Progress -= Input->MoveY * CrawlSpeed;		
+		Progress -= Input->MoveY * Movement->CrawlSpeed * DeltaTime;
 	}
 
 	LocationAtDistanceAlongSpline = Spline->GetLocationAtDistanceAlongSpline

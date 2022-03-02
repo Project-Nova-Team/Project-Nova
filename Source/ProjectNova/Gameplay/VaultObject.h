@@ -24,11 +24,7 @@ public:
 
 	FInteractionPrompt& GetInteractionPrompt() override { return Prompt; }
 
-	FName& GetInteractionMappingName() override { return ActionMappingName; }
-
-	void RecieveLookedAt(APawn* EventSender) override;
-
-	void RecieveLookedAway(APawn* EventSender, int32 MappingIndexToRemove) override;
+	const FName GetActionName() const override { return TEXT("Vault"); }
 
 	UPROPERTY(VisibleAnywhere)
 	USceneComponent* Offset;
@@ -56,8 +52,4 @@ protected:
 	virtual void ActorEndOverlap(AActor* OverlappedActor, AActor* OtherActor);
 
 	bool bIsPlayerInTrigger;
-
-	/** Is set to interact by default. See Edit->ProjectSettings->Input for list of action mapping names.*/
-	UPROPERTY(EditAnywhere, Category = "Interaction")
-	FName ActionMappingName;
 };

@@ -136,24 +136,25 @@ void AShooter::ScanInteractiveObject()
 	{
 		IInteractiveObject* InteractiveObject  = Cast<IInteractiveObject>(Hit.Actor);
 
-		if (LastScannedObject->CanInteract() && InteractiveObject != LastScannedObject)
+		//Looking at an object we were not looking at last frame
+		if (InteractiveObject->CanInteract() && InteractiveObject != LastScannedObject)
 		{
-			Object->RecieveLookedAt(this);
+			//If we were looking at another object last frame, tell it we stopped looking
+			if (LastScannedObject != nullptr)
+			{
+				LastScannedObject->ReceiveLookedAway(this);
+			}
+
+			//Now tell our new object we're looking at it
+			InteractiveObject->ReceiveLookedAt(this);
 			LastScannedObject = InteractiveObject;
 			OnInteractionUpdate.ExecuteIfBound(InteractiveObject);
 		}
-
-		else if (LastScannedObject != nullptr)
-		{
-			LastScannedObject->RecieveLookedAway(this, LastScannedObject->BindingIndex);
-			LastScannedObject = InteractiveObject;
-			OnInteractionUpdate.ExecuteIfBound(InteractiveObject);
-		}	
 	}
 
 	else if (LastScannedObject != nullptr)
 	{
-		LastScannedObject->RecieveLookedAway(this, LastScannedObject->BindingIndex);
+		LastScannedObject->ReceiveLookedAway(this);
 		LastScannedObject = nullptr;
 		OnInteractionUpdate.ExecuteIfBound(nullptr);
 	}
@@ -252,11 +253,4 @@ bool AShooter::IsAttacking()
 	}
 
 	return false;
-}
-
-void AShooter::HandleVault(AVaultObject* Obj)
-{
-	// Temp teleportation code
-	FVector Offset = Obj->Offset->GetComponentLocation();
-	this->SetActorLocation(Offset);
 }

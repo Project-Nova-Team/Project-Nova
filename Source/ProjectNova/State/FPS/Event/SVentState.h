@@ -43,9 +43,6 @@ protected:
 	/** the length of the spline*/
 	float ProgressMax;
 
-	/** How fast the player moves while crawling*/
-	float CrawlSpeed;
-
 	/** Vector location at a progress*/
 	FVector LocationAtDistanceAlongSpline;
 
@@ -68,7 +65,7 @@ protected:
 	void MoveToCrawlPosition(FVector StartPosition, FVector EndPosition, FRotator StartRotation, FRotator EndRotation);
 
 	/** The method that moves the player along the spline*/
-	void MoveAlongSpline(ECrawlDirection Direction);
+	void MoveAlongSpline(ECrawlDirection Direction, float DeltaTime);
 
 	/** Rotates the player along the spline while moving*/
 	void RotateAlongSpline(ECrawlDirection Direction);
