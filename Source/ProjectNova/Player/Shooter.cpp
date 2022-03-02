@@ -9,6 +9,11 @@
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "ShooterInventory.h"
 #include "../Animation/ShooterAnimInstance.h"
+#include "../Gameplay/MeleeComponent.h"
+#include "../Weapon/Gun.h"
+#include "../State/State.h"
+#include <ProjectNova/Gameplay/VaultObject.h>
+#include "../Gameplay/HealthPickup.h"
 
 void FShooterInput::Tick(const float DeltaTime)
 {
@@ -123,41 +128,35 @@ void AShooter::ScanInteractiveObject()
 	QueryParams.AddIgnoredActor(this);
 
 	const FVector TraceStart = Camera->GetComponentLocation();
-	const FVector TraceEnd = TraceStart + Camera->GetForwardVector() * ShooterMovement->InteractionDistance;
-	const bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_WorldStatic, QueryParams);
+	const FVector TraceEnd = TraceStart + Camera->GetForwardVector() * FMath::Min(ShooterMovement->StandingHeight * 2.f, ShooterMovement->InteractionDistance);
+	const bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_Camera, QueryParams);
 
 	//We're looking at an object that is interactive
-	if (bHit && Hit.GetActor() != nullptr && Hit.GetActor()->Implements<UInteractiveObject>())
+	if (bHit && Hit.Actor != nullptr && Hit.Actor->Implements<UInteractiveObject>())
 	{
-		IInteractiveObject* InteractiveObject = Cast<IInteractiveObject>(Hit.GetActor());
+		IInteractiveObject* InteractiveObject  = Cast<IInteractiveObject>(Hit.Actor);
 
-		if (InteractiveObject->CanInteract())
+		if (LastScannedObject->CanInteract() && InteractiveObject != LastScannedObject)
 		{
-			//We are looking at a new object, inform the HUD
-			if (InteractiveObject != LastScannedObject)
-			{
-				OnInteractionUpdate.ExecuteIfBound(InteractiveObject);
-			}
-
+			Object->RecieveLookedAt(this);
 			LastScannedObject = InteractiveObject;
-
-			if (InputState.bIsTryingToInteract)
-			{
-				InteractiveObject->InteractionEvent(this);
-				InputState.bIsTryingToInteract = false;
-			}
-
-			return;
+			OnInteractionUpdate.ExecuteIfBound(InteractiveObject);
 		}
+
+		else if (LastScannedObject != nullptr)
+		{
+			LastScannedObject->RecieveLookedAway(this, LastScannedObject->BindingIndex);
+			LastScannedObject = InteractiveObject;
+			OnInteractionUpdate.ExecuteIfBound(InteractiveObject);
+		}	
 	}
 
-	// If we were looking at something previously but aren't anymore, clear the HUD
-	if (LastScannedObject != nullptr)
+	else if (LastScannedObject != nullptr)
 	{
+		LastScannedObject->RecieveLookedAway(this, LastScannedObject->BindingIndex);
+		LastScannedObject = nullptr;
 		OnInteractionUpdate.ExecuteIfBound(nullptr);
 	}
-
-	LastScannedObject = nullptr;
 }
 
 void AShooter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -233,11 +232,11 @@ void AShooter::SwapPressDown()
 }
 
 void AShooter::ReloadPress()
-{ 
+{
 	if (bInputEnabled)
 	{
 		Combat->ReceiveReload();
-	}	
+	}
 }
 
 void AShooter::HandleDeath()
@@ -255,7 +254,9 @@ bool AShooter::IsAttacking()
 	return false;
 }
 
-bool AShooter::CanVault()
+void AShooter::HandleVault(AVaultObject* Obj)
 {
-	return bIsInsideVaultTrigger && bIsLookingAtVaultObject;
+	// Temp teleportation code
+	FVector Offset = Obj->Offset->GetComponentLocation();
+	this->SetActorLocation(Offset);
 }

@@ -9,7 +9,33 @@ AWeapon::AWeapon()
 
 	Mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Mesh"));
 	SetRootComponent(Mesh);
-	Mesh->SetCollisionProfileName(TEXT("Ragdoll"));
+
+	Mesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	Mesh->SetCollisionProfileName("Ragdoll");	
+	Mesh->SetSimulatePhysics(true);
+
+	ThrowForce = 100000.f;
+
+	BaseDamage = 25.f;
+	ImpulseKickFactor = .3f;
+
+	ActionMappingName = TEXT("Interact");
+}
+
+void AWeapon::InteractionEvent(APawn* EventSender)
+{
+	//We are already being held by another combat component
+	if (OwningComponent != nullptr)
+	{
+		return;
+	}
+	
+	//If the EventSender has a combat component, pick this weapon up
+	if (UCombatComponent* Combat = EventSender->FindComponentByClass<UCombatComponent>())
+	{
+		Combat->PickUpWeapon(this);
+		OwningComponent = Combat;
+	}
 }
 
 void AWeapon::SetCombatComponent(UCombatComponent* NewOwner)
@@ -74,4 +100,19 @@ void AWeapon::InteractionEvent(APawn* EventSender)
 	{
 		Combat->PickUpWeapon(this);
 	}
+}
+
+void AWeapon::RecieveLookedAt(APawn* EventSender)
+{
+	if (CanInteract())
+	{
+		BindingIndex = EventSender->InputComponent->BindAction<FShooterBindingEvent>(ActionMappingName, 
+			IE_Pressed, this, &AWeapon::InteractionEvent, EventSender).GetHandle();
+	}
+}
+
+void AWeapon::RecieveLookedAway(APawn* EventSender, int32 MappingIndexToRemove)
+{
+	// Remove the delegate tied to the this object's desired ActionMapping
+	EventSender->InputComponent->RemoveActionBindingForHandle(MappingIndexToRemove);
 }

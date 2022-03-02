@@ -10,6 +10,23 @@ AGenerator::AGenerator()
 
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>("Mesh");
 	SetRootComponent(Mesh);
+
+	ActionMappingName = "Interact";
+}
+
+void AGenerator::RecieveLookedAt(APawn* EventSender)
+{
+	if (CanInteract())
+	{
+		BindingIndex = EventSender->InputComponent->BindAction<FShooterBindingEvent>(ActionMappingName,
+			IE_Pressed, this, &AGenerator::InteractionEvent, EventSender).GetHandle();
+	}
+}
+
+void AGenerator::RecieveLookedAway(APawn* EventSender, int32 MappingIndexToRemove)
+{
+	// Remove the delegate tied to the this object's desired ActionMapping
+	EventSender->InputComponent->RemoveActionBindingForHandle(MappingIndexToRemove);
 }
 
 void AGenerator::BeginPlay()

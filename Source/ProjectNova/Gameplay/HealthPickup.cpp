@@ -9,16 +9,38 @@ AHealthPickup::AHealthPickup()
 	HealAmount = 25;
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>("Mesh");
 	SetRootComponent(Mesh);
+
+	ActionMappingName = "Interact";
 }
+
+
 
 
 void AHealthPickup::InteractionEvent(APawn* EventSender)
 {
-	UHealthComponent* PawnHealthComponent = EventSender->FindComponentByClass<UHealthComponent>();
-
-	if (PawnHealthComponent != nullptr && !PawnHealthComponent->bIsFullHealth)
+	if (CanInteract())
 	{
-		PawnHealthComponent->Heal(HealAmount);
-		RemoveSelf(this);
+		UHealthComponent* PawnHealthComponent = EventSender->FindComponentByClass<UHealthComponent>();
+
+		if (PawnHealthComponent != nullptr && !PawnHealthComponent->bIsFullHealth)
+		{
+			PawnHealthComponent->Heal(HealAmount);
+			RemoveSelf(this);
+		}
 	}
+}
+
+void AHealthPickup::RecieveLookedAt(APawn* EventSender)
+{
+	if (CanInteract())
+	{
+		BindingIndex = EventSender->InputComponent->BindAction<FShooterBindingEvent>(ActionMappingName,
+			IE_Pressed, this, &AHealthPickup::InteractionEvent, EventSender).GetHandle();
+	}
+}
+
+void AHealthPickup::RecieveLookedAway(APawn* EventSender, int32 MappingIndexToRemove)
+{
+	// Remove the delegate tied to the this object's desired ActionMapping
+	EventSender->InputComponent->RemoveActionBindingForHandle(MappingIndexToRemove);
 }

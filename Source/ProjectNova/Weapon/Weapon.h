@@ -138,6 +138,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "IK Animation")
 	FWeaponAnimationData AnimData;
 
+	FName& GetInteractionMappingName() override { return ActionMappingName; }
+
+	void RecieveLookedAt(APawn* EventSender) override;
+
+	void RecieveLookedAway(APawn* EventSender, int32 MappingIndexToRemove) override;
+
 protected:
 
 	/** The mesh component this weapon uses as its physical representation when not held*/
@@ -153,6 +159,10 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI | Interaction")
 	FInteractionPrompt Prompt;
+
+	/** Is set to interact by default. See Edit->ProjectSettings->Input for list of action mapping names.*/
+	UPROPERTY(EditAnywhere, Category = "Interaction")
+	FName ActionMappingName;
 
 	/** CombatComponent this weapon currently belongs to*/
 	UCombatComponent* OwningComponent;

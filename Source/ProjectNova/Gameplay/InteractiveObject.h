@@ -2,9 +2,12 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
+#include <Runtime/Engine/Classes/GameFramework/InputSettings.h>
 #include "InteractiveObject.generated.h"
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FInteractionEvent, APawn*);
+
+DECLARE_DELEGATE_OneParam(FShooterBindingEvent, APawn*)
 
 USTRUCT(BlueprintType)
 struct FInteractionPrompt
@@ -54,12 +57,22 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "On Interact"))
 	void BlueprintInteract(APawn* EventSender);
 
+	virtual void RecieveLookedAt(APawn* EventSender) = 0;
+
+	virtual void RecieveLookedAway(APawn* EventSender, int32 MappingIndexToRemove) = 0;
+
 	virtual void InteractionEvent(APawn* EventSender) { OnInteract.Broadcast(EventSender); }
 
 	FInteractionEvent OnInteract;
 
 	virtual bool CanInteract() const { return true; }
 
-	/** Forces classes that inherit from this provide prompt data*/
+	/** Forces classes that inherit from this to provide prompt data*/
 	virtual FInteractionPrompt& GetInteractionPrompt() = 0;
+
+	/** Forces classes that inherit from this to provide mapping data*/
+	virtual FName& GetInteractionMappingName() = 0;
+	
+	/** Used for removing bindings on ScanMiss*/
+	int32 BindingIndex;
 };
