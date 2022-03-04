@@ -48,7 +48,7 @@ void UHealthComponent::TakeDamage(AActor* DamagedActor, float Damage, const clas
 
 	else
 	{
-		OnDamaged.Broadcast();
+		OnDamaged.Broadcast(DamageType);
 	}
 }
 

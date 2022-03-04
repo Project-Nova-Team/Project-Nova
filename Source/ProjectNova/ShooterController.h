@@ -12,7 +12,7 @@ class PROJECTNOVA_API AShooterController : public APlayerController, public IGen
 {
 	GENERATED_BODY()
 
-protected:
+public:
 
 	/** Cached cast version of MyHUD for ease of use*/
 	UPROPERTY(BlueprintReadOnly)
@@ -25,6 +25,7 @@ private:
 
 public:
 
+	UFUNCTION(BlueprintCallable)
 	void ReceivePause();
 
 	/// Begin APawn Interface ///

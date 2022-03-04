@@ -10,7 +10,7 @@ void AShooterController::ReceivePause()
 	SetPause(!bPaused);
 
 	//Tell our HUD to put up/down the HUD menu
-	ShooterHUD->SetPauseDisplay(bPaused);
+	ShooterHUD->SetPauseDisplay(!bPaused);
 }
 
 void AShooterController::OnPossess(APawn* InPawn)
@@ -31,9 +31,9 @@ void AShooterController::OnPossess(APawn* InPawn)
 		SpawnInfo.ObjectFlags |= RF_Transient;	// We never want to save HUDs into a map
 
 		ShooterHUD = GetWorld()->SpawnActor<AShooterHUD>(World->GetAuthGameMode()->HUDClass, SpawnInfo);
-		ShooterHUD->Initialize();
-
+	
 		MyHUD = ShooterHUD;
+		ShooterHUD->Initialize();
 	}
 
 	else if(ShooterHUD == nullptr)

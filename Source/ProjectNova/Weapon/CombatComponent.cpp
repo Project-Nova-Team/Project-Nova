@@ -11,6 +11,20 @@ UCombatComponent::UCombatComponent()
 	PrimaryComponentTick.bStartWithTickEnabled = true;
 }
 
+void UCombatComponent::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (Arsenal.Num() > 0)
+	{
+		for (AWeapon* Weapon : Arsenal)
+		{
+			Arsenal.Remove(Weapon);
+			PickUpWeapon(Weapon);
+		}
+	}
+}
+
 void UCombatComponent::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
@@ -54,6 +68,11 @@ AWeapon* UCombatComponent::GetWeaponOfType(TSubclassOf<AWeapon> WeaponClass)
 
 void UCombatComponent::PickUpWeapon(AWeapon* NewWeapon)
 {
+	if (NewWeapon == nullptr)
+	{
+		return;
+	}
+
 	//Perform any necessary set up for the weapon
 	Arsenal.Emplace(NewWeapon);
 

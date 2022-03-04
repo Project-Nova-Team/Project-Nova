@@ -121,7 +121,7 @@ private:
 	FDelayedActionHandle* Handle;
 
 
-#if WITH_EDITOR
+#if WITH_EDITORONLY_DATA
 public:
 	void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 

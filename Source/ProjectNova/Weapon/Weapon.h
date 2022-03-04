@@ -106,13 +106,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UTexture2D* ReticleTexture;
 
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 	int32 LoadedAmmo;
 
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 	int32 MaxAmmo;
 
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 	int32 ExcessAmmo;
 };
 

@@ -2,10 +2,9 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
-#include "../Weapon/Weapon.h"
 #include "ShooterAnimInstance.generated.h"
 
-class AGun;
+class AWeapon;
 
 UCLASS()
 class PROJECTNOVA_API UShooterAnimInstance : public UAnimInstance
@@ -16,6 +15,9 @@ public:
 
 	UShooterAnimInstance();
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
+	UAnimMontage* MeleeAttackMontage;
+
 protected:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Animation")
@@ -24,6 +26,12 @@ protected:
 	/** Kind of hacky, set as true to enable event reporting (use this on the arms only*/
 	UPROPERTY(BlueprintReadWrite, Category = "Animation")
 	uint8 bReportEvents : 1;
+
+#if WITH_EDITORONLY_DATA
+	/** When true, the IK bone offset will be recomputed every anim update, enabling live editing of gun positioning*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	uint8 bLiveUpdates : 1;
+#endif
 
 
 	/***	Locomotion		***/
@@ -106,9 +114,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
 	UAnimMontage* AimStopAnimMontage;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
-	UAnimMontage* MeleeAttackMontage;
-
 private:
 
 	/** Delegate handle for unbinding locomotion multicast delegate*/
@@ -125,6 +130,14 @@ public:
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 	virtual void NativeUninitializeAnimation() override;
 
+protected:
+
+	UFUNCTION()
+	void ReceiveMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+
+	UFUNCTION()
+	void ReciveMontageStarted(UAnimMontage* Montage);
+
 private:
 
 	void ReceiveWeaponSwitch(const AWeapon* NewWeapon);
@@ -136,10 +149,4 @@ private:
 	void ReceiveSwap();
 
 	void ComputeWeaponSway(const float DeltaSeconds);
-
-	UFUNCTION()
-	void ReceiveMontageEnded(UAnimMontage* Montage, bool bInterrupted);
-
-	UFUNCTION()
-	void ReciveMontageStarted(UAnimMontage* Montage);
 };

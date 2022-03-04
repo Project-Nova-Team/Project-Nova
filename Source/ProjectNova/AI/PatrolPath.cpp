@@ -14,7 +14,7 @@
 
 APatrolPath::APatrolPath()
 {
-#if WITH_EDITOR
+#if WITH_EDITORONLY_DATA
 
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.bStartWithTickEnabled = true;
@@ -135,12 +135,12 @@ void APatrolPath::SetPathMode(const EPathMode NewMode)
 {
 	Mode = NewMode;
 
-#if WITH_EDITOR
+#if WITH_EDITORONLY_DATA
 	SetPathModeImpl();
 #endif
 }
 
-#if WITH_EDITOR
+#if WITH_EDITORONLY_DATA
 void APatrolPath::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
@@ -224,7 +224,7 @@ FReply APatrolPath::AddPoint()
 	
 	if (Client == nullptr)
 	{
-		FReply::Handled(); //bad error handling
+		return FReply::Handled(); //bad error handling
 	}
 
 	const FViewportCameraTransform& Transform = Client->GetViewTransform();
@@ -235,7 +235,7 @@ FReply APatrolPath::AddPoint()
 	FHitResult Hit;
 
 	//Trace from the camera to see where we should attempt to place the point
-	bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, Location, Forward * MAX_CAST_DISTANCE, ECC_WorldStatic);
+	bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, Location, Forward * MAX_CAST_DISTANCE, ECC_Pawn);
 	const FVector SpawnLocation = bHit ? Hit.ImpactPoint + Hit.ImpactNormal * 100.f : Location + (Forward * 100.f);
 
 	bool bNeedsFirstSplinePoint = Points.Num() == 1;

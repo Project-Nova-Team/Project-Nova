@@ -7,6 +7,7 @@
 #include "Components/BillboardComponent.h"
 #include "NavLinkRenderingComponent.h"
 #include "NavLinkCustomComponent.h"
+#include "UObject/ConstructorHelpers.h"
 
 ADoor::ADoor()
 {
@@ -34,7 +35,7 @@ ADoor::ADoor()
 	EdRenderComp->SetupAttachment(RootComponent);
 #endif
 
-#if WITH_EDITOR
+#if WITH_EDITORONLY_DATA
 	SpriteComponent = CreateEditorOnlyDefaultSubobject<UBillboardComponent>(TEXT("Sprite"));
 	if (!IsRunningCommandlet() && (SpriteComponent != NULL))
 	{
@@ -156,7 +157,7 @@ void ADoor::OverTimeTransition(const EDoorState TargetState)
 	}
 }
 
-#if WITH_EDITOR
+#if WITH_EDITORONLY_DATA
 void ADoor::PostEditChangeProperty(struct FPropertyChangedEvent& e)
 {
 	Super::PostEditChangeProperty(e);
