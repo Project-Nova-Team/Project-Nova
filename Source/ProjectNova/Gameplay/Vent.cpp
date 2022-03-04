@@ -2,39 +2,72 @@
 #include "Components/StaticMeshComponent.h"
 #include "Components/BoxComponent.h"
 #include "HealthComponent.h"
+#include "../Player/Shooter.h"
+#include "../State/State.h"
 #include "../ShooterGameMode.h"
+#include "../State/FPS/ShooterStateMachine.h"
 #include "../Utility/DelayedActionManager.h"
 
 AVent::AVent()
 {
 	PrimaryActorTick.bCanEverTick = false;
-	Frame = CreateDefaultSubobject<UStaticMeshComponent>("Frame");
-	SetRootComponent(Frame);
+	
+	Spline = CreateDefaultSubobject<USplineComponent>("Spline");
+	SetRootComponent(Spline);
 
-	Grate = CreateDefaultSubobject<UStaticMeshComponent>("Grate");
-	Grate->AttachToComponent(Frame, FAttachmentTransformRules::KeepRelativeTransform);
+	LeftFrame = CreateDefaultSubobject<UStaticMeshComponent>("LeftFrame");
+	LeftFrame->AttachToComponent(Spline, FAttachmentTransformRules::KeepRelativeTransform);
 
-	GrateTrigger = CreateDefaultSubobject<UBoxComponent>("Stuck Prevention");
-	GrateTrigger->AttachToComponent(Frame, FAttachmentTransformRules::KeepRelativeTransform);
-	GrateTrigger->SetCollisionProfileName("OverlapOnlyPawn");
+	RightFrame = CreateDefaultSubobject<UStaticMeshComponent>("RightFrame");
+	RightFrame->AttachToComponent(Spline, FAttachmentTransformRules::KeepRelativeTransform);
+
+	LeftGrate = CreateDefaultSubobject<UStaticMeshComponent>("LeftGrate");
+	LeftGrate->AttachToComponent(LeftFrame, FAttachmentTransformRules::KeepRelativeTransform);
+
+	RightGrate = CreateDefaultSubobject<UStaticMeshComponent>("RightGrate");
+	RightGrate->AttachToComponent(RightFrame, FAttachmentTransformRules::KeepRelativeTransform);
+
+	LeftGrateTrigger = CreateDefaultSubobject<UBoxComponent>("Left Stuck Prevention");
+	LeftGrateTrigger->AttachToComponent(LeftFrame, FAttachmentTransformRules::KeepRelativeTransform);
+	RightGrateTrigger = CreateDefaultSubobject<UBoxComponent>("Right Stuck Prevention");
+	RightGrateTrigger->AttachToComponent(RightFrame, FAttachmentTransformRules::KeepRelativeTransform);
+
+	LeftGrateTrigger->SetCollisionProfileName("OverlapOnlyPawn");
+	RightGrateTrigger->SetCollisionProfileName("OverlapOnlyPawn");
 
 	Health = CreateDefaultSubobject<UHealthComponent>("Health");
 	
 	DisableDuration = 10.f;
 }
 
+void AVent::InteractionEvent(APawn* EventSender)
+{
+	if (AShooter* Shooter = Cast<AShooter>(EventSender))
+	{
+		Shooter->GetStateMachine()->SetState("Venting");
+		DisableGrateForDuration();
+	}
+}
+
 void AVent::BeginPlay()
 {
+	bCanInteract = true; // temp
+
 	Super::BeginPlay();
 	Health->OnDeath.AddDynamic(this, &AVent::DisableGrateForDuration);
-	OnActorBeginOverlap.AddDynamic(this, &AVent::ActorBeginOverlap);
-	OnActorEndOverlap.AddDynamic(this, &AVent::ActorEndOverlap);
+	LeftGrateTrigger->OnComponentBeginOverlap.AddDynamic(this, &AVent::ComponentBeginOverlap);
+	LeftGrateTrigger->OnComponentEndOverlap.AddDynamic(this, &AVent::ComponentEndOverlap);
+	RightGrateTrigger->OnComponentBeginOverlap.AddDynamic(this, &AVent::ComponentBeginOverlap);
+	RightGrateTrigger->OnComponentEndOverlap.AddDynamic(this, &AVent::ComponentEndOverlap);
 }
 
 void AVent::DisableGrateForDuration()
 {
-	Grate->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	Grate->SetVisibility(false);
+	bCanInteract = true; // can interact while grate is down
+	LeftGrate->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	RightGrate->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	LeftGrate->SetVisibility(false);
+	RightGrate->SetVisibility(false);
 	OnVentDisabled.Broadcast();
 	bIsDisabled = true;
 	bDelayRunning = true;
@@ -54,23 +87,48 @@ void AVent::MaybeReEnableGrate()
 void AVent::ReEnableGrate()
 {
 	Health->Revive();
-	Grate->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-	Grate->SetVisibility(true);
+	LeftGrate->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	RightGrate->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	LeftGrate->SetVisibility(true);
+	RightGrate->SetVisibility(true);
 	bIsDisabled = false;
 	OnVentEnabled.Broadcast();
 }
 
-void AVent::ActorEndOverlap(AActor* OverlappedActor, AActor* OtherActor)
+void AVent::ComponentEndOverlap(class UPrimitiveComponent* HitComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 	OverlappedPawns--;
-
-	if (ShouldEnable())
+	if (Cast<AShooter>(OtherActor))
 	{
-		ReEnableGrate();
+		if (ShouldEnable())
+		{
+			ReEnableGrate();
+		}
+
+		if (Cast<UBoxComponent>(HitComp) == LeftGrateTrigger)
+		{
+			bIsOverlappingLeftTrigger = false;
+		}
+		else if (Cast<UBoxComponent>(HitComp) == RightGrateTrigger)
+		{
+			bIsOverlappingRightTrigger = false;
+		}
 	}
 }
 
-void AVent::ActorBeginOverlap(AActor* OverlappedActor, AActor* OtherActor)
+void AVent::ComponentBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	OverlappedPawns++;
+
+	if (Cast<AShooter>(OtherActor))
+	{
+		if (Cast<UBoxComponent>(OverlappedComp) == LeftGrateTrigger)
+		{
+			bIsOverlappingLeftTrigger = true;
+		}
+		else if (Cast<UBoxComponent>(OverlappedComp) == RightGrateTrigger)
+		{
+			bIsOverlappingRightTrigger = true;
+		}
+	}
 }

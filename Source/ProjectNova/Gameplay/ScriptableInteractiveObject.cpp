@@ -6,6 +6,8 @@ AScriptableInteractiveObject::AScriptableInteractiveObject()
 
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>("Mesh");
 	SetRootComponent(Mesh);
+
+	ActionMappingName = TEXT("Interact");
 }
 
 void AScriptableInteractiveObject::InteractionEvent(APawn* EventSender)

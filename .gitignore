@@ -74,4 +74,4 @@ Plugins/*/Intermediate/*
 DerivedDataCache/*
 
 # Template map
-*Template.umap
+Content/Levels/Template.umap

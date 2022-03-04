@@ -14,4 +14,5 @@ public:
 	bool CanInteract() const override { return false; }
 
 	void ReceivePieceRepaired() override;
+
 };

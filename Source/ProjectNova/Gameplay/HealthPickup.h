@@ -22,6 +22,8 @@ public:
 
 	FInteractionPrompt& GetInteractionPrompt() override { return Prompt; }
 
+	virtual bool CanInteract() const { return true; }
+
 protected:
 
 	UPROPERTY(EditAnywhere)
