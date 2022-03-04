@@ -53,13 +53,13 @@ public:
 protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
-		UStaticMeshComponent* Panel;
+	UStaticMeshComponent* Panel;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
-		UStaticMeshComponent* Button;
+	UStaticMeshComponent* Button;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
-		UArrowComponent* Arrow;
+	UArrowComponent* Arrow;
 
 	UMaterialInstanceDynamic* EmissiveMaterial;
 
@@ -87,11 +87,11 @@ protected:
 
 	/** How far this button retracts into the panel*/
 	UPROPERTY(EditAnywhere)
-		float PushDepth;
+	float PushDepth;
 
 	/** How long it takes for the button to retract*/
 	UPROPERTY(EditAnywhere)
-		float ButtonTransitionTime;
+	float ButtonTransitionTime;
 
 	/** Whether or not the button is currently locked*/
 	UPROPERTY(EditAnywhere, BlueprintSetter = SetIsLocked, Category = "Button")
@@ -99,10 +99,10 @@ protected:
 
 	/**This is mesh of button, not panel*/
 	UPROPERTY(BlueprintReadWrite)
-		UStaticMeshComponent* Mesh;
+	UStaticMeshComponent* Mesh;
 
 	UPROPERTY(Editanywhere, BlueprintReadWrite, Category = "Interactable")
-		FInteractionPrompt Prompt;
+	FInteractionPrompt Prompt;
 
 	/** Live state of this door*/
 	TEnumAsByte<EButtonState> State;
