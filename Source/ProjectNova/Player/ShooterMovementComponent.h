@@ -43,11 +43,11 @@ public:
 	float CameraSensitivity;
 
 	/** The max angle in degrees the camera can look up with respect to the XY plane*/
-	UPROPERTY(EditAnywhere, Category = "Control | Camera", meta = (ClampMin = "0.1", ClampMax = "89.9"))
+	UPROPERTY(EditAnywhere, Category = "Control | Camera", meta = (PitchClampMin = "0.1", PitchClampMax = "89.9"))
 	float CameraMaxAngle;
 
 	/** The min angle in degrees the camera can look down with respect to the XY plane*/
-	UPROPERTY(EditAnywhere, Category = "Control | Camera", meta = (ClampMin = "-89.9", ClampMax = "-0.1"))
+	UPROPERTY(EditAnywhere, Category = "Control | Camera", meta = (PitchClampMin = "-89.9", PitchClampMax = "-0.1"))
 	float CameraMinAngle;
 
 	/** The relative height at which the camera joint rests on the collider */
@@ -144,6 +144,10 @@ public:
 	/** The amount of time in seconds it takes to crouch down*/
 	UPROPERTY(EditAnywhere, Category = "Control | Crouch")
 	float CrouchTime;
+
+	/** The number of units the shooter moves each each second while proning*/
+	UPROPERTY(EditAnywhere, Category = "Control | Prone")
+	float CrawlSpeed;
 
 	/** The number of units the shooter accelerates each second while proning*/
 	UPROPERTY(EditAnywhere, Category = "Control | Prone")

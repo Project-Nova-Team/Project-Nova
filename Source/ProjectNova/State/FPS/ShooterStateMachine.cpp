@@ -6,6 +6,7 @@
 #include "Movement/SDiveState.h"
 #include "Event/SVaultState.h"
 #include "Event/SDeathState.h"
+#include "Event/SVentState.h"
 #include "Event/SLookState.h"
 #include "Event/SCutsceneState.h"
 
@@ -16,11 +17,12 @@ void UShooterStateMachine::Initialize(UObject* Context)
 	this->AddState<USWalkState>(Context, "Walking");
 	this->AddState<USRunState>(Context, "Running");
 	this->AddState<USCrouchState>(Context, "Crouching");
-	this->AddState<USProneState>(Context, "Proning");
+	this->AddState<USProneState>(Context, "Proning", false);
 	this->AddState<USVaultState>(Context, "Vaulting");
 	this->AddState<USDeathState>(Context, "Death");
 	this->AddState<USLookState>(Context, "Look");
 	this->AddState<USCutsceneState>(Context, "Cutscene");
+	this->AddState<USVentState>(Context, "Venting");
 	this->AddState<USDiveState>(Context, "Diving", false);
 
 	this->SetInitialState("Walking");

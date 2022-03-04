@@ -53,6 +53,5 @@ protected:
 	*/
 	bool CheckIfStandUpIsValid(const float NewColliderHalfHeight) const;
 
-private:
 	FDelayedActionHandle* Handle;
 };
