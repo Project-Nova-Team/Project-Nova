@@ -11,7 +11,6 @@ void USWalkState::Initialize(UStateMachine* StateMachine, UObject* ContextObject
 void USWalkState::Tick(const float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	CheckForVault();
 	CheckForRunState();
 	CheckForCrouchState();
 	CheckForProneState();
@@ -53,6 +52,7 @@ void USWalkState::CheckForProneState()
 {
 	if (Input->bIsTryingToProne && Movement->bIsOnGround && !Movement->bIsInTuckTransition)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("A"));
 		FlagTransition("Proning", 1);
 	}
 }

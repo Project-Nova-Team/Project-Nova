@@ -17,6 +17,8 @@ public:
 
 	FInteractionPrompt& GetInteractionPrompt() override { return Prompt; }
 
+	const FName GetActionName() const override { return ActionMappingName; }
+
 	void InteractionEvent(APawn* EventSender) override;
 
 protected:
@@ -30,4 +32,8 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
 	FInteractionPrompt Prompt;
+
+	/** Is set to interact by default. See Edit->ProjectSettings->Input for list of action mapping names.*/
+	UPROPERTY(EditAnywhere, Category = "Interaction")
+	FName ActionMappingName;
 };
