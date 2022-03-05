@@ -43,14 +43,6 @@ FVector USMovementState::ConvertInputRelativeToCamera() const
 	return RelativeInput;
 }
 
-void USMovementState::CheckForVault()
-{
-	if (Input->bIsTryingToVault && Movement->bIsOnGround && Shooter->CanVault())
-	{
-		FlagTransition("Vaulting", 10);
-	}
-}
-
 void USMovementState::CalculateVelocity(const float DeltaTime) const
 {
 	//If we're airborne we want our input to be scaled by the air control factor
@@ -167,7 +159,9 @@ void USMovementState::RotateCameraFromInput(const float DeltaTime)
 	//First apply camera rotations from user input
 
 	FRotator AnchorRotation = Shooter->GetAnchor()->GetComponentRotation();
+
 	AnchorRotation.Yaw += (Input->LookX * Movement->CameraSensitivity * DeltaTime);
+
 	AnchorRotation.Pitch = FMath::Clamp(
 		AnchorRotation.Pitch + (Input->LookY * Movement->CameraSensitivity * DeltaTime),
 		Movement->CameraMinAngle,

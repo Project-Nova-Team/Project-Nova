@@ -9,7 +9,12 @@ AWeapon::AWeapon()
 
 	Mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Mesh"));
 	SetRootComponent(Mesh);
-	Mesh->SetCollisionProfileName(TEXT("Ragdoll"));
+
+	Mesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	Mesh->SetCollisionProfileName("Ragdoll");	
+	Mesh->SetSimulatePhysics(true);
+
+	ThrowForce = 100000.f;
 }
 
 void AWeapon::SetCombatComponent(UCombatComponent* NewOwner)
