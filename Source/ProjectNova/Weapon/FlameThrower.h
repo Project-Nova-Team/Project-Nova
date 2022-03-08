@@ -4,6 +4,10 @@
 #include "Gun.h"
 #include "FlameThrower.generated.h"
 
+class UParticleSystemComponent;
+class UParticleSystem;
+class UAudioComponent;
+
 UCLASS()
 class PROJECTNOVA_API AFlameThrower : public AGun
 {
@@ -14,17 +18,17 @@ public:
 
 protected:
 
-	/** Particle system component responsible for playing flame vfx*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Flame Thrower")
-	class UParticleSystemComponent* FlameSystemComponent;
-
 	/** Audio component responsible for playing flame sfx*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Flame Thrower")
-	class UAudioComponent* FlameAudio;
+	UAudioComponent* FlameAudio;
 
 	/** The particle system we spawn when the flame of the flame thrower makes contact */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flame Thrower")
-	class UParticleSystem* SparkSystem;
+	UParticleSystem* FlameSystem;
+
+	/** The particle system we spawn when the flame of the flame thrower makes contact */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flame Thrower")
+	UParticleSystem* SparkSystem;
 
 	/** Sound clip that plays when sparks are active*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flame Thrower")
@@ -36,11 +40,14 @@ protected:
 
 private:
 
+	/** Temp instance of flame system*/
+	TWeakObjectPtr<UParticleSystemComponent> FlameSystemComponent;
+
 	/** Temp instance of spark system*/
-	class UParticleSystemComponent* SparkSystemComponent;
+	TWeakObjectPtr<UParticleSystemComponent> SparkSystemComponent;
 
 	/** Temp instance of spark audio system*/
-	class UAudioComponent* SparkAudioComponent;
+	TWeakObjectPtr<UAudioComponent> SparkAudioComponent;
 
 	/** True if the flame thrower is firing. Used to manage flame system activation*/
 	uint8 bAttacking : 1;

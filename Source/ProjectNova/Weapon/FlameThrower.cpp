@@ -6,9 +6,6 @@
 
 AFlameThrower::AFlameThrower()
 {
-	FlameSystemComponent = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("Flame System"));
-	FlameSystemComponent->SetupAttachment(Mesh, BarrelSocketName);
-
 	FlameAudio = CreateDefaultSubobject<UAudioComponent>(TEXT("Flame Audio"));
 	FlameAudio->SetupAttachment(Mesh, BarrelSocketName);
 
@@ -22,8 +19,8 @@ void AFlameThrower::Attack()
 	//If this is the first request to attack, do some set up
 	if (!bAttacking)
 	{
-		FlameSystemComponent->ActivateSystem(true);
 		FlameAudio->Play();
+		FlameSystemComponent = UGameplayStatics::SpawnEmitterAttached(FlameSystem, Mesh, BarrelSocketName);
 		bAttacking = true;
 	}
 
@@ -54,8 +51,8 @@ void AFlameThrower::Attack()
 
 	else if (!bHit && bHitLastFrame)
 	{
-		SparkAudioComponent->Stop();
-		SparkSystemComponent->DeactivateSystem();
+		SparkAudioComponent.Get()->Stop();
+		SparkSystemComponent.Get()->DeactivateSystem();
 	}
 
 	bHitLastFrame = bHit;
@@ -71,24 +68,28 @@ void AFlameThrower::StopAttack()
 
 void AFlameThrower::StartFlamethrower()
 {
-	FlameSystemComponent->ActivateSystem();
 	FlameAudio->Play();
+	FlameSystemComponent = UGameplayStatics::SpawnEmitterAttached(FlameSystem, Mesh, BarrelSocketName);
 	SparkSystemComponent = UGameplayStatics::SpawnEmitterAttached(SparkSystem, Mesh, BarrelSocketName);
 	SparkAudioComponent = UGameplayStatics::SpawnSoundAttached(SparkAudio, Mesh, BarrelSocketName);
 }
 
 void AFlameThrower::StopFlamethrower()
 {
-	if (SparkAudioComponent)
+	if (SparkAudioComponent.IsValid())
 	{
-		SparkSystemComponent->DeactivateSystem();
+		SparkSystemComponent.Get()->DeactivateSystem();
 	}
 
-	if (SparkAudioComponent)
+	if (SparkAudioComponent.IsValid())
 	{
-		SparkAudioComponent->Stop();
+		SparkAudioComponent.Get()->Stop();
 	}
 
-	FlameSystemComponent->DeactivateSystem();
+	if (FlameSystemComponent.IsValid())
+	{
+		FlameSystemComponent.Get()->DeactivateSystem();
+	}
+	
 	FlameAudio->Stop();
 }
