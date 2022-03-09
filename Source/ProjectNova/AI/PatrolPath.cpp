@@ -145,21 +145,18 @@ void APatrolPath::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	if (SplineComponent->GetNumberOfSplinePoints() > 1)
-	{
-		for (int32 i = 0; i < Points.Num(); ++i)
-		{
-			SplineComponent->SetLocationAtSplinePoint(i, Points[i]->GetActorLocation(), ESplineCoordinateSpace::World);
-		}
-	}
-
-	if (IsSelected())
+	if (Points.Num() > 1)
 	{
 		for (int32 i = 0; i < Points.Num(); ++i)
 		{
 			if (Points[i] != nullptr)
 			{
-				DrawDebugLine(GetWorld(), GetActorLocation(), Points[i]->GetActorLocation(), FColor::Red);
+				SplineComponent->SetLocationAtSplinePoint(i, Points[i]->GetActorLocation(), ESplineCoordinateSpace::World);
+
+				if (IsSelected())
+				{
+					DrawDebugLine(GetWorld(), GetActorLocation(), Points[i]->GetActorLocation(), FColor::Red);
+				}
 			}		
 		}
 	}
