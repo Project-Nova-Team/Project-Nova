@@ -43,14 +43,25 @@ protected:
 	/** the length of the spline*/
 	float ProgressMax;
 
+	float StandingProgress;
+
+	/** How fast the player moves through the vent. */
+	float CrawlSpeed;
+
+	float LerpToCrawlSpeed;
+
+	float LerpToStandSpeed;
+
 	/** Vector location at a progress*/
 	FVector LocationAtDistanceAlongSpline;
 
 	/** Lerp target vector for location*/
-	FVector TargetLerpLocation;
+	FVector TargetCrawlLocation;
 
 	/** Target Lerp rotation*/
-	FRotator TargetLerpRotation;
+	FRotator TargetCrawlRotation;
+
+	FVector TargetStandingLocation;
 
 	/** Direction at progress for rotation*/
 	FVector DirectionAtDistanceAlongSpline;
@@ -59,14 +70,21 @@ protected:
 	ECrawlDirection CrawlDirection;
 
 	/** is the handle finished lerping to the crawl position*/
-	uint8 bLerpingToCrawlPosition : 1;
+	uint8 bIsLerpingToCrawlPosition : 1;
+
+	uint8 bIsLerpingToStandingPosition : 1;
 
 	/** The method that lerps the player from standing to crawl*/
-	void MoveToCrawlPosition(FVector StartPosition, FVector EndPosition, FRotator StartRotation, FRotator EndRotation);
+	void LerpToCrawl(FVector StartPosition, FVector EndPosition, FRotator StartRotation, FRotator EndRotation);
+
+	/** The method that lerps the player from standing to crawl*/
+	void LerpToStanding(FVector StartPosition, FVector EndPosition);
 
 	/** The method that moves the player along the spline*/
 	void MoveAlongSpline(ECrawlDirection Direction, float DeltaTime);
 
 	/** Rotates the player along the spline while moving*/
-	void RotateAlongSpline(ECrawlDirection Direction);
+	void RotateAlongSpline();
+
+	void LeaveCrawl(FVector StartingPosition, FVector EndPosition);
 };

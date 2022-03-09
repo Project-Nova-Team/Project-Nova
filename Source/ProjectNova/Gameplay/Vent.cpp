@@ -38,6 +38,8 @@ AVent::AVent()
 	Health = CreateDefaultSubobject<UHealthComponent>("Health");
 	
 	DisableDuration = 10.f;
+
+	CrawlSpeed = 125.f;
 }
 
 void AVent::InteractionEvent(APawn* EventSender)
@@ -125,10 +127,12 @@ void AVent::ComponentBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* O
 		if (Cast<UBoxComponent>(OverlappedComp) == LeftGrateTrigger)
 		{
 			bIsOverlappingLeftTrigger = true;
+			UE_LOG(LogTemp, Warning, TEXT("LeftGrate"));
 		}
 		else if (Cast<UBoxComponent>(OverlappedComp) == RightGrateTrigger)
 		{
 			bIsOverlappingRightTrigger = true;
+			UE_LOG(LogTemp, Warning, TEXT("RightGrate"));
 		}
 	}
 }
