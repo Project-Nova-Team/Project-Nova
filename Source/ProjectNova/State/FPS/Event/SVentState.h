@@ -52,6 +52,7 @@ protected:
 
 	float LerpToStandSpeed;
 
+	/** How far down on the Z are we offset from the spline*/
 	float ProneOffset;
 
 	/** Vector location at a progress*/
@@ -88,5 +89,6 @@ protected:
 	/** Rotates the player along the spline while moving*/
 	void RotateAlongSpline();
 
+	/** Enter Standing lerp*/
 	void LeaveCrawl(FVector StartingPosition, FVector EndPosition);
 };

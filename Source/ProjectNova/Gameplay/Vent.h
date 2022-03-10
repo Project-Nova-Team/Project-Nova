@@ -101,6 +101,7 @@ protected:
 	UPROPERTY(Category = Health, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UHealthComponent* Health;
 
+	/** Interactive Fusebox*/
 	UPROPERTY(Category = Health, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UChildActorComponent* Fusebox;
 

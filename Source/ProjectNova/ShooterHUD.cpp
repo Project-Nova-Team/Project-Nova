@@ -63,11 +63,30 @@ void AShooterHUD::ReceiveInteractionUpdate(IInteractiveObject* Info)
 	if (Info == nullptr)
 	{
 		InteractionPromptRevoke();
+
+		//if (InteractionDelegateHandle.IsValid())
+		//{
+		//	if (Info->OnInteract.IsBound())
+		//	{
+		//		Info->OnInteract.Clear();
+		//		//Info->OnInteract.Remove(InteractionDelegateHandle); // remove delegate when look away
+		//	}
+		//}
+
+		//if (Info->OnInteract.IsBound()) 
+		//{
+		//	if (InteractionDelegateHandle.IsValid())
+		//	{
+
+		//		InteractionDelegateHandle.Reset();
+		//		Info->OnInteract.Remove(InteractionDelegateHandle); // remove delegate when look away
+		//	}
+		//}
 	}
 
 	else
 	{
-		Info->OnInteract.AddUObject(this, &AShooterHUD::ReceiveInteractionEvent);
+		InteractionDelegateHandle = Info->OnInteract.AddUObject(this, &AShooterHUD::ReceiveInteractionEvent);
 		InteractionPromptProvided(Info->GetInteractionPrompt());
 	}
 }
@@ -91,6 +110,12 @@ void AShooterHUD::RevokeIfObjectDisabled(IInteractiveObject* Info)
 		{
 			InteractionPromptRevoke(); // turn off prompt
 			Shooter->InputComponent->RemoveActionBindingForHandle(Info->BindingIndex); // turn off input binding
+
+			if (Info->OnInteract.IsBound())
+			{
+				if (InteractionDelegateHandle.IsValid())
+					Info->OnInteract.Remove(InteractionDelegateHandle);// remove delegate if we cannot interact
+			}
 		}
 	}
 }

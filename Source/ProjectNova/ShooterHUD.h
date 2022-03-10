@@ -81,6 +81,7 @@ protected:
 	void BuildBlueprintWidgets();
 
 private:
+	FDelegateHandle InteractionDelegateHandle;
 
 	/** Internal function that executes relevant interaction prompt updates in blueprint*/
 	void ReceiveInteractionUpdate(IInteractiveObject* Info);
