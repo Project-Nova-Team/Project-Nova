@@ -78,7 +78,7 @@ void AShooterHUD::ReceiveInteractionEvent(APawn* EventSender)
 		RevokeIfObjectDisabled(Shooter->GetLastScannedObject());
 }
 
-void AShooterHUD::RevokeIfObjectDisabled(IInteractiveObject* Info)
+void AShooterHUD::RevokeIfObjectDisabled(IInteractiveObject* Info) 
 {
 	if (Info == nullptr)
 	{
@@ -87,7 +87,10 @@ void AShooterHUD::RevokeIfObjectDisabled(IInteractiveObject* Info)
 
 	else
 	{
-		if(!Info->CanInteract()) // we have interacted with the object. If we can no longer interact, disable prompt
-			InteractionPromptRevoke();
+		if (!Info->CanInteract()) // we have interacted with the object, but are no longer supposed to be able to interact.
+		{
+			InteractionPromptRevoke(); // turn off prompt
+			Shooter->InputComponent->RemoveActionBindingForHandle(Info->BindingIndex); // turn off input binding
+		}
 	}
 }

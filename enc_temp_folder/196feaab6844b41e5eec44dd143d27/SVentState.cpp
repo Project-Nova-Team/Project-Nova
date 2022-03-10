@@ -22,7 +22,7 @@ void USVentState::OnEnter()
 			Spline = Vent->GetSpline(); // set spline
 		}
 
-		ProneOffset = 25;
+		ProneOffset = 20;
 
 		LerpToStandSpeed = Vent->GetLerpToStandingSpeed(); // how fast player stands up	
 
@@ -49,8 +49,6 @@ void USVentState::OnEnter()
 		TargetCrawlRotation = Spline->GetRotationAtDistanceAlongSpline(Progress, ESplineCoordinateSpace::World);
 
 		TargetCrawlLocation = Spline->GetLocationAtDistanceAlongSpline(Progress, ESplineCoordinateSpace::World);
-
-		TargetCrawlLocation.Z -= ProneOffset;
 
 		TargetStandingLocation = FVector(Spline->GetLocationAtDistanceAlongSpline(StandingProgress, 
 			ESplineCoordinateSpace::World).X, Spline->GetLocationAtDistanceAlongSpline(StandingProgress, 
@@ -104,8 +102,6 @@ void USVentState::LerpToStanding(FVector StartingPosition, FVector EndPosition)
 	if (Handle->CurrentActionProgress > .999f)
 	{
 		Shooter->GetStateMachine()->SetState("Walking");
-
-		Vent->ReEnableGrate();
 	}
 
 	Shooter->SetActorLocation(FMath::Lerp(StartingPosition, EndPosition, Handle->CurrentActionProgress));
@@ -130,10 +126,10 @@ void USVentState::MoveAlongSpline(ECrawlDirection Direction, float DeltaTime)
 		Progress -= Input->MoveY * CrawlSpeed * DeltaTime;
 	}
 
-	LocationAtDistanceAlongSpline = Spline->GetLocationAtDistanceAlongSpline
-	(Progress, ESplineCoordinateSpace::World);
-
-	LocationAtDistanceAlongSpline.Z -= ProneOffset;
+	LocationAtDistanceAlongSpline = FVector(Spline->GetLocationAtDistanceAlongSpline
+	(Progress, ESplineCoordinateSpace::World).X,Spline->GetLocationAtDistanceAlongSpline
+	(Progress, ESplineCoordinateSpace::World).Y, Spline->GetLocationAtDistanceAlongSpline
+	(Progress, ESplineCoordinateSpace::World).Z - ProneOffset);
 
 	Shooter->SetActorLocation(LocationAtDistanceAlongSpline);
 }

@@ -52,6 +52,7 @@ void AVent::InteractionEvent(APawn* EventSender)
 	if (AShooter* Shooter = Cast<AShooter>(EventSender))
 	{
 		Shooter->GetStateMachine()->SetState("Venting");
+		bCanInteract = false;
 	}
 }
 
@@ -109,6 +110,8 @@ void AVent::ReEnableGrate()
 	RightGrate->SetVisibility(true);
 	bIsDisabled = false;
 	OnVentEnabled.Broadcast();
+	FuseboxRef->SetCanInteract(true);
+	bCanInteract = false;
 }
 
 void AVent::ComponentEndOverlap(class UPrimitiveComponent* HitComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)

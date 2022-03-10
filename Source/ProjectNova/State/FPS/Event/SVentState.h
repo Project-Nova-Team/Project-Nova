@@ -52,6 +52,8 @@ protected:
 
 	float LerpToStandSpeed;
 
+	float ProneOffset;
+
 	/** Vector location at a progress*/
 	FVector LocationAtDistanceAlongSpline;
 

@@ -53,6 +53,9 @@ void AVent::InteractionEvent(APawn* EventSender)
 	{
 		Shooter->GetStateMachine()->SetState("Venting");
 		bCanInteract = false;
+
+		LeftGrate->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		RightGrate->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
 }
 
@@ -88,7 +91,6 @@ void AVent::DisableGrateForDuration()
 	OnVentDisabled.Broadcast();
 	bIsDisabled = true;
 	bDelayRunning = true;
-	GetWorld()->GetAuthGameMode<AShooterGameMode>()->GetDelayedActionManager()->StartDelayedAction(this, &AVent::MaybeReEnableGrate, DisableDuration);
 }
 
 void AVent::MaybeReEnableGrate()
@@ -127,10 +129,16 @@ void AVent::ComponentEndOverlap(class UPrimitiveComponent* HitComp, class AActor
 		if (Cast<UBoxComponent>(HitComp) == LeftGrateTrigger)
 		{
 			bIsOverlappingLeftTrigger = false;
+
+			if(bCanInteract) // we have left the trigger without venting
+				GetWorld()->GetAuthGameMode<AShooterGameMode>()->GetDelayedActionManager()->StartDelayedAction(this, &AVent::MaybeReEnableGrate, DisableDuration);
 		}
 		else if (Cast<UBoxComponent>(HitComp) == RightGrateTrigger)
 		{
 			bIsOverlappingRightTrigger = false;
+
+			if(bCanInteract) // we have left the trigger without venting
+				GetWorld()->GetAuthGameMode<AShooterGameMode>()->GetDelayedActionManager()->StartDelayedAction(this, &AVent::MaybeReEnableGrate, DisableDuration);
 		}
 	}
 }

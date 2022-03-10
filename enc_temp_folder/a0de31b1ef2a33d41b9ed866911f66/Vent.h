@@ -42,9 +42,6 @@ public:
 
 	uint8 bIsOverlappingRightTrigger : 1;
 
-	/** Turns the grate back on*/
-	void ReEnableGrate();
-
 protected:
 	virtual void BeginPlay() override;
 
@@ -107,6 +104,9 @@ protected:
 	/** Disables the grate for DisableDuration*/
 	UFUNCTION()
 	void DisableGrateForDuration();
+
+	/** Turns the grate back on*/
+	void ReEnableGrate();
 
 	/** Calls above function if conditions are met*/
 	void MaybeReEnableGrate();
