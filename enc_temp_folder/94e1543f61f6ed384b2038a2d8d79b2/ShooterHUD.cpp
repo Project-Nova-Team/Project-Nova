@@ -67,18 +67,17 @@ void AShooterHUD::ReceiveInteractionUpdate(IInteractiveObject* Info)
 
 	else
 	{
-		Info->OnInteract.AddUObject(this, &AShooterHUD::ReceiveInteractionEvent);
+		Info->OnInteract.AddUObject(this, &AShooterHUD::TurnOff);
 		InteractionPromptProvided(Info->GetInteractionPrompt());
 	}
 }
 
-void AShooterHUD::ReceiveInteractionEvent(APawn* EventSender)
+void AShooterHUD::TurnOff(APawn* EventSender)
 {
-	if(EventSender == Cast<AShooter>(EventSender))
-		RevokeIfObjectDisabled(Shooter->GetLastScannedObject());
+	ReceiveInteractionExecute(Shooter->GetLastScannedObject());
 }
 
-void AShooterHUD::RevokeIfObjectDisabled(IInteractiveObject* Info)
+void AShooterHUD::ReceiveInteractionExecute(IInteractiveObject* Info)
 {
 	if (Info == nullptr)
 	{
@@ -87,7 +86,7 @@ void AShooterHUD::RevokeIfObjectDisabled(IInteractiveObject* Info)
 
 	else
 	{
-		if(!Info->CanInteract()) // we have interacted with the object. If we can no longer interact, disable prompt
+		if(!Info->CanInteract())
 			InteractionPromptRevoke();
 	}
 }

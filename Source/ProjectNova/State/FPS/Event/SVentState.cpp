@@ -11,6 +11,8 @@ void USVentState::OnEnter()
 {
 	Super::OnEnter();
 
+	bIsLerpingToCrawlPosition = true; // turns tick logic off while moving
+
 	Vent = Cast<AVent>(Shooter->GetLastScannedObject());
 
 	if (Vent)
@@ -27,8 +29,6 @@ void USVentState::OnEnter()
 		CrawlSpeed = Vent->GetCrawlSpeed(); // how fast player crawls
 
 		ProgressMax = Spline->GetSplineLength();
-
-		bIsLerpingToCrawlPosition = true; // turns tick logic off while moving
 
 		Handle->GetAction()->StopAction();
 

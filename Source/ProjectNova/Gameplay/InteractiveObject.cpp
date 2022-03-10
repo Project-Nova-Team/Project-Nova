@@ -10,7 +10,6 @@ void IInteractiveObject::ReceiveLookedAt(APawn* EventSender)
 	Signature.BindRaw(this, &IInteractiveObject::InteractionEvent, EventSender);
 	Binding.ActionDelegate = Signature;
 
-
 	BindingIndex = EventSender->InputComponent->AddActionBinding(Binding).GetHandle();
 }
 

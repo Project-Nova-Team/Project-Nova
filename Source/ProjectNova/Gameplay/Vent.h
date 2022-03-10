@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "InteractiveObject.h"
+#include "InteractableFusebox.h"
 #include "Components/SplineComponent.h"
 #include "Components/SplineComponent.h"
 #include "Vent.generated.h"
@@ -22,7 +23,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Spline")
 	USplineComponent* SplineComponent;
 
-	bool CanInteract() const override { return !bIsDisabled && OverlappedPawns > 0; }
+	bool CanInteract() const override { return bIsDisabled && OverlappedPawns > 0; }
 
 	FInteractionPrompt& GetInteractionPrompt() override { return Prompt; }
 
@@ -74,9 +75,6 @@ protected:
 	UPROPERTY(Category = Spline, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	USplineComponent* Spline;
 
-	UPROPERTY(Category = Spline, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	USplineComponent* FuseBox;
-
 	UPROPERTY(Category = Mesh, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	UStaticMeshComponent* LeftFrame;
 
@@ -100,6 +98,9 @@ protected:
 	UPROPERTY(Category = Health, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UHealthComponent* Health;
 
+	UPROPERTY(Category = Health, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	class UChildActorComponent* Fusebox;
+
 	/** Disables the grate for DisableDuration*/
 	UFUNCTION()
 	void DisableGrateForDuration();
@@ -116,6 +117,9 @@ protected:
 	UFUNCTION()
 	void ComponentEndOverlap(class UPrimitiveComponent* HitComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
+	UFUNCTION()
+	void ReceiveFuseboxFixed(APawn* EventSender);
+	
 	UPROPERTY(BlueprintAssignable)
 	FVentEvent OnVentEnabled;
 
@@ -126,6 +130,8 @@ private:
 
 	/** Need this in the event a pawn is blocking the vent when we are trying to enable the lazers (which would get the object stuck)*/
 	FORCEINLINE bool ShouldEnable() { return OverlappedPawns == 0 && bIsDisabled && !bDelayRunning; }
+
+	AInteractableFusebox* FuseboxRef;
 
 	/** See grate trigger*/
 	int32 OverlappedPawns;

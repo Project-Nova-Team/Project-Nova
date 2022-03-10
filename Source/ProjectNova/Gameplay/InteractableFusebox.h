@@ -5,28 +5,36 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "InteractiveObject.h"
-#include "InteractiveFuseBox.generated.h"
+#include "InteractableFusebox.generated.h"
 
-DECLARE_MULTICAST_DELEGATE_OneParam(FFuseBoxInteractionEvent, IInteractiveObject*);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FFuseboxEvent, APawn*, EventSender);
 
 UCLASS()
-class PROJECTNOVA_API AInteractiveFuseBox : public UActorComponent, public IInteractiveObject
+class PROJECTNOVA_API AInteractableFusebox : public AActor, public IInteractiveObject
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	AInteractiveFuseBox();
+	AInteractableFusebox();
 
-	bool CanInteract() const override { return true; }
+	bool CanInteract() const override { return bCanInteract; }
 
 	FInteractionPrompt& GetInteractionPrompt() override { return Prompt; }
 
 	void InteractionEvent(APawn* EventSender) override;
 
+	UPROPERTY(Category = Mesh, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UStaticMeshComponent* Mesh;
+
+	UPROPERTY(BlueprintAssignable)
+	FFuseboxEvent FuseboxEvent;
+
+	void SetCanInteract(bool Status);
+
 protected:
 	// Called when the game starts or when spawned
-	//virtual void BeginPlay() override;
+	virtual void BeginPlay() override;
 
 	/** Whether or not the object can be interacted with. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
@@ -38,11 +46,4 @@ protected:
 	/** Is set to interact by default. See Edit->ProjectSettings->Input for list of action mapping names.*/
 	UPROPERTY(EditAnywhere, Category = "Interaction")
 	FName ActionMappingName;
-
-	FFuseBoxInteractionEvent FuseBoxInteractionEvent;
-
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
 };
