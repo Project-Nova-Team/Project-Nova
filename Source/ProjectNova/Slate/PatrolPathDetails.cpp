@@ -2,7 +2,6 @@
 
 #if WITH_EDITOR
 
-#include "../AI/PatrolPath.h"
 #include "Editor/PropertyEditor/Public/DetailLayoutBuilder.h"
 #include "Editor/PropertyEditor/Public/DetailCategoryBuilder.h"
 #include "Editor/PropertyEditor/Public/DetailWidgetRow.h"
@@ -18,6 +17,7 @@ TSharedRef<IDetailCustomization> FPatrolPathDetails::MakeInstance()
 
 void FPatrolPathDetails::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 {
+	/*
 	IDetailCategoryBuilder& Category = DetailBuilder.EditCategory("Patrol Path", FText::GetEmpty(), ECategoryPriority::Important);
 	APatrolPath* DetailsActor = nullptr;
 	TArray<TWeakObjectPtr<UObject>> CustomizedObjects;
@@ -53,6 +53,7 @@ void FPatrolPathDetails::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 			.ToolTipText(LOCTEXT("ButtonTooltip", "Adds a new point to the path"))
 			.OnClicked_UObject(DetailsActor, &APatrolPath::AddPoint)
 		];
+		*/
 }
 
 #undef LOCTEXT_NAMESCAPE
