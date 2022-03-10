@@ -177,6 +177,9 @@ public:
 	/** Executes subclass implementation when receiving a press attack*/
 	virtual void Attack() { }
 
+	/** Executes subclass implementation when receiving a stop attack*/
+	virtual void StopAttack() { }
+
 	/** Executes subclass implementation when receiving a reload command*/
 	virtual void Reload() { }
 
