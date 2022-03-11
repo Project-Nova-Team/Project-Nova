@@ -26,8 +26,17 @@ FPatrolPoint APatrolPath::GetNextPoint(const int32 CurrentPointIndex, bool& bRev
 		int32 Direction = bReversed ? -1 : 1;
 		OutPointIndex = CurrentPointIndex + Direction;
 
-		
-		return FPatrolPoint(WaitTimes.Num() > 0 ? WaitTimes[OutPointIndex] : 0.f, OutPointIndex, SplineComponent);
+		if (WaitTimes.Num() == 0)
+		{
+			WaitTimes.Add(0);
+		}
+
+		if (WaitTimes.Num() <= OutPointIndex)
+		{
+			WaitTimes.Add(0);
+		}
+
+		return FPatrolPoint(WaitTimes[OutPointIndex], OutPointIndex, SplineComponent);
 	}
 
 	else if (Mode == Loop)
@@ -42,7 +51,12 @@ FPatrolPoint APatrolPath::GetNextPoint(const int32 CurrentPointIndex, bool& bRev
 			WaitTimes.Add(0);
 		}
 
-		return FPatrolPoint(WaitTimes.Num() > 0 ? WaitTimes[OutPointIndex] : 0.f, OutPointIndex, SplineComponent);
+		if (WaitTimes.Num() <= OutPointIndex)
+		{
+			WaitTimes.Add(0);
+		}
+
+		return FPatrolPoint(WaitTimes[OutPointIndex], OutPointIndex, SplineComponent);
 	}
 
 	return FPatrolPoint(-1, -1, nullptr);
@@ -71,6 +85,11 @@ FPatrolPoint APatrolPath::GetRandomPoint(TArray<int32>& RememberedPoints, int32 
 
 	RandomSelection = Available[RandomSelection];
 	RememberedPoints.Emplace(RandomSelection); //implicit copy
+
+	if (WaitTimes.Num() <= RandomSelection)
+	{
+		WaitTimes.Add(0);
+	}
 
 	return FPatrolPoint(WaitTimes[RandomSelection], RandomSelection, SplineComponent);
 }
