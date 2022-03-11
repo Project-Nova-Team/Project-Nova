@@ -68,10 +68,26 @@ void AFlameThrower::StopAttack()
 
 void AFlameThrower::StartFlamethrower()
 {
+	FHitResult Hit;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(GetOwner());
+
+	FTransform SocketTransform = Mesh->GetSocketTransform(BarrelSocketName);
+
+	const FVector Forward = FRotationMatrix(SocketTransform.Rotator()).GetUnitAxis(EAxis::X);
+	const FVector Start = Mesh->GetSocketLocation(BarrelSocketName);
+
+	const bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, Start + (Forward * MaxFireRange), ECC_Pawn, Params);
+
 	FlameAudio->Play();
 	FlameSystemComponent = UGameplayStatics::SpawnEmitterAttached(FlameSystem, Mesh, BarrelSocketName);
 	SparkSystemComponent = UGameplayStatics::SpawnEmitterAttached(SparkSystem, Mesh, BarrelSocketName);
 	SparkAudioComponent = UGameplayStatics::SpawnSoundAttached(SparkAudio, Mesh, BarrelSocketName);
+
+	if (bHit)
+	{
+		SparkSystemComponent->SetWorldLocation(Hit.ImpactPoint);
+	}
 }
 
 void AFlameThrower::StopFlamethrower()
