@@ -71,6 +71,8 @@ public:
 	/** Updates spline component when this gets changed*/
 	void SetPathModeImpl();
 
+#endif //WITH_EDITOR
+
 protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
@@ -81,5 +83,4 @@ protected:
 	TArray<float> WaitTimes;
 
 
-#endif //WITH_EDITOR
 };
