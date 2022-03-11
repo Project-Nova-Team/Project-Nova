@@ -8,7 +8,7 @@ FPatrolPoint::FPatrolPoint(float Time, int32 Index, USplineComponent* Spline)
 
 APatrolPath::APatrolPath()
 {
-	SplineComponent = CreateEditorOnlyDefaultSubobject<USplineComponent>(TEXT("Spline"));
+	SplineComponent = CreateDefaultSubobject<USplineComponent>(TEXT("Spline"));
 	SetRootComponent(SplineComponent);
 }
 
