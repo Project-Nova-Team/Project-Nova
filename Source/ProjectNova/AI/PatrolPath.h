@@ -21,13 +21,16 @@ struct FPatrolPoint
 
 public:
 	FPatrolPoint() { }
-	FPatrolPoint(float Time, FSplinePoint Point);
+	FPatrolPoint(float Time, int32 PointIndex, USplineComponent* Spline);
 
 	UPROPERTY(BlueprintReadOnly)
 	float WaitTime;
 
 	UPROPERTY(BlueprintReadOnly)
-	FSplinePoint SplinePoint;
+	int32 PointIndex;
+
+	UPROPERTY(BlueprintReadOnly)
+	USplineComponent* SplineComponent;
 };
 
 UCLASS(HideCategories=(Rendering, Replication, Collision, Input, Actor, LOD, Cooking))

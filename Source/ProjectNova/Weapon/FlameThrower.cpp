@@ -19,7 +19,7 @@ void AFlameThrower::Attack()
 	//If this is the first request to attack, do some set up
 	if (!bAttacking)
 	{
-		FlameAudio->Play();
+		FlameAudio->Activate();
 		FlameSystemComponent = UGameplayStatics::SpawnEmitterAttached(FlameSystem, Mesh, BarrelSocketName);
 		bAttacking = true;
 	}
@@ -82,7 +82,7 @@ void AFlameThrower::StartFlamethrower()
 	FlameAudio->Play();
 	FlameSystemComponent = UGameplayStatics::SpawnEmitterAttached(FlameSystem, Mesh, BarrelSocketName);
 	SparkSystemComponent = UGameplayStatics::SpawnEmitterAttached(SparkSystem, Mesh, BarrelSocketName);
-	SparkAudioComponent = UGameplayStatics::SpawnSoundAttached(SparkAudio, Mesh, BarrelSocketName);
+	//SparkAudioComponent = UGameplayStatics::SpawnSoundAttached(SparkAudio, Mesh, BarrelSocketName);
 
 	if (bHit)
 	{
