@@ -6,7 +6,6 @@
 
 class UHealthComponent;
 class APatrolPath;
-class APatrolPoint;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FLoadEvent, const bool);
 
@@ -47,7 +46,7 @@ protected:
 
 	/** Current collection of points remembered by this AI*/
 	UPROPERTY(BlueprintReadWrite, Transient)
-	TArray<APatrolPoint*> RememberedPoints;
+	TArray<int32> RememberedPoints;
 
 	/** Decides which direction along a path the AI follows when their Path is a track*/
 	UPROPERTY(BlueprintReadWrite, Transient)
@@ -69,7 +68,7 @@ public:
 	FORCEINLINE UHealthComponent* GetHealth() const { return Health; }
 
 	UFUNCTION(BlueprintCallable)
-	TArray<APatrolPoint*>& GetRememberedPoints() { return RememberedPoints; }
+	TArray<int32>& GetRememberedPoints() { return RememberedPoints; }
 
 	/** Gets current load state*/
 	UFUNCTION(BlueprintGetter)
