@@ -78,7 +78,7 @@ void AVent::BeginPlay()
 	RightGrateTrigger->OnComponentEndOverlap.AddDynamic(this, &AVent::ComponentEndOverlap);
 
 	FuseboxRef = Cast<AInteractableFusebox>(Fusebox->GetChildActor());
-	FuseboxRef->FuseboxEvent.AddDynamic(this, &AVent::ReceiveFuseboxFixed);
+	FuseboxRef->OnInteract.AddUObject(this, &AVent::ReceiveFuseboxFixed);
 }
 
 void AVent::DisableGrateForDuration()

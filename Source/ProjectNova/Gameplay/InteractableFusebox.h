@@ -7,7 +7,7 @@
 #include "InteractiveObject.h"
 #include "InteractableFusebox.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FFuseboxEvent, APawn*, EventSender);
+class UAnimInstance;
 
 UCLASS()
 class PROJECTNOVA_API AInteractableFusebox : public AActor, public IInteractiveObject
@@ -27,14 +27,9 @@ public:
 	UPROPERTY(Category = Mesh, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	UStaticMeshComponent* Mesh;
 
-	UPROPERTY(BlueprintAssignable)
-	FFuseboxEvent FuseboxEvent;
-
 	void SetCanInteract(bool Status);
 
 protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
 
 	/** Whether or not the object can be interacted with. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
@@ -46,4 +41,7 @@ protected:
 	/** Is set to interact by default. See Edit->ProjectSettings->Input for list of action mapping names.*/
 	UPROPERTY(EditAnywhere, Category = "Interaction")
 	FName ActionMappingName;
+
+	UPROPERTY(EditAnywhere, Category = "Animation")
+	UAnimInstance* Anim;
 };
