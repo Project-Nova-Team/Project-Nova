@@ -2,6 +2,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Components/BoxComponent.h"
 #include "HealthComponent.h"
+#include "InteractableFusebox.h"
 #include "../Player/Shooter.h"
 #include "../State/State.h"
 #include "../ShooterGameMode.h"
@@ -36,8 +37,14 @@ AVent::AVent()
 	RightGrateTrigger->SetCollisionProfileName("OverlapOnlyPawn");
 
 	Health = CreateDefaultSubobject<UHealthComponent>("Health");
-	
+
+	Fusebox = CreateDefaultSubobject<UChildActorComponent>("Fusebox");
+	Fusebox->AttachToComponent(LeftFrame, FAttachmentTransformRules::KeepRelativeTransform);
+	Fusebox->SetChildActorClass(AInteractableFusebox::StaticClass());
+
 	DisableDuration = 10.f;
+
+	CrawlSpeed = 125.f;
 }
 
 void AVent::InteractionEvent(APawn* EventSender)
@@ -45,33 +52,45 @@ void AVent::InteractionEvent(APawn* EventSender)
 	if (AShooter* Shooter = Cast<AShooter>(EventSender))
 	{
 		Shooter->GetStateMachine()->SetState("Venting");
+		bCanInteract = false;
+
+		LeftGrate->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		RightGrate->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+}
+
+void AVent::ReceiveFuseboxFixed(APawn* EventSender)
+{
+	if (AShooter* Shooter = Cast<AShooter>(EventSender))
+	{
 		DisableGrateForDuration();
+		FuseboxRef->SetCanInteract(false);
 	}
 }
 
 void AVent::BeginPlay()
 {
-	bCanInteract = true; // temp
-
 	Super::BeginPlay();
 	Health->OnDeath.AddDynamic(this, &AVent::DisableGrateForDuration);
 	LeftGrateTrigger->OnComponentBeginOverlap.AddDynamic(this, &AVent::ComponentBeginOverlap);
 	LeftGrateTrigger->OnComponentEndOverlap.AddDynamic(this, &AVent::ComponentEndOverlap);
 	RightGrateTrigger->OnComponentBeginOverlap.AddDynamic(this, &AVent::ComponentBeginOverlap);
 	RightGrateTrigger->OnComponentEndOverlap.AddDynamic(this, &AVent::ComponentEndOverlap);
+
+	FuseboxRef = Cast<AInteractableFusebox>(Fusebox->GetChildActor());
+	FuseboxRef->OnInteract.AddUObject(this, &AVent::ReceiveFuseboxFixed);
 }
 
 void AVent::DisableGrateForDuration()
 {
 	bCanInteract = true; // can interact while grate is down
-	LeftGrate->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	RightGrate->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	LeftGrate->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	RightGrate->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	LeftGrate->SetVisibility(false);
 	RightGrate->SetVisibility(false);
 	OnVentDisabled.Broadcast();
 	bIsDisabled = true;
 	bDelayRunning = true;
-	GetWorld()->GetAuthGameMode<AShooterGameMode>()->GetDelayedActionManager()->StartDelayedAction(this, &AVent::MaybeReEnableGrate, DisableDuration);
 }
 
 void AVent::MaybeReEnableGrate()
@@ -93,6 +112,8 @@ void AVent::ReEnableGrate()
 	RightGrate->SetVisibility(true);
 	bIsDisabled = false;
 	OnVentEnabled.Broadcast();
+	FuseboxRef->SetCanInteract(true);
+	bCanInteract = false;
 }
 
 void AVent::ComponentEndOverlap(class UPrimitiveComponent* HitComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
@@ -108,10 +129,16 @@ void AVent::ComponentEndOverlap(class UPrimitiveComponent* HitComp, class AActor
 		if (Cast<UBoxComponent>(HitComp) == LeftGrateTrigger)
 		{
 			bIsOverlappingLeftTrigger = false;
+
+			if(bCanInteract) // we have left the trigger without venting
+				GetWorld()->GetAuthGameMode<AShooterGameMode>()->GetDelayedActionManager()->StartDelayedAction(this, &AVent::MaybeReEnableGrate, DisableDuration);
 		}
 		else if (Cast<UBoxComponent>(HitComp) == RightGrateTrigger)
 		{
 			bIsOverlappingRightTrigger = false;
+
+			if(bCanInteract) // we have left the trigger without venting
+				GetWorld()->GetAuthGameMode<AShooterGameMode>()->GetDelayedActionManager()->StartDelayedAction(this, &AVent::MaybeReEnableGrate, DisableDuration);
 		}
 	}
 }
@@ -125,10 +152,12 @@ void AVent::ComponentBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* O
 		if (Cast<UBoxComponent>(OverlappedComp) == LeftGrateTrigger)
 		{
 			bIsOverlappingLeftTrigger = true;
+			UE_LOG(LogTemp, Warning, TEXT("LeftGrate"));
 		}
 		else if (Cast<UBoxComponent>(OverlappedComp) == RightGrateTrigger)
 		{
 			bIsOverlappingRightTrigger = true;
+			UE_LOG(LogTemp, Warning, TEXT("RightGrate"));
 		}
 	}
 }
