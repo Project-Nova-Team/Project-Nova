@@ -87,9 +87,7 @@ private:
 	void ReceiveInteractionUpdate(IInteractiveObject* Info);
 
 	/** Internal function that executes relevant interaction prompt updates in blueprint*/
-	void RevokeIfObjectDisabled(IInteractiveObject* Info);
-
-	void ReceiveInteractionEvent(APawn* EventSender);
+	void RevokePromptIfObjectDisabled(IInteractiveObject* Info);
 
 	/** Executed upon receiving death event of shooter. Enables death screen widget and hides others*/
 	UFUNCTION()

@@ -211,6 +211,10 @@ private:
 	/** Look result from previous Tick*/
 	IInteractiveObject* LastScannedObject;
 
+	FDelegateHandle InteractionDelegateHandle;
+
+
+
 	/** Casts a trace from the camera to see if there is an object nearby we can interact with*/	
 	void ScanInteractiveObject();
 

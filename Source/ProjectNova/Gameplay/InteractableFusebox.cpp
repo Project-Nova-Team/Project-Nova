@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "Animation/AnimInstance.h"
 #include "InteractableFusebox.h"
+#include <ProjectNova/Player/Shooter.h>
 
 // Sets default values
 AInteractableFusebox::AInteractableFusebox()
@@ -17,8 +17,8 @@ AInteractableFusebox::AInteractableFusebox()
 
 void AInteractableFusebox::InteractionEvent(APawn* EventSender)
 {
+	Shooter = Cast<AShooter>(EventSender);
 	SetCanInteract(false);
-	
 	OnInteract.Broadcast(EventSender);
 }
 

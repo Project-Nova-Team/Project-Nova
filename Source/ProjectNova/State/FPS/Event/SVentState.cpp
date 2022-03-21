@@ -140,7 +140,8 @@ void USVentState::MoveAlongSpline(ECrawlDirection Direction, float DeltaTime)
 
 void USVentState::RotateAlongSpline()
 {
-	Shooter->GetAnchor()->SetWorldRotation(TargetCrawlRotation);
+	Shooter->GetAnchor()->SetWorldRotation(Spline->GetDirectionAtDistanceAlongSpline
+	(Progress, ESplineCoordinateSpace::World).GetSafeNormal().Rotation());
 }
 
 void USVentState::LeaveCrawl(FVector StartingPosition, FVector EndPosition)

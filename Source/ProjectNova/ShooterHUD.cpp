@@ -63,59 +63,30 @@ void AShooterHUD::ReceiveInteractionUpdate(IInteractiveObject* Info)
 	if (Info == nullptr)
 	{
 		InteractionPromptRevoke();
-
-		//if (InteractionDelegateHandle.IsValid())
-		//{
-		//	if (Info->OnInteract.IsBound())
-		//	{
-		//		Info->OnInteract.Clear();
-		//		//Info->OnInteract.Remove(InteractionDelegateHandle); // remove delegate when look away
-		//	}
-		//}
-
-		//if (Info->OnInteract.IsBound()) 
+		//if (Shooter->GetLastScannedObject()->OnInteract.IsBound())
 		//{
 		//	if (InteractionDelegateHandle.IsValid())
-		//	{
+		//		Shooter->GetLastScannedObject()->OnInteract.Remove(InteractionDelegateHandle);
 
-		//		InteractionDelegateHandle.Reset();
-		//		Info->OnInteract.Remove(InteractionDelegateHandle); // remove delegate when look away
-		//	}
+		//	// unbind delegate if we look away				
 		//}
+
+		//TODO: Find a way to unbind the delegate here. Problem is InteractiveObject is null
 	}
 
 	else
 	{
-		InteractionDelegateHandle = Info->OnInteract.AddUObject(this, &AShooterHUD::ReceiveInteractionEvent);
+		//InteractionDelegateHandle = Info->OnInteract.AddUObject(this, &AShooterHUD::ReceiveInteractionEvent);
 		InteractionPromptProvided(Info->GetInteractionPrompt());
-	}
-}
-
-void AShooterHUD::ReceiveInteractionEvent(APawn* EventSender)
-{
-	if(EventSender == Cast<AShooter>(EventSender))
 		RevokeIfObjectDisabled(Shooter->GetLastScannedObject());
+	}
 }
 
 void AShooterHUD::RevokeIfObjectDisabled(IInteractiveObject* Info) 
 {
-	if (Info == nullptr)
+	if (!Info->CanInteract()) // we have interacted with the object, but are no longer supposed to be able to interact.
 	{
-		InteractionPromptRevoke();
-	}
-
-	else
-	{
-		if (!Info->CanInteract()) // we have interacted with the object, but are no longer supposed to be able to interact.
-		{
-			InteractionPromptRevoke(); // turn off prompt
-			Shooter->InputComponent->RemoveActionBindingForHandle(Info->BindingIndex); // turn off input binding
-
-			if (Info->OnInteract.IsBound())
-			{
-				if (InteractionDelegateHandle.IsValid())
-					Info->OnInteract.Remove(InteractionDelegateHandle);// remove delegate if we cannot interact
-			}
-		}
+		InteractionPromptRevoke(); // turn off prompt
+		Shooter->InputComponent->RemoveActionBindingForHandle(Info->BindingIndex); // turn off input binding
 	}
 }
