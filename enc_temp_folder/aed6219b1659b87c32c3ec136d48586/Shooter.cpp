@@ -146,7 +146,6 @@ void AShooter::ScanInteractiveObject()
 				{
 					LastScannedObject->ReceiveLookedAway(this);
 				}
-
 				//Now tell our new object we're looking at it
 				InteractiveObject->ReceiveLookedAt(this);
 				LastScannedObject = InteractiveObject;
@@ -161,14 +160,6 @@ void AShooter::ScanInteractiveObject()
 			LastScannedObject = nullptr;
 			OnInteractionUpdate.ExecuteIfBound(nullptr);
 		}
-	}
-
-
-	else if (LastScannedObject != nullptr)
-	{
-		LastScannedObject->ReceiveLookedAway(this);
-		LastScannedObject = nullptr;
-		OnInteractionUpdate.ExecuteIfBound(nullptr);
 	}
 }
 

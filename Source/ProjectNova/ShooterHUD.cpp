@@ -63,30 +63,11 @@ void AShooterHUD::ReceiveInteractionUpdate(IInteractiveObject* Info)
 	if (Info == nullptr)
 	{
 		InteractionPromptRevoke();
-		//if (Shooter->GetLastScannedObject()->OnInteract.IsBound())
-		//{
-		//	if (InteractionDelegateHandle.IsValid())
-		//		Shooter->GetLastScannedObject()->OnInteract.Remove(InteractionDelegateHandle);
-
-		//	// unbind delegate if we look away				
-		//}
-
-		//TODO: Find a way to unbind the delegate here. Problem is InteractiveObject is null
 	}
 
 	else
 	{
 		//InteractionDelegateHandle = Info->OnInteract.AddUObject(this, &AShooterHUD::ReceiveInteractionEvent);
 		InteractionPromptProvided(Info->GetInteractionPrompt());
-		RevokeIfObjectDisabled(Shooter->GetLastScannedObject());
-	}
-}
-
-void AShooterHUD::RevokeIfObjectDisabled(IInteractiveObject* Info) 
-{
-	if (!Info->CanInteract()) // we have interacted with the object, but are no longer supposed to be able to interact.
-	{
-		InteractionPromptRevoke(); // turn off prompt
-		Shooter->InputComponent->RemoveActionBindingForHandle(Info->BindingIndex); // turn off input binding
 	}
 }
