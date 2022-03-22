@@ -157,19 +157,22 @@ void AShooter::ScanInteractiveObject()
 
 		else if (LastScannedObject == InteractiveObject)
 		{
-			LastScannedObject->ReceiveLookedAway(this);
-			LastScannedObject = nullptr;
-			OnInteractionUpdate.ExecuteIfBound(nullptr);
+			LookAway();
 		}
 	}
 
 
 	else if (LastScannedObject != nullptr)
 	{
-		LastScannedObject->ReceiveLookedAway(this);
-		LastScannedObject = nullptr;
-		OnInteractionUpdate.ExecuteIfBound(nullptr);
+		LookAway();
 	}
+}
+
+void AShooter::LookAway()
+{
+	LastScannedObject->ReceiveLookedAway(this);
+	LastScannedObject = nullptr;
+	OnInteractionUpdate.ExecuteIfBound(nullptr);
 }
 
 void AShooter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
