@@ -72,6 +72,8 @@ protected:
 	/** Enum denoting which direction we need to face*/
 	ECrawlDirection CrawlDirection;
 
+	FRotator CurrentRotation;
+
 	/** is the handle finished lerping to the crawl position*/
 	uint8 bIsLerpingToCrawlPosition : 1;
 
@@ -87,7 +89,7 @@ protected:
 	void MoveAlongSpline(ECrawlDirection Direction, float DeltaTime);
 
 	/** Rotates the player along the spline while moving*/
-	void RotateAlongSpline();
+	void RotateAlongSpline(float DeltaTime);
 
 	/** Enter Standing lerp*/
 	void LeaveCrawl(FVector StartingPosition, FVector EndPosition);
