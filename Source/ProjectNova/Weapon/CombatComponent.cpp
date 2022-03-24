@@ -40,6 +40,7 @@ void UCombatComponent::TickComponent(float DeltaTime, enum ELevelTick TickType, 
 			if (!Weapon->bAttackContinuously)
 			{
 				bIsTryingToAttack = false;
+				Weapon->StopAttack();
 			}
 		}
 	}
@@ -87,6 +88,7 @@ void UCombatComponent::PickUpWeapon(AWeapon* NewWeapon)
 	if (Arsenal.Num() > MaxWeaponCount)
 	{
 		bIsTryingToAttack = false;
+		Arsenal[CurrentWeaponIndex]->StopAttack();
 		Arsenal[CurrentWeaponIndex]->SetCombatComponent(nullptr);
 		Arsenal.SwapMemory(CurrentWeaponIndex, Arsenal.Num() - 1);
 		Arsenal.RemoveAt(Arsenal.Num() - 1);
@@ -96,7 +98,7 @@ void UCombatComponent::PickUpWeapon(AWeapon* NewWeapon)
 	else if (Arsenal.Num() > 1)
 	{
 		bIsTryingToAttack = false;
-
+		Arsenal[CurrentWeaponIndex]->StopAttack();
 		Arsenal[CurrentWeaponIndex]->GetMesh()->SetVisibility(false);
 
 		CurrentWeaponIndex = Arsenal.Num() - 1;
@@ -122,6 +124,7 @@ void UCombatComponent::SwapWeapon(const int32 Direction)
 	}
 
 	bIsTryingToAttack = false;
+	Arsenal[CurrentWeaponIndex]->StopAttack();
 	Arsenal[CurrentWeaponIndex]->GetMesh()->SetVisibility(false);
 
 	//If we swap past the last or before the first index, loop to the other end
@@ -156,7 +159,7 @@ void UCombatComponent::ReceiveReload()
 	{
 		//Don't want to keep attacking when a reload is requested
 		bIsTryingToAttack = false;
-
+		Arsenal[CurrentWeaponIndex]->StopAttack();
 		bIsReloading = true;
 
 		OnReload.ExecuteIfBound();
@@ -171,6 +174,11 @@ void UCombatComponent::ReceiveStartAttack()
 void UCombatComponent::ReceiveStopAttack()
 {
 	bIsTryingToAttack = false;
+	
+	if (AWeapon* Weapon = GetHeldWeapon())
+	{
+		Weapon->StopAttack();
+	}
 }
 
 void UCombatComponent::ReceiveAimStart()

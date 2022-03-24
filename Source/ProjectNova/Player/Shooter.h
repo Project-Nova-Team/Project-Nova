@@ -13,6 +13,7 @@ class UShooterStateMachine;
 class UHealthComponent;
 class UShooterInventory;
 class UAIPerceptionStimuliSourceComponent;
+class AVaultObject;
 
 DECLARE_DELEGATE_OneParam(FScan, IInteractiveObject*);
 
@@ -144,29 +145,13 @@ public:
 	UPROPERTY(Category = Pawn, EditAnywhere)
 	uint8 bTraceDebug : 1;
 
-	/** Set when player overlaps or unoverlaps vault trigger*/
-	UPROPERTY(BlueprintReadOnly)
-	uint8 bIsInsideVaultTrigger : 1;
-
-	/** Is player looking at a vault object?*/
-	UPROPERTY(BlueprintReadWrite)
-	uint8 bIsLookingAtVaultObject : 1;
-
 	/** Returns true if the shooter is currently in the middle of swinging a melee attack*/
 	UFUNCTION(BlueprintCallable)
 	bool IsAttacking();
 
-	/** Returns whether player is in vault trigger and is looking at vault object*/
-	UFUNCTION(BlueprintCallable)
-	bool CanVault();
-
 	/** Sets the death state in the state machine when the shooter dies*/
 	UFUNCTION()
 	void HandleDeath();
-
-	/** Is the shooter currently in a UI prompt event*/
-	UPROPERTY(BlueprintReadWrite)
-	uint8 bIsPrompted : 1;
 
 	/** Forces state to change to the given state name*/
 	UFUNCTION(BlueprintCallable, Category = "State")
@@ -177,6 +162,8 @@ public:
 
 	/** Delegate executed when scan detects a change and we should update UI prompt*/
 	FScan OnInteractionUpdate;
+
+	IInteractiveObject* GetLastScannedObject() { return LastScannedObject; }
 
 protected:
 

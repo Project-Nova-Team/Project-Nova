@@ -37,6 +37,7 @@ UShooterMovementComponent::UShooterMovementComponent()
 	CrouchMaxSpeed = 250.f;
 	CrouchTime = 1.f;
 
+	CrawlSpeed = 125.f;
 	ProneAcceleration = 400.f;
 	ProneMaxSpeed = 100.f;
 	ProneInputTime = 0.25f;
