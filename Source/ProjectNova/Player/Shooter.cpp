@@ -97,25 +97,29 @@ void AShooter::SetStateOverride(const FString NewState)
 	StateMachine->SetState(NewState);
 }
 
-void AShooter::PlayCutsceneAnimation(UAnimMontage* Montage)
+void AShooter::PlayCutsceneAnimation(UAnimMontage* Montage, bool bSetState)
 {
-	//Attach the camera to the head bone
-	CameraAnchor->AttachToComponent(BodyMesh, FAttachmentTransformRules::KeepWorldTransform, TEXT("C_Head_jnt"));//todo fix magic string
-
-	SetStateOverride("Cutscene");
-
 	//Play the animation
 	float Duration = BodyMesh->GetAnimInstance()->Montage_Play(Montage);
 	ArmsMesh->GetAnimInstance()->Montage_Play(Montage);
 
-	//We should not ever need the handle so we just throw this lvalue at it
-	FTimerHandle Handle;
-	GetWorldTimerManager().SetTimer(Handle, this, &AShooter::FinishCutsceneAnimation, Duration);
+	if (bSetState)
+	{
+		//Attach the camera to the head bone
+		CameraAnchor->AttachToComponent(BodyMesh, FAttachmentTransformRules::KeepWorldTransform, TEXT("C_Head_jnt"));
+		SetStateOverride("Cutscene");
+
+		//We should not ever need the handle so we just throw this lvalue at it
+		FTimerHandle Handle;
+		GetWorldTimerManager().SetTimer(Handle, this, &AShooter::FinishCutsceneAnimation, Duration);
+	}
 }
 
 void AShooter::FinishCutsceneAnimation()
 {
 	CameraAnchor->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepWorldTransform, TEXT("C_Head_jnt"));
+	CameraAnchor->SetRelativeLocation(FVector(20.f, 0.f, 90.f));
+	CameraAnchor->SetRelativeRotation(FRotator(0,0,0));
 }
 
 void AShooter::BeginPlay()
@@ -124,8 +128,6 @@ void AShooter::BeginPlay()
 
 	Collider->SetCapsuleHalfHeight(ShooterMovement->StandingHeight);
 	Collider->SetCapsuleRadius(ShooterMovement->CollisionRadius);
-	const FVector CameraLocation = CameraAnchor->GetRelativeLocation();
-	CameraAnchor->SetRelativeLocation(FVector(CameraLocation.X, CameraLocation.Y, ShooterMovement->CameraHeight));
 
 	StateMachine = NewObject<UShooterStateMachine>();
 	StateMachine->Initialize(this);

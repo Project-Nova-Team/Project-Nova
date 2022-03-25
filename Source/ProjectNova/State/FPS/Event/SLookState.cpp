@@ -30,8 +30,8 @@ void USLookState::RotateCameraFromInput(const float DeltaTime)
 		70.f);
 	AnchorRotation.Pitch = FMath::Clamp(
 		AnchorRotation.Pitch + (Input->LookY * Movement->CameraSensitivity * DeltaTime),
-		Movement->CameraMinAngle * 0.6f,
-		Movement->CameraMaxAngle * 0.6f);
+		Movement->CameraMinAngle * 0.8f,
+		Movement->CameraMaxAngle * 0.8f);
 
 	Shooter->GetAnchor()->SetRelativeRotation(AnchorRotation);
 }

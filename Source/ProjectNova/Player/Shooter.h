@@ -160,8 +160,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "State")
 	void SetStateOverride(const FString NewState);
 
+	/** Plays an animation designed for a cutscene. */
 	UFUNCTION(BlueprintCallable, Category = "Animation")
-	void PlayCutsceneAnimation(UAnimMontage* Montage);
+	void PlayCutsceneAnimation(UAnimMontage* Montage, bool bSetState = true);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
 	FString StartingStateOverride;

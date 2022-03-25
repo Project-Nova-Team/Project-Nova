@@ -30,6 +30,7 @@ void USMovementState::Tick(const float DeltaTime)
 	RotateCameraFromInput(DeltaTime);
 	CalculateVelocity(DeltaTime);
 	SetNewLocation(DeltaTime);
+	Shooter->GetCameraCast()->AdjustToHeadBone();
 }
 
 FVector USMovementState::ConvertInputRelativeToCamera() const

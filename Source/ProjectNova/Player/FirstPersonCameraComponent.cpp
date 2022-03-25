@@ -15,7 +15,7 @@ UFirstPersonCameraComponent::UFirstPersonCameraComponent()
 	RunSwayAmplitude = 8;
 	RunSwayFrequency = 15;
 
-	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bCanEverTick = false;
 	HeadBoneName = TEXT("C_Head_jnt");
 }
 
@@ -29,14 +29,8 @@ void UFirstPersonCameraComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	InitialAnchorPosition = CameraAnchor->GetRelativeLocation();
+	InitialAnchorPosition = FVector(20.f, 0.f, 90.f);
 	InitialBonePosition = Mesh->GetBoneLocation(HeadBoneName, EBoneSpaces::ComponentSpace);
-}
-
-void UFirstPersonCameraComponent::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	AdjustToHeadBone();
 }
 
 void UFirstPersonCameraComponent::SetState(const ECameraSwayState NewState)

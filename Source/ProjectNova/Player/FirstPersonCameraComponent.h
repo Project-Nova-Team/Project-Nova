@@ -108,13 +108,10 @@ private:
 
 public:
 
-	void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	/** Moves the bone to follow the head bone*/
+	void AdjustToHeadBone();
 
 protected:
 
 	void BeginPlay() override;
-
-	//void TickComponent
-	/** Moves the bone to */
-	void AdjustToHeadBone();
 };
