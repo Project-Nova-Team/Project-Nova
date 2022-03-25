@@ -26,8 +26,8 @@ void USMovementState::Tick(const float DeltaTime)
 {
 	HandleBaseMovement();
 	Movement->bIsOnGround = IsOnGround();
-	RotateCameraFromInput(DeltaTime);
 	Movement->CameraRelativeInput = ConvertInputRelativeToCamera();
+	RotateCameraFromInput(DeltaTime);
 	CalculateVelocity(DeltaTime);
 	SetNewLocation(DeltaTime);
 }
@@ -158,16 +158,18 @@ void USMovementState::RotateCameraFromInput(const float DeltaTime)
 {
 	//First apply camera rotations from user input
 
-	FRotator AnchorRotation = Shooter->GetAnchor()->GetComponentRotation();
+	FRotator AnchorRotation = Shooter->GetAnchor()->GetRelativeRotation();
 
-	AnchorRotation.Yaw += (Input->LookX * Movement->CameraSensitivity * DeltaTime);
+	FRotator ActorRotation = Shooter->GetActorRotation();
+	ActorRotation.Yaw += (Input->LookX * Movement->CameraSensitivity * DeltaTime);
 
 	AnchorRotation.Pitch = FMath::Clamp(
 		AnchorRotation.Pitch + (Input->LookY * Movement->CameraSensitivity * DeltaTime),
 		Movement->CameraMinAngle,
 		Movement->CameraMaxAngle);
 
-	Shooter->GetAnchor()->SetWorldRotation(AnchorRotation);
+	Shooter->SetActorRotation(ActorRotation);
+	Shooter->GetAnchor()->SetRelativeRotation(AnchorRotation);
 	const FRotator RelativeLook = Shooter->GetCamera()->GetRelativeRotation();
 
 	//Now lets change based on effects like weapon recoil

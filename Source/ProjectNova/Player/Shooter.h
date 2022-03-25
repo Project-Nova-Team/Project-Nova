@@ -111,8 +111,11 @@ public:
 	/** Returns the input state. Note: contents are mutable*/
 	FORCEINLINE FShooterInput* GetInput() { return &InputState; }
 
-	/** Returns the Skeletal Mesh component of this shooter*/
-	FORCEINLINE USkeletalMeshComponent* GetSkeletalMeshComponent() const { return ShooterSkeletalMesh; }
+	/** Returns the Body Mesh component of this shooter*/
+	FORCEINLINE USkeletalMeshComponent* GetBodyMesh() const { return BodyMesh; }
+
+	/** Returns the Arms Mesh component of this shooter*/
+	FORCEINLINE USkeletalMeshComponent* GetArmsMesh() const { return ArmsMesh; }
 
 	/** Returns the Shooter Movement component attached to this shooter*/
 	FORCEINLINE UShooterMovementComponent* GetShooterMovement() const { return ShooterMovement; }
@@ -157,6 +160,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "State")
 	void SetStateOverride(const FString NewState);
 
+	UFUNCTION(BlueprintCallable, Category = "Animation")
+	void PlayCutsceneAnimation(UAnimMontage* Montage);
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
 	FString StartingStateOverride;
 
@@ -176,7 +182,10 @@ protected:
 private:
 
 	UPROPERTY(Category = Mesh, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	USkeletalMeshComponent* ShooterSkeletalMesh;
+	USkeletalMeshComponent* BodyMesh;
+
+	UPROPERTY(Category = Mesh, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	USkeletalMeshComponent* ArmsMesh;
 
 	UPROPERTY(Category = Shooter, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	UShooterMovementComponent* ShooterMovement;
@@ -213,6 +222,9 @@ private:
 
 	/** Casts a trace from the camera to see if there is an object nearby we can interact with*/	
 	void ScanInteractiveObject();
+
+	/** Called upon the completion of a cutscene animation. This reparents the camera to the appropriate component*/
+	void FinishCutsceneAnimation();
 
 	///		 Begin Input Bindings	   ///
 

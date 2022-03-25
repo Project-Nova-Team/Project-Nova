@@ -20,6 +20,8 @@ class PROJECTNOVA_API UFirstPersonCameraComponent : public UCameraComponent
 public:
 	UFirstPersonCameraComponent();
 
+	void SetupConstruction(USkeletalMeshComponent* Mesh, USceneComponent* Anchor);
+
 	UFUNCTION(BlueprintCallable)
 	void ProcessCameraSway();
 
@@ -69,7 +71,7 @@ protected:
 
 private:
 
-	float timer;
+	float Timer;
 
 	bool bIsBlending;
 
@@ -88,5 +90,31 @@ private:
 	float PreBlendSway;
 
 	float PreBlendRotation;
-	
+
+	// Bone transform
+
+	/** Name of the head bone*/
+	FName HeadBoneName;
+
+	/** Mesh this bone follows*/
+	USkeletalMeshComponent* Mesh;
+
+	/** Camera anchor to transform to the bone*/
+	USceneComponent* CameraAnchor;
+
+	FVector InitialAnchorPosition;
+
+	FVector InitialBonePosition;
+
+public:
+
+	void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+protected:
+
+	void BeginPlay() override;
+
+	//void TickComponent
+	/** Moves the bone to */
+	void AdjustToHeadBone();
 };

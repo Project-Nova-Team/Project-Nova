@@ -22,14 +22,18 @@ void USLookState::OnEnter()
 
 void USLookState::RotateCameraFromInput(const float DeltaTime)
 {
-	FRotator AnchorRotation = Shooter->GetAnchor()->GetComponentRotation();
-	AnchorRotation.Yaw += (Input->LookX * Movement->CameraSensitivity * DeltaTime);
+	FRotator AnchorRotation = Shooter->GetAnchor()->GetRelativeRotation();
+
+	AnchorRotation.Yaw = FMath::Clamp(
+		AnchorRotation.Yaw + (Input->LookX * Movement->CameraSensitivity * DeltaTime),
+		-70.f,
+		70.f);
 	AnchorRotation.Pitch = FMath::Clamp(
 		AnchorRotation.Pitch + (Input->LookY * Movement->CameraSensitivity * DeltaTime),
-		Movement->CameraMinAngle,
-		Movement->CameraMaxAngle);
+		Movement->CameraMinAngle * 0.6f,
+		Movement->CameraMaxAngle * 0.6f);
 
-	Shooter->GetAnchor()->SetWorldRotation(AnchorRotation);
+	Shooter->GetAnchor()->SetRelativeRotation(AnchorRotation);
 }
 
 void USLookState::Tick(const float DeltaTime)
