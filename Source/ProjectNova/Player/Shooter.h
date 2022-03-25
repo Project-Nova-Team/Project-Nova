@@ -13,6 +13,7 @@ class UShooterStateMachine;
 class UHealthComponent;
 class UShooterInventory;
 class UAIPerceptionStimuliSourceComponent;
+class AVaultObject;
 
 DECLARE_DELEGATE_OneParam(FScan, IInteractiveObject*);
 
@@ -110,8 +111,11 @@ public:
 	/** Returns the input state. Note: contents are mutable*/
 	FORCEINLINE FShooterInput* GetInput() { return &InputState; }
 
-	/** Returns the Skeletal Mesh component of this shooter*/
-	FORCEINLINE USkeletalMeshComponent* GetSkeletalMeshComponent() const { return ShooterSkeletalMesh; }
+	/** Returns the Body Mesh component of this shooter*/
+	FORCEINLINE USkeletalMeshComponent* GetBodyMesh() const { return BodyMesh; }
+
+	/** Returns the Arms Mesh component of this shooter*/
+	FORCEINLINE USkeletalMeshComponent* GetArmsMesh() const { return ArmsMesh; }
 
 	/** Returns the Shooter Movement component attached to this shooter*/
 	FORCEINLINE UShooterMovementComponent* GetShooterMovement() const { return ShooterMovement; }
@@ -144,39 +148,29 @@ public:
 	UPROPERTY(Category = Pawn, EditAnywhere)
 	uint8 bTraceDebug : 1;
 
-	/** Set when player overlaps or unoverlaps vault trigger*/
-	UPROPERTY(BlueprintReadOnly)
-	uint8 bIsInsideVaultTrigger : 1;
-
-	/** Is player looking at a vault object?*/
-	UPROPERTY(BlueprintReadWrite)
-	uint8 bIsLookingAtVaultObject : 1;
-
 	/** Returns true if the shooter is currently in the middle of swinging a melee attack*/
 	UFUNCTION(BlueprintCallable)
 	bool IsAttacking();
-
-	/** Returns whether player is in vault trigger and is looking at vault object*/
-	UFUNCTION(BlueprintCallable)
-	bool CanVault();
 
 	/** Sets the death state in the state machine when the shooter dies*/
 	UFUNCTION()
 	void HandleDeath();
 
-	/** Is the shooter currently in a UI prompt event*/
-	UPROPERTY(BlueprintReadWrite)
-	uint8 bIsPrompted : 1;
-
 	/** Forces state to change to the given state name*/
 	UFUNCTION(BlueprintCallable, Category = "State")
 	void SetStateOverride(const FString NewState);
+
+	/** Plays an animation designed for a cutscene. */
+	UFUNCTION(BlueprintCallable, Category = "Animation")
+	void PlayCutsceneAnimation(UAnimMontage* Montage, bool bSetState = true);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
 	FString StartingStateOverride;
 
 	/** Delegate executed when scan detects a change and we should update UI prompt*/
 	FScan OnInteractionUpdate;
+
+	IInteractiveObject* GetLastScannedObject() { return LastScannedObject; }
 
 protected:
 
@@ -189,7 +183,10 @@ protected:
 private:
 
 	UPROPERTY(Category = Mesh, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	USkeletalMeshComponent* ShooterSkeletalMesh;
+	USkeletalMeshComponent* BodyMesh;
+
+	UPROPERTY(Category = Mesh, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	USkeletalMeshComponent* ArmsMesh;
 
 	UPROPERTY(Category = Shooter, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	UShooterMovementComponent* ShooterMovement;
@@ -226,6 +223,9 @@ private:
 
 	/** Casts a trace from the camera to see if there is an object nearby we can interact with*/	
 	void ScanInteractiveObject();
+
+	/** Called upon the completion of a cutscene animation. This reparents the camera to the appropriate component*/
+	void FinishCutsceneAnimation();
 
 	///		 Begin Input Bindings	   ///
 

@@ -26,10 +26,11 @@ void USMovementState::Tick(const float DeltaTime)
 {
 	HandleBaseMovement();
 	Movement->bIsOnGround = IsOnGround();
-	RotateCameraFromInput(DeltaTime);
 	Movement->CameraRelativeInput = ConvertInputRelativeToCamera();
+	RotateCameraFromInput(DeltaTime);
 	CalculateVelocity(DeltaTime);
 	SetNewLocation(DeltaTime);
+	Shooter->GetCameraCast()->AdjustToHeadBone();
 }
 
 FVector USMovementState::ConvertInputRelativeToCamera() const
@@ -41,14 +42,6 @@ FVector USMovementState::ConvertInputRelativeToCamera() const
 	RelativeInput.Normalize();
 
 	return RelativeInput;
-}
-
-void USMovementState::CheckForVault()
-{
-	if (Input->bIsTryingToVault && Movement->bIsOnGround && Shooter->CanVault())
-	{
-		FlagTransition("Vaulting", 10);
-	}
 }
 
 void USMovementState::CalculateVelocity(const float DeltaTime) const
@@ -166,14 +159,18 @@ void USMovementState::RotateCameraFromInput(const float DeltaTime)
 {
 	//First apply camera rotations from user input
 
-	FRotator AnchorRotation = Shooter->GetAnchor()->GetComponentRotation();
-	AnchorRotation.Yaw += (Input->LookX * Movement->CameraSensitivity * DeltaTime);
+	FRotator AnchorRotation = Shooter->GetAnchor()->GetRelativeRotation();
+
+	FRotator ActorRotation = Shooter->GetActorRotation();
+	ActorRotation.Yaw += (Input->LookX * Movement->CameraSensitivity * DeltaTime);
+
 	AnchorRotation.Pitch = FMath::Clamp(
 		AnchorRotation.Pitch + (Input->LookY * Movement->CameraSensitivity * DeltaTime),
 		Movement->CameraMinAngle,
 		Movement->CameraMaxAngle);
 
-	Shooter->GetAnchor()->SetWorldRotation(AnchorRotation);
+	Shooter->SetActorRotation(ActorRotation);
+	Shooter->GetAnchor()->SetRelativeRotation(AnchorRotation);
 	const FRotator RelativeLook = Shooter->GetCamera()->GetRelativeRotation();
 
 	//Now lets change based on effects like weapon recoil

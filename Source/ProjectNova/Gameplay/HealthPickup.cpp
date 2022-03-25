@@ -11,14 +11,16 @@ AHealthPickup::AHealthPickup()
 	SetRootComponent(Mesh);
 }
 
-
 void AHealthPickup::InteractionEvent(APawn* EventSender)
 {
-	UHealthComponent* PawnHealthComponent = EventSender->FindComponentByClass<UHealthComponent>();
-
-	if (PawnHealthComponent != nullptr && !PawnHealthComponent->bIsFullHealth)
+	if (CanInteract())
 	{
-		PawnHealthComponent->Heal(HealAmount);
-		RemoveSelf(this);
+		UHealthComponent* PawnHealthComponent = EventSender->FindComponentByClass<UHealthComponent>();
+
+		if (PawnHealthComponent != nullptr && !PawnHealthComponent->bIsFullHealth)
+		{
+			PawnHealthComponent->Heal(HealAmount);
+			RemoveSelf(this);
+		}
 	}
 }

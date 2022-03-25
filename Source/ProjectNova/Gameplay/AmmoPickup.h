@@ -43,7 +43,7 @@ public:
 	AAmmoPickup();
 
 	/** Ammount of ammo and type of gun this is used for*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ammo Pickup")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ammo Pickup | Ammo")
 	FAmmoPackage Package;
 
 protected:
@@ -51,7 +51,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Mesh", meta =(AllowPrivateAccess="true"))
 	UStaticMeshComponent* Mesh;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ammo Pickup")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ammo Pickup | Interaction")
 	FInteractionPrompt Prompt;
 
 protected:

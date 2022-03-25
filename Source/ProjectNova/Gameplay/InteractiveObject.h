@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
+#include <Runtime/Engine/Classes/GameFramework/InputSettings.h>
 #include "InteractiveObject.generated.h"
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FInteractionEvent, APawn*);
@@ -54,12 +55,22 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "On Interact"))
 	void BlueprintInteract(APawn* EventSender);
 
-	virtual void InteractionEvent(APawn* EventSender) { OnInteract.Broadcast(EventSender); }
+	virtual void ReceiveLookedAt(APawn* EventSender);
+
+	virtual void ReceiveLookedAway(APawn* EventSender);
+
+	virtual void InteractionEvent(APawn* EventSender);
+
+	virtual bool CanInteract() const;
+
+	/** Returns the input action name this interactive object uses*/
+	virtual const FName GetActionName() const;
+
+	/** Forces classes that inherit from this to provide prompt data*/
+	virtual FInteractionPrompt& GetInteractionPrompt() = 0;
 
 	FInteractionEvent OnInteract;
 
-	virtual bool CanInteract() const { return true; }
-
-	/** Forces classes that inherit from this provide prompt data*/
-	virtual FInteractionPrompt& GetInteractionPrompt() = 0;
+	/** Index of input action binding which is used to unhook input action events*/
+	int32 BindingIndex;
 };
