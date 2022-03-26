@@ -1,9 +1,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include <ProjectNova/State/FPS/Event/SVentState.h>
 #include "Animation/AnimInstance.h"
 #include "ShooterAnimInstance.generated.h"
 
+class UShooterStateMachine;
 class AWeapon;
 
 UCLASS()
@@ -50,6 +52,9 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Animation")
 	float AnalogModifier;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Animation")
+	uint8 bIsInVent : 1;
 
 	/***	IK	   ***/
 

@@ -1,5 +1,6 @@
 #include "ShooterAnimInstance.h"
 #include "../Player/Shooter.h"
+#include "../State/FPS/ShooterStateMachine.h"
 #include "../Weapon/Gun.h"
 
 UShooterAnimInstance::UShooterAnimInstance()
@@ -87,6 +88,9 @@ void UShooterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	{
 		bIsFalling = !Shooter->GetShooterMovement()->bIsOnGround;
 
+		if(Shooter->GetStateMachine())
+			bIsInVent = Shooter->GetStateMachine()->GetStateAtKey("Venting") == Shooter->GetStateMachine()->GetActiveState();
+
 		if (Shooter->GetInput()->bIsMoving)
 		{
 			AnalogModifier = Shooter->GetInput()->bIsRunning ? 2.f : 1.f;
@@ -100,7 +104,7 @@ void UShooterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		if (AlphaIK > 0.f)
 		{
 			ComputeWeaponSway(DeltaSeconds);
-		}	
+		}
 	}
 }
 

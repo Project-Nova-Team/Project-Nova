@@ -117,6 +117,7 @@ void USVentState::LerpToStanding(FVector StartingPosition, FVector EndPosition)
 
 void USVentState::MoveAlongSpline(ECrawlDirection Direction, float DeltaTime)
 {
+	PreviousProgress = Progress;
 	if (Direction == ECrawlDirection::CD_Right)
 	{
 		if (Progress == ProgressMax)
@@ -134,6 +135,14 @@ void USVentState::MoveAlongSpline(ECrawlDirection Direction, float DeltaTime)
 		Progress -= Input->MoveY * CrawlSpeed * DeltaTime;
 	}
 
+	if (Progress == PreviousProgress)
+		Shooter->GetInput()->bIsMoving = false;
+	else
+		Shooter->GetInput()->bIsMoving = true;
+
+
+	UE_LOG(LogTemp, Warning, TEXT("%s"), Shooter->GetInput()->bIsMoving ? TEXT("true") : TEXT("false"));
+
 	LocationAtDistanceAlongSpline = Spline->GetLocationAtDistanceAlongSpline
 	(Progress, ESplineCoordinateSpace::World);
 
@@ -145,27 +154,21 @@ void USVentState::MoveAlongSpline(ECrawlDirection Direction, float DeltaTime)
 void USVentState::RotateAlongSpline(float DeltaTime)
 {
 	//Get the tangent of the vector at the current point on the spline
-	FVector TangentDirection = 
-		Spline->GetTangentAtTime(Progress, ESplineCoordinateSpace::World);
+	//FVector TangentDirection = 
+	//	Spline->GetTangentAtTime(Progress, ESplineCoordinateSpace::World);
+	//	
+	//TangentDirection = TangentDirection.GetSafeNormal();                   
 
-	UE_LOG(LogTemp, Warning, TEXT("Before %s"), *TangentDirection.ToString());
-		
-	TangentDirection = TangentDirection.GetSafeNormal();                   
+	//float DesiredYaw = FRotator(0.f, TangentDirection.X, 0.f).Yaw;
 
-	UE_LOG(LogTemp, Warning, TEXT("After %s"), *TangentDirection.ToString());
-
-	float DesiredYaw = FRotator(0.f, TangentDirection.X, 0.f).Yaw;
-
-	UE_LOG(LogTemp, Warning, TEXT("Yaw %f"), DesiredYaw);
-
-	CurrentRotation.Yaw = FMath::FInterpTo(Shooter->GetActorRotation().Yaw, DesiredYaw, DeltaTime, 5); //Rotation Speed is a UProperty value set by designers
-	Shooter->GetAnchor()->SetWorldRotation(CurrentRotation);
+	//CurrentRotation.Yaw = FMath::FInterpTo(Shooter->GetActorRotation().Yaw, DesiredYaw, DeltaTime, 5); //Rotation Speed is a UProperty value set by designers
+	//Shooter->GetAnchor()->SetWorldRotation(CurrentRotation);
 
 	//DrawDebugLine(GetWorld(), Vent->GetActorLocation(), Vent->GetActorLocation() + TangentDirection * 100, FColor::Orange, true, 100.0f);
 
-	Shooter->GetAnchor()->SetWorldRotation(Spline->GetRotationAtDistanceAlongSpline(Progress, ESplineCoordinateSpace::World));
+	Shooter->GetAnchor()->SetWorldRotation(TargetCrawlRotation);
 
-	UE_LOG(LogTemp, Warning, TEXT("%s"), *Spline->GetTangentAtDistanceAlongSpline(Progress, ESplineCoordinateSpace::World).ToString());
+	//UE_LOG(LogTemp, Warning, TEXT("%s"), *Spline->GetTangentAtDistanceAlongSpline(Progress, ESplineCoordinateSpace::World).ToString());
 }
 
 void USVentState::LeaveCrawl(FVector StartingPosition, FVector EndPosition)

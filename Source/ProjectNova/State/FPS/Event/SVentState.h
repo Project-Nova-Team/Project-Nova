@@ -31,6 +31,8 @@ public:
 
 protected:
 
+	float PreviousProgress;
+
 	/** Spline Reference*/
 	USplineComponent* Spline;
 
