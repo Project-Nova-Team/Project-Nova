@@ -39,9 +39,7 @@ AVent::AVent()
 	Health = CreateDefaultSubobject<UHealthComponent>("Health");
 
 	Fusebox = CreateDefaultSubobject<UChildActorComponent>("Fusebox");
-	Fusebox->AttachToComponent(LeftFrame, FAttachmentTransformRules::KeepRelativeTransform);
-	Fusebox->SetChildActorClass(AInteractableFusebox::StaticClass());
-
+	
 	DisableDuration = 10.f;
 
 	CrawlSpeed = 125.f;
@@ -114,6 +112,16 @@ void AVent::ReEnableGrate()
 	OnVentEnabled.Broadcast();
 	FuseboxRef->SetCanInteract(true);
 	bCanInteract = false;
+}
+
+void AVent::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+
+	//For whatever reason, builds don't like this being called in the constructor
+	//It will crash if its not loaded later, which is why its here.
+	Fusebox->SetChildActorClass(AInteractableFusebox::StaticClass());
+	Fusebox->AttachToComponent(LeftFrame, FAttachmentTransformRules::KeepRelativeTransform);
 }
 
 void AVent::ComponentEndOverlap(class UPrimitiveComponent* HitComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
