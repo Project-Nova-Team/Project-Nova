@@ -14,6 +14,23 @@ UFirstPersonCameraComponent::UFirstPersonCameraComponent()
 	RunRotationFrequency = 10;
 	RunSwayAmplitude = 8;
 	RunSwayFrequency = 15;
+
+	PrimaryComponentTick.bCanEverTick = false;
+	HeadBoneName = TEXT("C_Head_jnt");
+}
+
+void UFirstPersonCameraComponent::SetupConstruction(USkeletalMeshComponent* SkeletalMesh, USceneComponent* Anchor)
+{
+	Mesh = SkeletalMesh;
+	CameraAnchor = Anchor;	
+}
+
+void UFirstPersonCameraComponent::BeginPlay()
+{
+	Super::BeginPlay();
+
+	InitialAnchorPosition = FVector(20.f, 0.f, 90.f);
+	InitialBonePosition = Mesh->GetBoneLocation(HeadBoneName, EBoneSpaces::ComponentSpace);
 }
 
 void UFirstPersonCameraComponent::SetState(const ECameraSwayState NewState)
@@ -44,7 +61,7 @@ void UFirstPersonCameraComponent::SetState(const ECameraSwayState NewState)
 			break;
 		}
 
-		timer = 0;
+		Timer = 0;
 		bIsBlending = true;
 
 		PreBlendRotation = GetRelativeRotation().Roll;
@@ -54,18 +71,18 @@ void UFirstPersonCameraComponent::SetState(const ECameraSwayState NewState)
 
 void UFirstPersonCameraComponent::ProcessCameraSway()
 {
-	timer += GetWorld()->GetDeltaSeconds();
+	Timer += GetWorld()->GetDeltaSeconds();
 
 	const FVector CurrentLocation= GetRelativeLocation();
 	const FRotator CurrentRotation = GetRelativeRotation();
 
-	float NewHeight = FMath::Sin(timer * ActiveSwayFrequency) * ActiveSwayAmplitude;
-	float NewRoll= FMath::Sin(timer * ActiveRotationFrequency) * ActiveRotationAmplitude;
+	float NewHeight = FMath::Sin(Timer * ActiveSwayFrequency) * ActiveSwayAmplitude;
+	float NewRoll= FMath::Sin(Timer * ActiveRotationFrequency) * ActiveRotationAmplitude;
 	
 	//kind of a lazy blend but the effect is so subtle you cant really tell anyways
 	if (bIsBlending)
 	{
-		const float BlendAlpha = FMath::Clamp(timer / BlendTime, 0.f, 1.f);
+		const float BlendAlpha = FMath::Clamp(Timer / BlendTime, 0.f, 1.f);
 
 		NewHeight = FMath::Lerp(PreBlendSway, NewHeight, BlendAlpha);
 		NewRoll = FMath::Lerp(PreBlendRotation, NewRoll, BlendAlpha);
@@ -80,4 +97,10 @@ void UFirstPersonCameraComponent::ProcessCameraSway()
 	const FVector NewLocation = FVector(CurrentLocation.X, CurrentLocation.Y, NewHeight);
 	
 	SetRelativeLocationAndRotation(NewLocation, NewRotation);
+}
+
+void UFirstPersonCameraComponent::AdjustToHeadBone()
+{
+	const FVector BoneOffset = (Mesh->GetBoneLocation(HeadBoneName, EBoneSpaces::ComponentSpace) - InitialBonePosition) * WalkSwayAmplitude;
+	CameraAnchor->SetRelativeLocation(BoneOffset + InitialAnchorPosition);
 }

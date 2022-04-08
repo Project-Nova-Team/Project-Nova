@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "InteractiveObject.h"
+#include "InteractableFusebox.h"
 #include "Components/SplineComponent.h"
 #include "Components/SplineComponent.h"
 #include "Vent.generated.h"
@@ -22,7 +23,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Spline")
 	USplineComponent* SplineComponent;
 
-	bool CanInteract() const override { return !bIsDisabled && OverlappedPawns > 0; }
+	bool CanInteract() const override { return bIsDisabled && OverlappedPawns > 0; }
 
 	FInteractionPrompt& GetInteractionPrompt() override { return Prompt; }
 
@@ -30,10 +31,19 @@ public:
 
 	USplineComponent* GetSpline() { return Spline; }
 
+	float GetCrawlSpeed() { return CrawlSpeed; }
+
+	float GetLerpToStandingSpeed() { return LerpToStandingSpeed; }
+
+	float GetLerpToCrawlSpeed() { return LerpToCrawlSpeed; }
+
 	/** These bools are used for ventstate to determine which side of the spline to start from */
 	uint8 bIsOverlappingLeftTrigger : 1;
 
 	uint8 bIsOverlappingRightTrigger : 1;
+
+	/** Turns the grate back on*/
+	void ReEnableGrate();
 
 protected:
 	virtual void BeginPlay() override;
@@ -52,6 +62,18 @@ protected:
 	/** How many seconds after taking damage do the lazers stay disabled for*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vent")
 	float DisableDuration;
+
+	/** How fast the player lerps from standing to crawl position. 2.f is about right */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speed")
+	float LerpToCrawlSpeed;
+
+	/** How fast the player lerps from crawl to standing position. 2.f is about right */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speed")
+	float LerpToStandingSpeed;
+	
+	/** How fast the player moves through the vent. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speed")
+	float CrawlSpeed;
 
 	UPROPERTY(Category = Spline, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	USplineComponent* Spline;
@@ -79,12 +101,13 @@ protected:
 	UPROPERTY(Category = Health, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UHealthComponent* Health;
 
+	/** Interactive Fusebox*/
+	UPROPERTY(Category = Health, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	class UChildActorComponent* Fusebox;
+
 	/** Disables the grate for DisableDuration*/
 	UFUNCTION()
 	void DisableGrateForDuration();
-
-	/** Turns the grate back on*/
-	void ReEnableGrate();
 
 	/** Calls above function if conditions are met*/
 	void MaybeReEnableGrate();
@@ -95,6 +118,9 @@ protected:
 	UFUNCTION()
 	void ComponentEndOverlap(class UPrimitiveComponent* HitComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
+	UFUNCTION()
+	void ReceiveFuseboxFixed(APawn* EventSender);
+	
 	UPROPERTY(BlueprintAssignable)
 	FVentEvent OnVentEnabled;
 
@@ -105,6 +131,8 @@ private:
 
 	/** Need this in the event a pawn is blocking the vent when we are trying to enable the lazers (which would get the object stuck)*/
 	FORCEINLINE bool ShouldEnable() { return OverlappedPawns == 0 && bIsDisabled && !bDelayRunning; }
+
+	AInteractableFusebox* FuseboxRef;
 
 	/** See grate trigger*/
 	int32 OverlappedPawns;

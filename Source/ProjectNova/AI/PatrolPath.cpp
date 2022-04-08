@@ -1,17 +1,14 @@
 #include "PatrolPath.h"
 
-FPatrolPoint::FPatrolPoint(float Time, FSplinePoint Point)
+FPatrolPoint::FPatrolPoint(float Time, int32 Index, USplineComponent* Spline)
 	: WaitTime(Time)
-	, SplinePoint(Point)
+	, PointIndex(Index)
+	, SplineComponent(Spline)
 {}
 
 APatrolPath::APatrolPath()
 {
-	SplineComponent = CreateEditorOnlyDefaultSubobject<USplineComponent>(TEXT("Spline"));
-	SplineComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
-	SplineComponent->RemoveSplinePoint(1);
-	SplineComponent->RemoveSplinePoint(0);
-
+	SplineComponent = CreateDefaultSubobject<USplineComponent>(TEXT("Spline"));
 	SetRootComponent(SplineComponent);
 }
 
@@ -29,9 +26,17 @@ FPatrolPoint APatrolPath::GetNextPoint(const int32 CurrentPointIndex, bool& bRev
 		int32 Direction = bReversed ? -1 : 1;
 		OutPointIndex = CurrentPointIndex + Direction;
 
-		
-		return FPatrolPoint(WaitTimes[OutPointIndex], 
-			FSplinePoint(OutPointIndex, SplineComponent->GetLocationAtSplineInputKey(OutPointIndex, ESplineCoordinateSpace::World), ESplinePointType::Linear));
+		if (WaitTimes.Num() == 0)
+		{
+			WaitTimes.Add(0);
+		}
+
+		if (WaitTimes.Num() <= OutPointIndex)
+		{
+			WaitTimes.Add(0);
+		}
+
+		return FPatrolPoint(WaitTimes[OutPointIndex], OutPointIndex, SplineComponent);
 	}
 
 	else if (Mode == Loop)
@@ -41,15 +46,20 @@ FPatrolPoint APatrolPath::GetNextPoint(const int32 CurrentPointIndex, bool& bRev
 			? 0
 			: CurrentPointIndex + 1;
 
-		return FPatrolPoint(WaitTimes[OutPointIndex], 
-			FSplinePoint(OutPointIndex, SplineComponent->GetLocationAtSplineInputKey(OutPointIndex, ESplineCoordinateSpace::World), ESplinePointType::Linear));
+		if (WaitTimes.Num() == 0)
+		{
+			WaitTimes.Add(0);
+		}
+
+		if (WaitTimes.Num() <= OutPointIndex)
+		{
+			WaitTimes.Add(0);
+		}
+
+		return FPatrolPoint(WaitTimes[OutPointIndex], OutPointIndex, SplineComponent);
 	}
 
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("Error! GetNextPointLocation can only be called when a path is in Track or Loop Mode"));
-		return FPatrolPoint(0.f, FSplinePoint());
-	}
+	return FPatrolPoint(-1, -1, nullptr);
 }
 
 FPatrolPoint APatrolPath::GetRandomPoint(TArray<int32>& RememberedPoints, int32 MemoryLimit)
@@ -76,8 +86,12 @@ FPatrolPoint APatrolPath::GetRandomPoint(TArray<int32>& RememberedPoints, int32 
 	RandomSelection = Available[RandomSelection];
 	RememberedPoints.Emplace(RandomSelection); //implicit copy
 
-	return FPatrolPoint(WaitTimes[RandomSelection], 
-		FSplinePoint(RandomSelection, SplineComponent->GetLocationAtSplineInputKey(RandomSelection, ESplineCoordinateSpace::World), ESplinePointType::Linear));
+	if (WaitTimes.Num() <= RandomSelection)
+	{
+		WaitTimes.Add(0);
+	}
+
+	return FPatrolPoint(WaitTimes[RandomSelection], RandomSelection, SplineComponent);
 }
 
 void APatrolPath::SetPathMode(const EPathMode NewMode)

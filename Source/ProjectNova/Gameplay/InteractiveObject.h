@@ -71,8 +71,6 @@ public:
 
 	FInteractionEvent OnInteract;
 
-protected:
-
 	/** Index of input action binding which is used to unhook input action events*/
 	int32 BindingIndex;
 };
