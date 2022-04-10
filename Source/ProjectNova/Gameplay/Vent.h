@@ -45,6 +45,8 @@ public:
 	/** Turns the grate back on*/
 	void ReEnableGrate();
 
+	void PostInitializeComponents() override;
+
 protected:
 	virtual void BeginPlay() override;
 
