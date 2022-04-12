@@ -23,7 +23,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Spline")
 	USplineComponent* SplineComponent;
 
-	bool CanInteract() const override { return bIsDisabled && OverlappedPawns > 0; }
+	bool CanInteract() const override { return bIsDisabled && OverlappedPawns > 0 && bCanInteract; }
 
 	FInteractionPrompt& GetInteractionPrompt() override { return Prompt; }
 

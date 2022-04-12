@@ -51,9 +51,10 @@ void AVent::InteractionEvent(APawn* EventSender)
 	{
 		Shooter->GetStateMachine()->SetState("Venting");
 		bCanInteract = false;
-
 		LeftGrate->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		RightGrate->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+		OnInteract.Broadcast(EventSender);
 	}
 }
 
@@ -62,7 +63,6 @@ void AVent::ReceiveFuseboxFixed(APawn* EventSender)
 	if (AShooter* Shooter = Cast<AShooter>(EventSender))
 	{
 		DisableGrateForDuration();
-		FuseboxRef->SetCanInteract(false);
 	}
 }
 

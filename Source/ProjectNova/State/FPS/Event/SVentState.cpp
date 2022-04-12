@@ -1,5 +1,7 @@
 #include "SVentState.h"
 #include "../../../State/FPS/ShooterStateMachine.h"
+#include "Math/UnrealMathUtility.h"
+#include "DrawDebugHelpers.h"
 #include "../../../Gameplay/Vent.h"
 
 void USVentState::Initialize(UStateMachine* StateMachine, UObject* ContextObject)
@@ -52,8 +54,8 @@ void USVentState::OnEnter()
 
 		TargetCrawlLocation.Z -= ProneOffset;
 
-		TargetStandingLocation = FVector(Spline->GetLocationAtDistanceAlongSpline(StandingProgress, 
-			ESplineCoordinateSpace::World).X, Spline->GetLocationAtDistanceAlongSpline(StandingProgress, 
+		TargetStandingLocation = FVector(Spline->GetLocationAtDistanceAlongSpline(StandingProgress,
+			ESplineCoordinateSpace::World).X, Spline->GetLocationAtDistanceAlongSpline(StandingProgress,
 				ESplineCoordinateSpace::World).Y, Shooter->GetActorLocation().Z);
 
 		Handle = GetDelayedActionManager()->StartOverTimeAction( // start crawl
@@ -77,14 +79,14 @@ void USVentState::OnExit()
 	Super::OnExit();
 }
 
-void USVentState::Tick(const float DeltaTime) 
+void USVentState::Tick(const float DeltaTime)
 {
 	if (!bIsLerpingToCrawlPosition && !bIsLerpingToStandingPosition)
 	{
 		Progress = FMath::Clamp(Progress, 0.f, ProgressMax);
 
 		MoveAlongSpline(CrawlDirection, DeltaTime);
-		RotateAlongSpline();
+		RotateAlongSpline(DeltaTime);
 	}
 }
 
@@ -94,6 +96,8 @@ void USVentState::LerpToCrawl(FVector StartingPosition, FVector EndPosition, FRo
 	{
 		bIsLerpingToCrawlPosition = false;
 	}
+
+
 
 	Shooter->SetActorLocation(FMath::Lerp(StartingPosition, EndPosition, Handle->CurrentActionProgress));
 	Shooter->GetAnchor()->SetWorldRotation(FMath::Lerp(StartingRotation, EndRotation, Handle->CurrentActionProgress));
@@ -113,6 +117,7 @@ void USVentState::LerpToStanding(FVector StartingPosition, FVector EndPosition)
 
 void USVentState::MoveAlongSpline(ECrawlDirection Direction, float DeltaTime)
 {
+	PreviousProgress = Progress;
 	if (Direction == ECrawlDirection::CD_Right)
 	{
 		if (Progress == ProgressMax)
@@ -130,6 +135,14 @@ void USVentState::MoveAlongSpline(ECrawlDirection Direction, float DeltaTime)
 		Progress -= Input->MoveY * CrawlSpeed * DeltaTime;
 	}
 
+	if (Progress == PreviousProgress)
+		Shooter->GetInput()->bIsMoving = false;
+	else
+		Shooter->GetInput()->bIsMoving = true;
+
+
+	UE_LOG(LogTemp, Warning, TEXT("%s"), Shooter->GetInput()->bIsMoving ? TEXT("true") : TEXT("false"));
+
 	LocationAtDistanceAlongSpline = Spline->GetLocationAtDistanceAlongSpline
 	(Progress, ESplineCoordinateSpace::World);
 
@@ -138,9 +151,24 @@ void USVentState::MoveAlongSpline(ECrawlDirection Direction, float DeltaTime)
 	Shooter->SetActorLocation(LocationAtDistanceAlongSpline);
 }
 
-void USVentState::RotateAlongSpline()
+void USVentState::RotateAlongSpline(float DeltaTime)
 {
+	//Get the tangent of the vector at the current point on the spline
+	//FVector TangentDirection = 
+	//	Spline->GetTangentAtTime(Progress, ESplineCoordinateSpace::World);
+	//	
+	//TangentDirection = TangentDirection.GetSafeNormal();                   
+
+	//float DesiredYaw = FRotator(0.f, TangentDirection.X, 0.f).Yaw;
+
+	//CurrentRotation.Yaw = FMath::FInterpTo(Shooter->GetActorRotation().Yaw, DesiredYaw, DeltaTime, 5); //Rotation Speed is a UProperty value set by designers
+	//Shooter->GetAnchor()->SetWorldRotation(CurrentRotation);
+
+	//DrawDebugLine(GetWorld(), Vent->GetActorLocation(), Vent->GetActorLocation() + TangentDirection * 100, FColor::Orange, true, 100.0f);
+
 	Shooter->GetAnchor()->SetWorldRotation(TargetCrawlRotation);
+
+	//UE_LOG(LogTemp, Warning, TEXT("%s"), *Spline->GetTangentAtDistanceAlongSpline(Progress, ESplineCoordinateSpace::World).ToString());
 }
 
 void USVentState::LeaveCrawl(FVector StartingPosition, FVector EndPosition)

@@ -1,6 +1,7 @@
 #include "ShooterAnimInstance.h"
 #include "Components/SceneComponent.h"
 #include "../Player/Shooter.h"
+#include "../State/FPS/ShooterStateMachine.h"
 #include "../Weapon/Gun.h"
 
 #include "DrawDebugHelpers.h"
@@ -90,7 +91,7 @@ void UShooterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	if (Shooter)
 	{
 		bIsFalling = !Shooter->GetShooterMovement()->bIsOnGround;
-
+			
 		if (Shooter->GetInput()->bIsMoving)
 		{
 			AnalogModifier = Shooter->GetInput()->bIsRunning ? 2.f : 1.f;

@@ -5,7 +5,7 @@
 #include "InteractiveObject.h"
 #include "InteractableFusebox.generated.h"
 
-class UAnimInstance;
+class AShooter;
 
 UCLASS()
 class PROJECTNOVA_API AInteractableFusebox : public AActor, public IInteractiveObject
@@ -40,6 +40,6 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Interaction")
 	FName ActionMappingName;
 
-	UPROPERTY(EditAnywhere, Category = "Animation")
-	UAnimInstance* Anim;
+private:
+	AShooter* Shooter;
 };

@@ -63,6 +63,8 @@ public:
 
 	virtual bool CanInteract() const;
 
+	void RemoveInputIfDisabled(APawn* EventSender);
+
 	/** Returns the input action name this interactive object uses*/
 	virtual const FName GetActionName() const;
 
