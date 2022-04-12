@@ -162,7 +162,15 @@ public:
 
 	/** Plays an animation designed for a cutscene. */
 	UFUNCTION(BlueprintCallable, Category = "Animation")
-	void PlayCutsceneAnimation(UAnimMontage* Montage, bool bSetState = true);
+	void PlayCutsceneAnimation(UAnimMontage* Montage);
+
+	/** Plays a montage for a unique situation without changing state*/
+	UFUNCTION(BlueprintCallable, Category = "Animation")
+	void PlayUniqueAnimation(UAnimMontage* Montage);
+
+	/** Stops all montages running on the shooter*/
+	UFUNCTION(BlueprintCallable, Category = "Animation")
+	void StopMontages(const float BlendTime);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
 	FString StartingStateOverride;
@@ -223,9 +231,6 @@ private:
 
 	/** Casts a trace from the camera to see if there is an object nearby we can interact with*/	
 	void ScanInteractiveObject();
-
-	/** Called upon the completion of a cutscene animation. This reparents the camera to the appropriate component*/
-	void FinishCutsceneAnimation();
 
 	///		 Begin Input Bindings	   ///
 

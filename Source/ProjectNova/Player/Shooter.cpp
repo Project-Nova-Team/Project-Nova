@@ -8,12 +8,13 @@
 #include "../Gameplay/HealthComponent.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "ShooterInventory.h"
-#include "../Animation/ShooterAnimInstance.h"
 #include "../Gameplay/MeleeComponent.h"
 #include "../Weapon/Gun.h"
 #include "../State/State.h"
 #include <ProjectNova/Gameplay/VaultObject.h>
 #include "../Gameplay/HealthPickup.h"
+#include "../Animation/ShooterCutscene.h"
+#include "Animation/AnimInstance.h"
 
 void FShooterInput::Tick(const float DeltaTime)
 {
@@ -60,10 +61,9 @@ AShooter::AShooter()
 	ShooterMovement = CreateDefaultSubobject<UShooterMovementComponent>(TEXT("Movement"));
 
 	SetRootComponent(Collider);
-	CameraAnchor->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
-	Camera->AttachToComponent(CameraAnchor, FAttachmentTransformRules::KeepRelativeTransform);
+	CameraAnchor->SetupAttachment(RootComponent);
+	Camera->SetupAttachment(CameraAnchor);
 	
-
 	Collider->SetCollisionProfileName("Pawn");
 	Collider->SetCapsuleHalfHeight(ShooterMovement->StandingHeight);
 	Collider->SetCapsuleRadius(ShooterMovement->CollisionRadius);
@@ -71,10 +71,12 @@ AShooter::AShooter()
 	CameraAnchor->SetRelativeLocation(FVector(0, 0, ShooterMovement->CameraHeight));
 
 	BodyMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Body"));
-	BodyMesh->AttachToComponent(Collider, FAttachmentTransformRules::KeepRelativeTransform);
+	BodyMesh->SetupAttachment(Collider);
+	BodyMesh->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
 
 	ArmsMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Arms"));
-	ArmsMesh->AttachToComponent(Collider, FAttachmentTransformRules::KeepRelativeTransform);
+	ArmsMesh->SetupAttachment(Collider);
+	ArmsMesh->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
 
 	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("Combat"));
 	Combat->SetUpConstruction(ArmsMesh, Camera, &InputState.bIsRunning);
@@ -97,29 +99,21 @@ void AShooter::SetStateOverride(const FString NewState)
 	StateMachine->SetState(NewState);
 }
 
-void AShooter::PlayCutsceneAnimation(UAnimMontage* Montage, bool bSetState)
+void AShooter::PlayCutsceneAnimation(UAnimMontage* Montage)
 {
-	//Play the animation
-	float Duration = BodyMesh->GetAnimInstance()->Montage_Play(Montage);
-	ArmsMesh->GetAnimInstance()->Montage_Play(Montage);
-
-	if (bSetState)
-	{
-		//Attach the camera to the head bone
-		CameraAnchor->AttachToComponent(BodyMesh, FAttachmentTransformRules::KeepWorldTransform, TEXT("C_Head_jnt"));
-		SetStateOverride("Cutscene");
-
-		//We should not ever need the handle so we just throw this lvalue at it
-		FTimerHandle Handle;
-		GetWorldTimerManager().SetTimer(Handle, this, &AShooter::FinishCutsceneAnimation, Duration);
-	}
+	GetWorld()->GetAuthGameMode<AShooterGameMode>()->GetShooterCutscene()->PlayCutscene(Montage);
 }
 
-void AShooter::FinishCutsceneAnimation()
+void AShooter::PlayUniqueAnimation(UAnimMontage* Montage)
 {
-	CameraAnchor->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepWorldTransform, TEXT("C_Head_jnt"));
-	CameraAnchor->SetRelativeLocation(FVector(20.f, 0.f, 90.f));
-	CameraAnchor->SetRelativeRotation(FRotator(0,0,0));
+	BodyMesh->GetAnimInstance()->Montage_Play(Montage);
+	ArmsMesh->GetAnimInstance()->Montage_Play(Montage);
+}
+
+void AShooter::StopMontages(const float BlendTime)
+{
+	BodyMesh->GetAnimInstance()->Montage_Stop(BlendTime);
+	ArmsMesh->GetAnimInstance()->Montage_Stop(BlendTime);
 }
 
 void AShooter::BeginPlay()
@@ -288,10 +282,10 @@ void AShooter::HandleDeath()
 
 bool AShooter::IsAttacking()
 {
-	if (UShooterAnimInstance* ShooterAnim = Cast<UShooterAnimInstance>(BodyMesh->AnimScriptInstance))
+	/*if (UShooterAnimInstance* ShooterAnim = Cast<UShooterAnimInstance>(BodyMesh->AnimScriptInstance))
 	{
 		return ShooterAnim->Montage_IsPlaying(ShooterAnim->MeleeAttackMontage);
-	}
+	}*/
 
 	return false;
 }

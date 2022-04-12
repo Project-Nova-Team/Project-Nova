@@ -33,6 +33,9 @@ protected:
 	uint8 bLiveUpdates : 1;
 #endif
 
+	/** Makes the camera follow the head bones transform*/
+	UPROPERTY(BlueprintReadOnly, Category = "Animation")
+	uint8 bApplyHeadTracking : 1;
 
 	/***	Locomotion		***/
 
@@ -96,6 +99,14 @@ protected:
 	/** IK Blending Alpha. 1 when weapon is held, 0 if otherwise or when in montage*/
 	UPROPERTY(BlueprintReadOnly, Category = "Animation")
 	float AlphaIK;
+
+	/** Rotation to apply to the head bone*/
+	UPROPERTY(BlueprintReadOnly, Category = "Animation")
+	FRotator HeadBoneRotation;
+
+	/** Alpha blend of the head rotation*/
+	UPROPERTY(BlueprintReadOnly, Category = "Animation")
+	float AlphaHeadRotation;
 
 	/***	Montage		***/
 
