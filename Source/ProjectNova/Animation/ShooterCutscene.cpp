@@ -48,7 +48,7 @@ void AShooterCutscene::PlayCutscene(UAnimMontage* Animation, const FString& Exit
 
 	FTimerDelegate FinishDelegate;
 	FinishDelegate.BindUObject(this, &AShooterCutscene::FinishCutscene, ExitState);
-	GetWorldTimerManager().SetTimer(TimerHandle, FinishDelegate, BlendTime, false);
+	GetWorldTimerManager().SetTimer(TimerHandle, FinishDelegate, Animation->GetPlayLength(), false);
 
 	Shooter->GetController<APlayerController>()->SetViewTargetWithBlend(this, BlendTime, EViewTargetBlendFunction::VTBlend_Cubic);
 }
