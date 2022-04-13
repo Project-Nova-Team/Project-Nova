@@ -16,40 +16,6 @@
 #include "../Animation/ShooterCutscene.h"
 #include "Animation/AnimInstance.h"
 
-void FShooterInput::Tick(const float DeltaTime)
-{
-	bIsTryingToCrouch = false;
-	bIsTryingToProne = false;
-
-	HandleCrouchInputStates(DeltaTime);
-}
-
-void FShooterInput::HandleCrouchInputStates(const float DeltaTime)
-{
-	if (bIsHoldingCrouch)
-	{
-		CurrentCrouchHoldTime += DeltaTime;
-		if (CurrentCrouchHoldTime >= Owner->ShooterMovement->ProneInputTime)
-		{
-			CurrentCrouchHoldTime = 0;
-			bIsHoldingCrouch = false;
-			bIsTryingToProne = true;
-		}
-	}
-
-	else
-	{
-		if (bWasHoldingCrouch)
-		{
-			bIsTryingToCrouch = true;
-			CurrentCrouchHoldTime = 0;
-		}
-	}
-
-	bWasHoldingCrouch = bIsHoldingCrouch;
-}
-
-
 AShooter::AShooter()
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -94,14 +60,14 @@ AShooter::AShooter()
 	StartingStateOverride.Empty();
 }
 
-void AShooter::SetStateOverride(const FString NewState)
+void AShooter::SetStateOverride(const FString& NewState)
 {
 	StateMachine->SetState(NewState);
 }
 
-void AShooter::PlayCutsceneAnimation(UAnimMontage* Montage)
+void AShooter::PlayCutsceneAnimation(UAnimMontage* Montage, const FTransform& StartingTransform, const FString& ExitState)
 {
-	GetWorld()->GetAuthGameMode<AShooterGameMode>()->GetShooterCutscene()->PlayCutscene(Montage);
+	GetWorld()->GetAuthGameMode<AShooterGameMode>()->GetShooterCutscene()->PlayCutscene(Montage, ExitState, StartingTransform);
 }
 
 void AShooter::PlayUniqueAnimation(UAnimMontage* Montage)
@@ -139,7 +105,6 @@ void AShooter::BeginPlay()
 void AShooter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	InputState.Tick(DeltaTime);
 	StateMachine->Tick(DeltaTime);
 	ScanInteractiveObject();
 }
@@ -204,7 +169,6 @@ void AShooter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	InputComponent->BindAction("Vault", IE_Pressed, this, &AShooter::VaultPress);
 	InputComponent->BindAction("Vault", IE_Released, this, &AShooter::VaultRelease);
 	InputComponent->BindAction("Crouch", IE_Pressed, this, &AShooter::CrouchPress);
-	InputComponent->BindAction("Crouch", IE_Released, this, &AShooter::CrouchRelease);
 	InputComponent->BindAction("Aim", IE_Pressed, this, &AShooter::AimPress);
 	InputComponent->BindAction("Aim", IE_Released, this, &AShooter::AimRelease);
 	InputComponent->BindAction("Interact", IE_Pressed, this, &AShooter::InteractPress);

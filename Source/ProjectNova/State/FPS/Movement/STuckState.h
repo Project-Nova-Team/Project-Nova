@@ -27,6 +27,8 @@ protected:
 	/** The relative z position of the camera joint this state will try to maintain*/
 	float TargetCameraHeight;
 
+	float Timer;
+
 	/** 
 	* Begins timer that adjusts the collider height and camera position over time
 	* 
@@ -52,6 +54,4 @@ protected:
 	* @returns	True if a capsule sweep at the specified half height does not collide with level geometry
 	*/
 	bool CheckIfStandUpIsValid(const float NewColliderHalfHeight) const;
-
-	FDelayedActionHandle* Handle;
 };

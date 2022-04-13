@@ -20,6 +20,15 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
 	UAnimMontage* MeleeAttackMontage;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
+	UAnimMontage* VentEnterMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
+	UAnimMontage* VentExitMontage;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Animation")
+	uint8 bIsInVent : 1;
+
 protected:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Animation")
@@ -55,9 +64,6 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Animation")
 	float AnalogModifier;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Animation")
-	uint8 bIsInVent : 1;
 
 	/***	IK	   ***/
 

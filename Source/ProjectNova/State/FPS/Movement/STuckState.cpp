@@ -5,12 +5,7 @@ void USTuckState::OnEnter()
 {
 	Super::OnEnter();
 	Movement->bIsInTuckTransition = true;
-
-	//HACK this assumes the only states that enter a tuck state are already movement states
-	//This breaks if we want to move from an event state to a tuck state
-	UShooterStateMachine* DownCastedMachine = Cast <UShooterStateMachine>(GetMachine());
-	USMovementState* DownCastedPreviousState = Cast<USMovementState>(DownCastedMachine->GetPreviousState());
-	StartHeightInterpolation(TargetHalfHeight, DownCastedPreviousState->ExpectedHalfHeight, TargetCameraHeight);
+	StartHeightInterpolation(TargetHalfHeight, Movement->StandingHeight, TargetCameraHeight);
 }
 
 void USTuckState::OnExit()
@@ -56,20 +51,17 @@ void USTuckState::StartHeightInterpolation(const float NewColliderHalfHeight, co
 		}
 	}
 
-	Handle = GetDelayedActionManager()->StartOverTimeAction(
-		this,
-		&USTuckState::AdjustHeight,
-		ActionTime,
-		CurrentHeight,
-		NewColliderHalfHeight,
-		CameraHeight,
-		NewCameraHeight);
+	Timer = 0.f;
+	AdjustHeight(CurrentHeight, NewColliderHalfHeight, CameraHeight, NewCameraHeight);
 }
 
 void USTuckState::AdjustHeight(const float StartHeight, const float TargetHeight, const float CameraStartHeight, const float TargetCamHeight)
-{	
+{
+	Timer += Shooter->GetWorld()->GetDeltaSeconds();
+	const float Progress = FMath::Clamp(Timer / Movement->CrouchTime, 0.f, 1.f);
+
 	//Resize the collider and snap the capsule component so the new bottom is in the same position as before
-	const float NewColliderHalfHeight = FMath::Lerp(StartHeight, TargetHeight, Handle->CurrentActionProgress);
+	const float NewColliderHalfHeight = FMath::Lerp(StartHeight, TargetHeight, Progress);
 	const float HeightDifference = Shooter->GetCollider()->GetScaledCapsuleHalfHeight() - NewColliderHalfHeight;
 	const FVector CapsuleLoc = Shooter->GetCollider()->GetComponentLocation();
 	const FVector NewPosition = FVector(CapsuleLoc.X, CapsuleLoc.Y, CapsuleLoc.Z - HeightDifference);
@@ -77,20 +69,8 @@ void USTuckState::AdjustHeight(const float StartHeight, const float TargetHeight
 	//We have entered a place that we cant resize into
 	if (!CheckIfStandUpIsValid(TargetHeight))
 	{
-		//Stop the current height adjustment
-		Handle->GetAction()->StopAction();
 		Movement->bIsInTuckTransition = false;
-
-
-		UState* PreviousState = Cast<UShooterStateMachine>(GetMachine())->GetPreviousState();
-		if (PreviousState->IsA(USTuckState::StaticClass()))
-		{
-			GetMachine()->GetActiveState()->FlagTransition(PreviousState, 255);
-		}
-		else
-		{
-			GetMachine()->GetActiveState()->FlagTransition(this, 255);		
-		}
+		FlagTransition(Cast<UShooterStateMachine>(GetMachine())->GetPreviousState(), 255);
 	}
 
 	//Otherwise this position is safe to resize into
@@ -99,16 +79,25 @@ void USTuckState::AdjustHeight(const float StartHeight, const float TargetHeight
 		//Set the size and position
 		Shooter->GetCollider()->SetCapsuleHalfHeight(NewColliderHalfHeight);	
 		Shooter->GetCollider()->SetWorldLocation(NewPosition);
+		Shooter->GetBodyMesh()->AddRelativeLocation(FVector(0.f, 0.f, HeightDifference));
+		Shooter->GetArmsMesh()->AddRelativeLocation(FVector(0.f, 0.f, HeightDifference));
 
 		//Calculate and set the new position of the camera joint
-		const float NewCameraHeight = FMath::Lerp(CameraStartHeight, TargetCamHeight, Handle->CurrentActionProgress);
+		const float NewCameraHeight = FMath::Lerp(CameraStartHeight, TargetCamHeight, Progress);
 		const FVector NewCameraPos = FVector(0, 0, NewCameraHeight);
 
 		Shooter->GetAnchor()->SetRelativeLocation(NewCameraPos);
 
-		if (Handle->CurrentActionProgress >= 1.f)
-		{
+		if (Progress >= 1.f)
+		{			
 			Movement->bIsInTuckTransition = false;
+		}
+
+		else
+		{
+			FTimerDelegate Delegate;
+			Delegate.BindUObject(this, &USTuckState::AdjustHeight, StartHeight, TargetHeight, CameraStartHeight, TargetCamHeight);
+			Shooter->GetWorldTimerManager().SetTimerForNextTick(Delegate);
 		}
 	}
 }
