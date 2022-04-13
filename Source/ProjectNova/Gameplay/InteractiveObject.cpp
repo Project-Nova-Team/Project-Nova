@@ -23,6 +23,12 @@ bool IInteractiveObject::CanInteract() const
 	return true;
 }
 
+void IInteractiveObject::RemoveInputIfDisabled(APawn* EventSender)
+{
+	if (!CanInteract())
+		ReceiveLookedAway(EventSender); // unbinds input
+}
+
 const FName IInteractiveObject::GetActionName() const
 {
 	return TEXT("Interact");

@@ -19,7 +19,11 @@ public:
 	UState* GetActiveState() const { return ActiveState; }
 
 	/** Gets state at key value*/
-	UState* GetStateAtKey(const FString Key) const { return States[Key]; }
+	UState* GetStateAtKey(const FString& Key) const { return States[Key]; }
+
+	/** Templated version of GetStateAtKey that peforms the cast*/
+	template<class T>
+	T* GetStateAtKey(const FString& Key) const { return Cast<T>(States[Key]); }
 
 	/** Gets the collection of states this StateMachine has*/
 	TMap<FString, UState*> GetStates() const { return States; }

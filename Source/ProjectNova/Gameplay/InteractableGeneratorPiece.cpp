@@ -14,6 +14,5 @@ void AInteractableGeneratorPiece::InteractionEvent(APawn* EventSender)
 	bIsRepaired = true;
 	OnGeneratorPieceRepair.Broadcast();
 	Mesh->SetStaticMesh(FixedMesh);
-
 	Execute_BlueprintInteract(this, EventSender);
 }
