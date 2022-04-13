@@ -8,11 +8,9 @@ AShooterCutscene::AShooterCutscene()
 {
 	Body = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Body"));
 	SetRootComponent(Body);
-	Body->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
 
 	Arms = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Arms"));
 	Arms->SetupAttachment(Body);
-	Arms->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
 
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(Body, TEXT("C_Head_jnt"));
