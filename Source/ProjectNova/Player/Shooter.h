@@ -21,15 +21,6 @@ struct FShooterInput
 {
 	FShooterInput() { }
 
-	/** 
-	* Runs within the shooter's Tick to handle any input states that need to be watched 
-	* @param	DeltaTime				Time slice 
-	*/
-	void Tick(const float DeltaTime);
-
-	/** Watches the crouch input values so any substates can avoid re-implementing the same checks for crouching/prone*/
-	void HandleCrouchInputStates(const float DeltaTime);
-
 	/** Shooter this input state applies to*/
 	AShooter* Owner;
 
@@ -42,17 +33,11 @@ struct FShooterInput
 	/** Whether or not the player is pressing the interact button*/
 	uint8 bIsTryingToInteract : 1;
 
-	/** Whether or not the player is pressing the crouch button*/
-	uint8 bIsHoldingCrouch : 1;
-
 	/** The previous ticks's state of the crouch input*/
 	uint8 bWasHoldingCrouch: 1;
 
 	/** Whether or not crouch input has been released after its been pressed*/
 	uint8 bIsTryingToCrouch : 1;
-
-	/** Whether or not crouch input has been held long enough go prone*/
-	uint8 bIsTryingToProne : 1;
 
 	/** Whether or not the player is pressing the sprint button*/
 	uint8 bIsTryingToSprint : 1;
@@ -158,11 +143,19 @@ public:
 
 	/** Forces state to change to the given state name*/
 	UFUNCTION(BlueprintCallable, Category = "State")
-	void SetStateOverride(const FString NewState);
+	void SetStateOverride(const FString& NewState);
 
 	/** Plays an animation designed for a cutscene. */
 	UFUNCTION(BlueprintCallable, Category = "Animation")
-	void PlayCutsceneAnimation(UAnimMontage* Montage, bool bSetState = true);
+	void PlayCutsceneAnimation(UAnimMontage* Montage, const FTransform& StartingTransform, const FString& ExitState = TEXT("Walking"));
+
+	/** Plays a montage for a unique situation without changing state*/
+	UFUNCTION(BlueprintCallable, Category = "Animation")
+	void PlayUniqueAnimation(UAnimMontage* Montage);
+
+	/** Stops all montages running on the shooter*/
+	UFUNCTION(BlueprintCallable, Category = "Animation")
+	void StopMontages(const float BlendTime);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
 	FString StartingStateOverride;
@@ -224,9 +217,6 @@ private:
 	/** Casts a trace from the camera to see if there is an object nearby we can interact with*/	
 	void ScanInteractiveObject();
 
-	/** Called upon the completion of a cutscene animation. This reparents the camera to the appropriate component*/
-	void FinishCutsceneAnimation();
-
 	///		 Begin Input Bindings	   ///
 
 	void ShootPress();
@@ -242,8 +232,7 @@ private:
 	void LookInputY(const float Value)	{ InputState.LookY = Value; }
 	void VaultPress()					{ InputState.bIsTryingToVault = true; }
 	void VaultRelease()					{ InputState.bIsTryingToVault = false; }
-	void CrouchPress()					{ InputState.bIsHoldingCrouch = true; }
-	void CrouchRelease()				{ InputState.bIsHoldingCrouch = false; }
+	void CrouchPress()					{ InputState.bIsTryingToCrouch = !InputState.bIsTryingToCrouch; }
 	void InteractPress()				{ InputState.bIsTryingToInteract = true; }
 	void InteractRelease()				{ InputState.bIsTryingToInteract = false; }
 	void SprintPress()					{ InputState.bIsTryingToSprint = true; }

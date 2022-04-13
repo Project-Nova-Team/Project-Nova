@@ -24,7 +24,6 @@ void USRunState::Tick(const float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	CheckForWalkState();
-	//CheckForDiveState();
 }
 
 void USRunState::CheckForWalkState()
@@ -51,15 +50,5 @@ void USRunState::CheckForWalkState()
 	{
 		FlagTransition("Walking", 1);
 		return;
-	}
-}
-
-void USRunState::CheckForDiveState()
-{
-	float MinDiveVelocitySquare = Movement->DiveMinSpeed * Movement->DiveMinSpeed;
-
-	if (Input->bIsTryingToProne && Movement->Velocity.SizeSquared2D() >= MinDiveVelocitySquare)
-	{
-		FlagTransition("Diving", 2);
 	}
 }

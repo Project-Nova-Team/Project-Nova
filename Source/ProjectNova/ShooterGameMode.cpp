@@ -5,6 +5,7 @@
 #include "Player/Shooter.h"
 #include "Gameplay/HealthComponent.h"
 #include "Gameplay/QuickTimeManager.h"
+#include "Animation/ShooterCutscene.h"
 #include "UObject/ConstructorHelpers.h"
 
 AShooterGameMode::AShooterGameMode()
@@ -16,6 +17,9 @@ AShooterGameMode::AShooterGameMode()
 
 	static ConstructorHelpers::FClassFinder<AQuickTimeManager> ManagerClass(TEXT("/Game/Blueprints/Systems/BP_QuickTimeManager"));
 	QuickTimeManagerClass = ManagerClass.Class;
+
+	static ConstructorHelpers::FClassFinder<AShooterCutscene> CutsceneClass(TEXT("/Game/Blueprints/Animation/BP_ShooterCutscene"));
+	ShooterCutsceneClass = CutsceneClass.Class;
 }
 
 void AShooterGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
@@ -29,6 +33,9 @@ void AShooterGameMode::InitGame(const FString& MapName, const FString& Options, 
 	FActorSpawnParameters Params;
 	Params.Name = TEXT("Quick Time Manager");
 	QuickTimeManager = GetWorld()->SpawnActor<AQuickTimeManager>(QuickTimeManagerClass, Params);
+
+	Params.Name = TEXT("Shooter Cutscene");
+	ShooterCutscene = GetWorld()->SpawnActor<AShooterCutscene>(ShooterCutsceneClass, Params);
 	
 	//If we can't figure out why "lighting needs rebuild" warnings wont go away, we can set this flag for builds
 	//GEngine->bSuppressMapWarnings = true;
@@ -51,6 +58,7 @@ void AShooterGameMode::PostLogin(APlayerController* NewPlayer)
 		if (Shooter)
 		{
 			QuickTimeManager->Init();
+			ShooterCutscene->Shooter = Shooter;
 		}
 	}
 }

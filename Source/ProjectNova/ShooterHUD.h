@@ -81,15 +81,8 @@ protected:
 	void BuildBlueprintWidgets();
 
 private:
-	FDelegateHandle InteractionDelegateHandle;
-
 	/** Internal function that executes relevant interaction prompt updates in blueprint*/
 	void ReceiveInteractionUpdate(IInteractiveObject* Info);
-
-	/** Internal function that executes relevant interaction prompt updates in blueprint*/
-	void RevokeIfObjectDisabled(IInteractiveObject* Info);
-
-	void ReceiveInteractionEvent(APawn* EventSender);
 
 	/** Executed upon receiving death event of shooter. Enables death screen widget and hides others*/
 	UFUNCTION()

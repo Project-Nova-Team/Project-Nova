@@ -13,7 +13,6 @@ void USWalkState::Tick(const float DeltaTime)
 	Super::Tick(DeltaTime);
 	CheckForRunState();
 	CheckForCrouchState();
-	CheckForProneState();
 }
 
 void USWalkState::CheckForRunState()
@@ -45,14 +44,5 @@ void USWalkState::CheckForCrouchState()
 	if (Input->bIsTryingToCrouch && Movement->bIsOnGround && !Movement->bIsInTuckTransition)
 	{
 		FlagTransition("Crouching", 1);
-	}
-}
-
-void USWalkState::CheckForProneState()
-{
-	if (Input->bIsTryingToProne && Movement->bIsOnGround && !Movement->bIsInTuckTransition)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("A"));
-		FlagTransition("Proning", 1);
 	}
 }

@@ -7,157 +7,99 @@
 #include "../State/State.h"
 #include "../ShooterGameMode.h"
 #include "../State/FPS/ShooterStateMachine.h"
+#include "../State/FPS/Event/SVentState.h"
 #include "../Utility/DelayedActionManager.h"
+#include "../Animation/ShooterAnimInstance.h"
 
 AVent::AVent()
 {
 	PrimaryActorTick.bCanEverTick = false;
 	
-	Spline = CreateDefaultSubobject<USplineComponent>("Spline");
-	SetRootComponent(Spline);
+	SplineComponent = CreateDefaultSubobject<USplineComponent>("Spline");
+	SetRootComponent(SplineComponent);
 
-	LeftFrame = CreateDefaultSubobject<UStaticMeshComponent>("LeftFrame");
-	LeftFrame->AttachToComponent(Spline, FAttachmentTransformRules::KeepRelativeTransform);
+	EntryFrame = CreateDefaultSubobject<UStaticMeshComponent>("Entry");
+	EntryFrame->SetupAttachment(SplineComponent);
 
-	RightFrame = CreateDefaultSubobject<UStaticMeshComponent>("RightFrame");
-	RightFrame->AttachToComponent(Spline, FAttachmentTransformRules::KeepRelativeTransform);
+	EntryGrate = CreateDefaultSubobject<UStaticMeshComponent>("Entry Grate");
+	EntryGrate->SetupAttachment(EntryFrame);
 
-	LeftGrate = CreateDefaultSubobject<UStaticMeshComponent>("LeftGrate");
-	LeftGrate->AttachToComponent(LeftFrame, FAttachmentTransformRules::KeepRelativeTransform);
+	ExitFrame = CreateDefaultSubobject<UStaticMeshComponent>("Exit");
+	ExitFrame->SetupAttachment(SplineComponent);
 
-	RightGrate = CreateDefaultSubobject<UStaticMeshComponent>("RightGrate");
-	RightGrate->AttachToComponent(RightFrame, FAttachmentTransformRules::KeepRelativeTransform);
+	ExitGrate = CreateDefaultSubobject<UStaticMeshComponent>("Exit Grate");
+	ExitGrate->SetupAttachment(ExitFrame);
 
-	LeftGrateTrigger = CreateDefaultSubobject<UBoxComponent>("Left Stuck Prevention");
-	LeftGrateTrigger->AttachToComponent(LeftFrame, FAttachmentTransformRules::KeepRelativeTransform);
-	RightGrateTrigger = CreateDefaultSubobject<UBoxComponent>("Right Stuck Prevention");
-	RightGrateTrigger->AttachToComponent(RightFrame, FAttachmentTransformRules::KeepRelativeTransform);
+	const FVector RelativeOffset(300.f, 0.f, 0.f);
 
-	LeftGrateTrigger->SetCollisionProfileName("OverlapOnlyPawn");
-	RightGrateTrigger->SetCollisionProfileName("OverlapOnlyPawn");
+	EntryFrame->SetRelativeLocation(RelativeOffset);
+	ExitFrame->SetRelativeLocation(-RelativeOffset);
 
-	Health = CreateDefaultSubobject<UHealthComponent>("Health");
+	SplineComponent->SetLocationAtSplinePoint(0, RelativeOffset, ESplineCoordinateSpace::Local);
+	SplineComponent->SetLocationAtSplinePoint(1, -RelativeOffset, ESplineCoordinateSpace::Local);
+}
 
-	Fusebox = CreateDefaultSubobject<UChildActorComponent>("Fusebox");
-	Fusebox->AttachToComponent(LeftFrame, FAttachmentTransformRules::KeepRelativeTransform);
-	Fusebox->SetChildActorClass(AInteractableFusebox::StaticClass());
-
-	DisableDuration = 10.f;
-
-	CrawlSpeed = 125.f;
+void AVent::SetVentDisabled(const bool bDisableVent)
+{
+	bDisabled = bDisableVent;
+	EntryGrate->SetVisibility(!bDisabled);
+	ExitGrate->SetVisibility(!bDisabled);
 }
 
 void AVent::InteractionEvent(APawn* EventSender)
 {
 	if (AShooter* Shooter = Cast<AShooter>(EventSender))
 	{
-		Shooter->GetStateMachine()->SetState("Venting");
-		bCanInteract = false;
+		IInteractiveObject::InteractionEvent(EventSender);
 
-		LeftGrate->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		RightGrate->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		const FString StateName = TEXT("Venting");
+		USVentState* VentState = Shooter->GetStateMachine()->GetStateAtKey<USVentState>(StateName);
+		VentState->Vent = this;
+
+		//Hacky way to determine which vent was entered
+		const FVector ShooterLocation(EventSender->GetActorLocation());
+		const bool bEnteredVentFromEntryGrate =
+			FVector::DistSquared(ShooterLocation, EntryGrate->GetComponentLocation()) <
+			FVector::DistSquared(ShooterLocation, ExitGrate->GetComponentLocation());
+		VentState->CrawlDirection = bEnteredVentFromEntryGrate ? CD_Forward : CD_Back;
+
+		FVector EntryPoint;
+		FVector EntryTangent;
+		if (bEnteredVentFromEntryGrate)
+		{
+			EntryPoint = SplineComponent->GetLocationAtSplinePoint(0, ESplineCoordinateSpace::World);
+			const FVector TangentSample = SplineComponent->GetLocationAtTime(0.01f, ESplineCoordinateSpace::World);
+			EntryTangent = TangentSample - EntryPoint.GetSafeNormal2D();
+		}
+
+		else
+		{
+			const int SplineIndex = SplineComponent->GetNumberOfSplinePoints() - 1;
+			EntryPoint = SplineComponent->GetLocationAtSplinePoint(0, ESplineCoordinateSpace::World);
+			const FVector TangentSample = SplineComponent->GetLocationAtTime(0.99f, ESplineCoordinateSpace::World);
+			EntryTangent = TangentSample - EntryPoint.GetSafeNormal2D();
+		}
+
+		FTransform EntryTransform;
+		EntryTransform.SetLocation(EntryPoint);
+		EntryTransform.SetRotation(FRotator(0.f, EntryTangent.ToOrientationRotator().Yaw, 0.f).Quaternion());
+			
+		Shooter->PlayCutsceneAnimation(
+			Cast<UShooterAnimInstance>(Shooter->GetBodyMesh()->GetAnimInstance())->VentEnterMontage,
+			EntryTransform,
+			StateName);
 	}
 }
 
-void AVent::ReceiveFuseboxFixed(APawn* EventSender)
+#if WITH_EDITOR
+void AVent::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
-	if (AShooter* Shooter = Cast<AShooter>(EventSender))
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+
+	//turns off the vent during editor time when the details panel bool is ticked
+	if (PropertyChangedEvent.GetPropertyName() == GET_MEMBER_NAME_CHECKED(AVent, bDisabled))
 	{
-		DisableGrateForDuration();
-		FuseboxRef->SetCanInteract(false);
-	}
+		SetVentDisabled(bDisabled);
+	}	
 }
-
-void AVent::BeginPlay()
-{
-	Super::BeginPlay();
-	Health->OnDeath.AddDynamic(this, &AVent::DisableGrateForDuration);
-	LeftGrateTrigger->OnComponentBeginOverlap.AddDynamic(this, &AVent::ComponentBeginOverlap);
-	LeftGrateTrigger->OnComponentEndOverlap.AddDynamic(this, &AVent::ComponentEndOverlap);
-	RightGrateTrigger->OnComponentBeginOverlap.AddDynamic(this, &AVent::ComponentBeginOverlap);
-	RightGrateTrigger->OnComponentEndOverlap.AddDynamic(this, &AVent::ComponentEndOverlap);
-
-	FuseboxRef = Cast<AInteractableFusebox>(Fusebox->GetChildActor());
-	FuseboxRef->OnInteract.AddUObject(this, &AVent::ReceiveFuseboxFixed);
-}
-
-void AVent::DisableGrateForDuration()
-{
-	bCanInteract = true; // can interact while grate is down
-	LeftGrate->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	RightGrate->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	LeftGrate->SetVisibility(false);
-	RightGrate->SetVisibility(false);
-	OnVentDisabled.Broadcast();
-	bIsDisabled = true;
-	bDelayRunning = true;
-}
-
-void AVent::MaybeReEnableGrate()
-{
-	bDelayRunning = false;
-
-	if (ShouldEnable())
-	{
-		ReEnableGrate();
-	}
-}
-
-void AVent::ReEnableGrate()
-{
-	Health->Revive();
-	LeftGrate->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-	RightGrate->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-	LeftGrate->SetVisibility(true);
-	RightGrate->SetVisibility(true);
-	bIsDisabled = false;
-	OnVentEnabled.Broadcast();
-	FuseboxRef->SetCanInteract(true);
-	bCanInteract = false;
-}
-
-void AVent::ComponentEndOverlap(class UPrimitiveComponent* HitComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
-{
-	OverlappedPawns--;
-	if (Cast<AShooter>(OtherActor))
-	{
-		if (ShouldEnable())
-		{
-			ReEnableGrate();
-		}
-
-		if (Cast<UBoxComponent>(HitComp) == LeftGrateTrigger)
-		{
-			bIsOverlappingLeftTrigger = false;
-
-			if(bCanInteract) // we have left the trigger without venting
-				GetWorld()->GetAuthGameMode<AShooterGameMode>()->GetDelayedActionManager()->StartDelayedAction(this, &AVent::MaybeReEnableGrate, DisableDuration);
-		}
-		else if (Cast<UBoxComponent>(HitComp) == RightGrateTrigger)
-		{
-			bIsOverlappingRightTrigger = false;
-
-			if(bCanInteract) // we have left the trigger without venting
-				GetWorld()->GetAuthGameMode<AShooterGameMode>()->GetDelayedActionManager()->StartDelayedAction(this, &AVent::MaybeReEnableGrate, DisableDuration);
-		}
-	}
-}
-
-void AVent::ComponentBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	OverlappedPawns++;
-
-	if (Cast<AShooter>(OtherActor))
-	{
-		if (Cast<UBoxComponent>(OverlappedComp) == LeftGrateTrigger)
-		{
-			bIsOverlappingLeftTrigger = true;
-			UE_LOG(LogTemp, Warning, TEXT("LeftGrate"));
-		}
-		else if (Cast<UBoxComponent>(OverlappedComp) == RightGrateTrigger)
-		{
-			bIsOverlappingRightTrigger = true;
-			UE_LOG(LogTemp, Warning, TEXT("RightGrate"));
-		}
-	}
-}
+#endif

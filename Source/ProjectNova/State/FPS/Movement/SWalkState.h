@@ -32,12 +32,4 @@ private:
 	 * Crouch input is received
 	 */
 	void CheckForCrouchState();	
-
-	/**
-	 * Changes state to proning if...
-	 *
-	 * Grounded
-	 * Prone input is received
-	 */
-	void CheckForProneState();
 };
