@@ -8,6 +8,7 @@ class UDelayedActionManager;
 class AQuickTimeManager;
 class AShooter;
 class AShooterController;
+class AShooterCutscene;
 
 
 
@@ -36,6 +37,9 @@ protected:
 	UPROPERTY(Transient, BlueprintReadOnly)
 	AQuickTimeManager* QuickTimeManager;
 
+	UPROPERTY(Transient, BlueprintReadOnly)
+	AShooterCutscene* ShooterCutscene;
+
 private:
 
 	UPROPERTY(Transient)
@@ -43,9 +47,12 @@ private:
 
 	UClass* QuickTimeManagerClass;
 
+	UClass* ShooterCutsceneClass;
+
 public:
 
 	FORCEINLINE AShooter* GetShooter() const { return Shooter; }
 	FORCEINLINE AShooterController* GetShooterController() const { return ShooterController; }
 	FORCEINLINE UDelayedActionManager* GetDelayedActionManager() const { return DelayedActionManager; }
+	FORCEINLINE AShooterCutscene* GetShooterCutscene() const { return ShooterCutscene; }
 };

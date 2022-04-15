@@ -1,156 +1,79 @@
 #include "SVentState.h"
 #include "../../../State/FPS/ShooterStateMachine.h"
 #include "../../../Gameplay/Vent.h"
+#include "../../../Animation/ShooterAnimInstance.h"
 
 void USVentState::Initialize(UStateMachine* StateMachine, UObject* ContextObject)
 {
 	Super::Initialize(StateMachine, ContextObject);
+	BodyInstance = Cast<UShooterAnimInstance>(Shooter->GetBodyMesh()->GetAnimInstance());
+	ArmsInstance = Cast<UShooterAnimInstance>(Shooter->GetArmsMesh()->GetAnimInstance());
 }
 
 void USVentState::OnEnter()
 {
 	Super::OnEnter();
 
-	bIsLerpingToCrawlPosition = true; // turns tick logic off while moving
+	Shooter->GetAnchor()->SetRelativeLocation(Movement->VentCameraLocation);
 
-	Vent = Cast<AVent>(Shooter->GetLastScannedObject());
-
-	if (Vent)
-	{
-		if (Vent->GetSpline())
-		{
-			Spline = Vent->GetSpline(); // set spline
-		}
-
-		ProneOffset = 25;
-
-		LerpToStandSpeed = Vent->GetLerpToStandingSpeed(); // how fast player stands up	
-
-		LerpToCrawlSpeed = Vent->GetLerpToCrawlSpeed(); // how fast player goes into crawl
-
-		CrawlSpeed = Vent->GetCrawlSpeed(); // how fast player crawls
-
-		ProgressMax = Spline->GetSplineLength();
-
-		Handle->GetAction()->StopAction();
-
-		if (Vent->bIsOverlappingLeftTrigger)
-		{
-			CrawlDirection = ECrawlDirection::CD_Right;
-			Progress = 0;
-			StandingProgress = ProgressMax;
-		}
-		else if (Vent->bIsOverlappingRightTrigger)
-		{
-			CrawlDirection = ECrawlDirection::CD_Left;
-			Progress = ProgressMax; // start at the end if going from right to left
-			StandingProgress = 0;
-		}
-		TargetCrawlRotation = Spline->GetRotationAtDistanceAlongSpline(Progress, ESplineCoordinateSpace::World);
-
-		TargetCrawlLocation = Spline->GetLocationAtDistanceAlongSpline(Progress, ESplineCoordinateSpace::World);
-
-		TargetCrawlLocation.Z -= ProneOffset;
-
-		TargetStandingLocation = FVector(Spline->GetLocationAtDistanceAlongSpline(StandingProgress, 
-			ESplineCoordinateSpace::World).X, Spline->GetLocationAtDistanceAlongSpline(StandingProgress, 
-				ESplineCoordinateSpace::World).Y, Shooter->GetActorLocation().Z);
-
-		Handle = GetDelayedActionManager()->StartOverTimeAction( // start crawl
-			this,
-			&USVentState::LerpToCrawl,
-			LerpToCrawlSpeed,
-			Shooter->GetActorLocation(),
-			TargetCrawlLocation,
-			Shooter->GetAnchor()->GetComponentRotation(),
-			TargetCrawlRotation);
-	}
+	SplineLength = Vent->GetSpline()->GetSplineLength();
+	CurrentProgress = CrawlDirection == CD_Forward ? 0.f : SplineLength;
 }
 
 void USVentState::OnExit()
 {
-	Movement->bIsInTuckTransition = false; // so that we can crouch again
-
-	if (bIsLerpingToStandingPosition)
-		bIsLerpingToStandingPosition = false;
-
 	Super::OnExit();
+
+	Vent->bInUse = false;
+	SetAnimState(false);
+
+	Shooter->SetActorRotation(FRotator(0.f, Shooter->GetActorRotation().Yaw, 0.f));
 }
 
-void USVentState::Tick(const float DeltaTime) 
+void USVentState::Tick(float DeltaTime)
 {
-	if (!bIsLerpingToCrawlPosition && !bIsLerpingToStandingPosition)
-	{
-		Progress = FMath::Clamp(Progress, 0.f, ProgressMax);
+	MoveAlongSpline(DeltaTime);
+	SetShooterRotation(DeltaTime);
+}
 
-		MoveAlongSpline(CrawlDirection, DeltaTime);
-		RotateAlongSpline();
+void USVentState::SetAnimState(const bool bValue)
+{
+	BodyInstance->bIsInVent = bValue;
+	ArmsInstance->bIsInVent = bValue;
+}
+
+void USVentState::MoveAlongSpline(float DeltaTime)
+{
+	Input->bIsMoving = FMath::Abs(Input->MoveY) > KINDA_SMALL_NUMBER;
+
+	if (!Input->bIsMoving)
+	{
+		return;
+	}
+
+	const float TravelDirection = CrawlDirection == CD_Forward ? 1.f : -1.f;
+	CurrentProgress += Input->MoveY * DeltaTime * Movement->VentSpeed * TravelDirection;
+
+	FVector SplinePoint = Vent->GetSpline()->GetWorldLocationAtDistanceAlongSpline(CurrentProgress);
+	SplinePoint.Z += Shooter->GetCollider()->GetScaledCapsuleHalfHeight();
+	Shooter->SetActorLocation(SplinePoint);
+
+	//Check if player exited vent
+	if (CurrentProgress < 0.f || CurrentProgress > SplineLength)
+	{	
+		FTransform ExitTransform;
+		ExitTransform.SetLocation(Vent->GetSpline()->GetWorldLocationAtDistanceAlongSpline(FMath::Clamp(CurrentProgress, 0.f, SplineLength)));
+		ExitTransform.SetRotation(Shooter->GetActorRotation().Quaternion());
+		Shooter->PlayCutsceneAnimation(BodyInstance->VentExitMontage, ExitTransform);
 	}
 }
 
-void USVentState::LerpToCrawl(FVector StartingPosition, FVector EndPosition, FRotator StartingRotation, FRotator EndRotation)
+void USVentState::SetShooterRotation(float DeltaTime)
 {
-	if (Handle->CurrentActionProgress > .999f)
-	{
-		bIsLerpingToCrawlPosition = false;
-	}
+	const float Offset = CrawlDirection == CD_Forward ? 5.f : -5.f;
+	const FVector TangentSample(Vent->GetSpline()->GetWorldLocationAtDistanceAlongSpline(CurrentProgress + Offset));
+	const FVector CurrentLocation(Shooter->GetActorLocation() - FVector(0.f, 0.f, Shooter->GetCollider()->GetScaledCapsuleHalfHeight()));
 
-	Shooter->SetActorLocation(FMath::Lerp(StartingPosition, EndPosition, Handle->CurrentActionProgress));
-	Shooter->GetAnchor()->SetWorldRotation(FMath::Lerp(StartingRotation, EndRotation, Handle->CurrentActionProgress));
-}
-
-void USVentState::LerpToStanding(FVector StartingPosition, FVector EndPosition)
-{
-	if (Handle->CurrentActionProgress > .999f)
-	{
-		Shooter->GetStateMachine()->SetState("Walking");
-
-		Vent->ReEnableGrate();
-	}
-
-	Shooter->SetActorLocation(FMath::Lerp(StartingPosition, EndPosition, Handle->CurrentActionProgress));
-}
-
-void USVentState::MoveAlongSpline(ECrawlDirection Direction, float DeltaTime)
-{
-	if (Direction == ECrawlDirection::CD_Right)
-	{
-		if (Progress == ProgressMax)
-		{
-			LeaveCrawl(Shooter->GetActorLocation(), TargetStandingLocation);
-		}
-		Progress += Input->MoveY * CrawlSpeed * DeltaTime;		// progress going right is positive
-	}
-	else
-	{
-		if (Progress == 0)
-		{
-			LeaveCrawl(Shooter->GetActorLocation(), TargetStandingLocation);
-		}
-		Progress -= Input->MoveY * CrawlSpeed * DeltaTime;
-	}
-
-	LocationAtDistanceAlongSpline = Spline->GetLocationAtDistanceAlongSpline
-	(Progress, ESplineCoordinateSpace::World);
-
-	LocationAtDistanceAlongSpline.Z -= ProneOffset;
-
-	Shooter->SetActorLocation(LocationAtDistanceAlongSpline);
-}
-
-void USVentState::RotateAlongSpline()
-{
-	Shooter->GetAnchor()->SetWorldRotation(TargetCrawlRotation);
-}
-
-void USVentState::LeaveCrawl(FVector StartingPosition, FVector EndPosition)
-{
-	Handle = GetDelayedActionManager()->StartOverTimeAction(
-		this,
-		&USVentState::LerpToStanding,
-		LerpToStandSpeed,
-		StartingPosition,
-		EndPosition);
-
-	bIsLerpingToStandingPosition = true;
+	FRotator LookRotation = (TangentSample - CurrentLocation).GetSafeNormal2D().ToOrientationRotator();
+	Shooter->SetActorRotation(FMath::RInterpTo(Shooter->GetActorRotation(), LookRotation, DeltaTime, Movement->VentTurnSpeed));
 }

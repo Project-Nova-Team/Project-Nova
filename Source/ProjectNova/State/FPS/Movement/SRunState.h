@@ -26,12 +26,4 @@ private:
 	 * Shooter goes airborne
 	 */
 	void CheckForWalkState();
-
-	/**
-	 * Changes state to diving if...
-	 *
-	 * Prone input is being received
-	 * Current speed is at a near maximum
-	 */
-	void CheckForDiveState();
 };
