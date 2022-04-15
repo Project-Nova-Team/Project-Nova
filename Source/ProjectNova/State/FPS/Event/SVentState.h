@@ -7,6 +7,7 @@
 #include "SVentState.generated.h"
 
 class AVent;
+class UShooterAnimInstance;
 
 UENUM()
 enum ECrawlDirection
@@ -27,6 +28,8 @@ public:
 	void OnEnter() override;
 	void OnExit() override;
 
+	void SetAnimState(const bool bValue);
+
 	/** Vent the shooter is currently in*/
 	AVent* Vent;
 
@@ -42,7 +45,9 @@ private:
 	float SplineLength;
 
 	/** Anim instance of the shooter body*/
-	class UShooterAnimInstance* AnimInstance;
+	UShooterAnimInstance* BodyInstance;
+
+	UShooterAnimInstance* ArmsInstance;
 
 private:
 

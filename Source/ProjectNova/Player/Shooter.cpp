@@ -38,11 +38,9 @@ AShooter::AShooter()
 
 	BodyMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Body"));
 	BodyMesh->SetupAttachment(Collider);
-	BodyMesh->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
 
 	ArmsMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Arms"));
 	ArmsMesh->SetupAttachment(Collider);
-	ArmsMesh->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
 
 	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("Combat"));
 	Combat->SetUpConstruction(ArmsMesh, Camera, &InputState.bIsRunning);
@@ -118,8 +116,6 @@ void AShooter::ScanInteractiveObject()
 	const FVector TraceStart = Camera->GetComponentLocation();
 	const FVector TraceEnd = TraceStart + Camera->GetForwardVector() * FMath::Min(ShooterMovement->StandingHeight * 2.f, ShooterMovement->InteractionDistance);
 	const bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_Camera, QueryParams);
-
-	bool bObjectNoLongerInteractable = false;
 
 	//We're looking at an object that is interactive
 	if (bHit && Hit.Actor != nullptr && Hit.Actor->Implements<UInteractiveObject>())

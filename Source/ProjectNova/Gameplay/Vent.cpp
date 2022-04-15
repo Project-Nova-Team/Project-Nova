@@ -10,6 +10,7 @@
 #include "../State/FPS/Event/SVentState.h"
 #include "../Utility/DelayedActionManager.h"
 #include "../Animation/ShooterAnimInstance.h"
+#include "DrawDebugHelpers.h"
 
 AVent::AVent()
 {
@@ -37,6 +38,7 @@ AVent::AVent()
 
 	SplineComponent->SetLocationAtSplinePoint(0, RelativeOffset, ESplineCoordinateSpace::Local);
 	SplineComponent->SetLocationAtSplinePoint(1, -RelativeOffset, ESplineCoordinateSpace::Local);
+	SplineComponent->Duration = 1.f;
 }
 
 void AVent::SetVentDisabled(const bool bDisableVent)
@@ -52,32 +54,33 @@ void AVent::InteractionEvent(APawn* EventSender)
 	{
 		IInteractiveObject::InteractionEvent(EventSender);
 
+		bInUse = true;
 		const FString StateName = TEXT("Venting");
 		USVentState* VentState = Shooter->GetStateMachine()->GetStateAtKey<USVentState>(StateName);
 		VentState->Vent = this;
 
 		//Hacky way to determine which vent was entered
-		const FVector ShooterLocation(EventSender->GetActorLocation());
+		const FVector ShooterLocation(Shooter->GetActorLocation());
 		const bool bEnteredVentFromEntryGrate =
-			FVector::DistSquared(ShooterLocation, EntryGrate->GetComponentLocation()) <
-			FVector::DistSquared(ShooterLocation, ExitGrate->GetComponentLocation());
-		VentState->CrawlDirection = bEnteredVentFromEntryGrate ? CD_Forward : CD_Back;
+			(EntryGrate->GetComponentLocation() - Shooter->GetActorLocation()).SizeSquared() <
+			(ExitGrate->GetComponentLocation() - Shooter->GetActorLocation()).SizeSquared();
 
+		VentState->CrawlDirection = bEnteredVentFromEntryGrate ? CD_Forward : CD_Back;
+		
 		FVector EntryPoint;
 		FVector EntryTangent;
 		if (bEnteredVentFromEntryGrate)
 		{
-			EntryPoint = SplineComponent->GetLocationAtSplinePoint(0, ESplineCoordinateSpace::World);
-			const FVector TangentSample = SplineComponent->GetLocationAtTime(0.01f, ESplineCoordinateSpace::World);
-			EntryTangent = TangentSample - EntryPoint.GetSafeNormal2D();
+			EntryPoint = SplineComponent->GetWorldLocationAtDistanceAlongSpline(0.f);
+			const FVector TangentSample = SplineComponent->GetWorldLocationAtDistanceAlongSpline(5.f);
+			EntryTangent = (TangentSample - EntryPoint).GetSafeNormal2D();
 		}
 
 		else
 		{
-			const int SplineIndex = SplineComponent->GetNumberOfSplinePoints() - 1;
-			EntryPoint = SplineComponent->GetLocationAtSplinePoint(0, ESplineCoordinateSpace::World);
-			const FVector TangentSample = SplineComponent->GetLocationAtTime(0.99f, ESplineCoordinateSpace::World);
-			EntryTangent = TangentSample - EntryPoint.GetSafeNormal2D();
+			EntryPoint = SplineComponent->GetWorldLocationAtDistanceAlongSpline(SplineComponent->GetSplineLength());
+			const FVector TangentSample = SplineComponent->GetWorldLocationAtDistanceAlongSpline(SplineComponent->GetSplineLength() - 5.f);
+			EntryTangent = (TangentSample - EntryPoint).GetSafeNormal2D();
 		}
 
 		FTransform EntryTransform;
@@ -88,6 +91,8 @@ void AVent::InteractionEvent(APawn* EventSender)
 			Cast<UShooterAnimInstance>(Shooter->GetBodyMesh()->GetAnimInstance())->VentEnterMontage,
 			EntryTransform,
 			StateName);
+
+		VentState->SetAnimState(true);
 	}
 }
 
