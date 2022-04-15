@@ -146,12 +146,16 @@ public:
 	float CrouchTime;
 
 	/** The number of units the shooter moves each each second while crawling through a vent*/
-	UPROPERTY(EditAnywhere, Category = "Control | Prone")
+	UPROPERTY(EditAnywhere, Category = "Control | Vent")
 	float VentSpeed;
 
 	/** Rate at which the shooter rotates to face forward in vents*/
-	UPROPERTY(EditAnywhere, Category = "Control | Prone")
+	UPROPERTY(EditAnywhere, Category = "Control | Vent")
 	float VentTurnSpeed;
+
+	/** Relative location of the camera during vent crawling*/
+	UPROPERTY(EditAnywhere, Category = "Control | Vent")
+	FVector VentCameraLocation;
 
 	/** Set to true if shooter overlaps vault trigger and is looking at vault object*/
 	UPROPERTY(BlueprintReadWrite)

@@ -37,8 +37,9 @@ UShooterMovementComponent::UShooterMovementComponent()
 	CrouchMaxSpeed = 250.f;
 	CrouchTime = 1.f;
 
-	VentSpeed = 125.f;
+	VentSpeed = 5.f;
 	VentTurnSpeed = 15.f;
+	VentCameraLocation = FVector(-6.75f, 4.565f, -66.11f);
 }
 
 void UShooterMovementComponent::BeginPlay()

@@ -6,18 +6,18 @@
 void USVentState::Initialize(UStateMachine* StateMachine, UObject* ContextObject)
 {
 	Super::Initialize(StateMachine, ContextObject);
-	AnimInstance = Cast<UShooterAnimInstance>(Shooter->GetBodyMesh()->GetAnimInstance());
+	BodyInstance = Cast<UShooterAnimInstance>(Shooter->GetBodyMesh()->GetAnimInstance());
+	ArmsInstance = Cast<UShooterAnimInstance>(Shooter->GetArmsMesh()->GetAnimInstance());
 }
 
 void USVentState::OnEnter()
 {
 	Super::OnEnter();
 
-	Vent->bInUse = true;
-	AnimInstance->bIsInVent = true;
+	Shooter->GetAnchor()->SetRelativeLocation(Movement->VentCameraLocation);
 
 	SplineLength = Vent->GetSpline()->GetSplineLength();
-	CurrentProgress = CrawlDirection == CD_Forward ? 0.f : 1.f;
+	CurrentProgress = CrawlDirection == CD_Forward ? 0.f : SplineLength;
 }
 
 void USVentState::OnExit()
@@ -25,7 +25,7 @@ void USVentState::OnExit()
 	Super::OnExit();
 
 	Vent->bInUse = false;
-	AnimInstance->bIsInVent = false;
+	SetAnimState(false);
 
 	Shooter->SetActorRotation(FRotator(0.f, Shooter->GetActorRotation().Yaw, 0.f));
 }
@@ -33,12 +33,18 @@ void USVentState::OnExit()
 void USVentState::Tick(float DeltaTime)
 {
 	MoveAlongSpline(DeltaTime);
-	//SetShooterRotation(DeltaTime);
+	SetShooterRotation(DeltaTime);
+}
+
+void USVentState::SetAnimState(const bool bValue)
+{
+	BodyInstance->bIsInVent = bValue;
+	ArmsInstance->bIsInVent = bValue;
 }
 
 void USVentState::MoveAlongSpline(float DeltaTime)
 {
-	Input->bIsMoving = Input->MoveY > KINDA_SMALL_NUMBER;
+	Input->bIsMoving = FMath::Abs(Input->MoveY) > KINDA_SMALL_NUMBER;
 
 	if (!Input->bIsMoving)
 	{
@@ -48,27 +54,26 @@ void USVentState::MoveAlongSpline(float DeltaTime)
 	const float TravelDirection = CrawlDirection == CD_Forward ? 1.f : -1.f;
 	CurrentProgress += Input->MoveY * DeltaTime * Movement->VentSpeed * TravelDirection;
 
-	Shooter->SetActorLocation(Vent->GetSpline()->GetLocationAtTime(CurrentProgress, ESplineCoordinateSpace::World));
+	FVector SplinePoint = Vent->GetSpline()->GetWorldLocationAtDistanceAlongSpline(CurrentProgress);
+	SplinePoint.Z += Shooter->GetCollider()->GetScaledCapsuleHalfHeight();
+	Shooter->SetActorLocation(SplinePoint);
 
 	//Check if player exited vent
-	if (CurrentProgress < 0.f || CurrentProgress > 1.f)
+	if (CurrentProgress < 0.f || CurrentProgress > SplineLength)
 	{	
 		FTransform ExitTransform;
-		ExitTransform.SetLocation(
-			Vent->GetSpline()->GetLocationAtTime(FMath::Clamp(CurrentProgress, 0.f, 1.f), ESplineCoordinateSpace::World)
-			+ FVector(0.f, 0.f, Shooter->GetShooterMovement()->StandingHeight));
+		ExitTransform.SetLocation(Vent->GetSpline()->GetWorldLocationAtDistanceAlongSpline(FMath::Clamp(CurrentProgress, 0.f, SplineLength)));
 		ExitTransform.SetRotation(Shooter->GetActorRotation().Quaternion());
-		Shooter->PlayCutsceneAnimation(AnimInstance->VentExitMontage, ExitTransform);
+		Shooter->PlayCutsceneAnimation(BodyInstance->VentExitMontage, ExitTransform);
 	}
 }
 
 void USVentState::SetShooterRotation(float DeltaTime)
 {
-	const float Offset = (CrawlDirection == CD_Forward ? 1 : -1) * 0.01f;
-	const FVector TangentSample(Vent->GetSpline()->GetLocationAtTime(CurrentProgress + Offset, ESplineCoordinateSpace::World).GetSafeNormal2D());
-	
-	//This is capable of changing pitch which can allow crawling up/down slopes in a vent
-	//Have to be considerate of undoing any pitch to the actor after exiting the vent
-	FRotator LookRotation = (Shooter->GetActorLocation() - TangentSample).ToOrientationRotator();
+	const float Offset = CrawlDirection == CD_Forward ? 5.f : -5.f;
+	const FVector TangentSample(Vent->GetSpline()->GetWorldLocationAtDistanceAlongSpline(CurrentProgress + Offset));
+	const FVector CurrentLocation(Shooter->GetActorLocation() - FVector(0.f, 0.f, Shooter->GetCollider()->GetScaledCapsuleHalfHeight()));
+
+	FRotator LookRotation = (TangentSample - CurrentLocation).GetSafeNormal2D().ToOrientationRotator();
 	Shooter->SetActorRotation(FMath::RInterpTo(Shooter->GetActorRotation(), LookRotation, DeltaTime, Movement->VentTurnSpeed));
 }
