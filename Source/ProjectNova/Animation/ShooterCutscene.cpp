@@ -3,6 +3,7 @@
 #include "Animation/AnimInstance.h"
 #include "../Player/Shooter.h"
 #include "GameFramework/PlayerController.h"
+#include "DrawDebugHelpers.h"
 
 AShooterCutscene::AShooterCutscene()
 {
@@ -18,11 +19,26 @@ AShooterCutscene::AShooterCutscene()
 
 	Arms->SetVisibility(false);
 	Body->SetVisibility(false);
+	Body->bNoSkeletonUpdate = true;
+	Arms->bNoSkeletonUpdate = true;
 }
 
-void AShooterCutscene::PlayCutscene(UAnimMontage* Animation, const FString& ExitState, const FTransform& StartingTransform)
+void AShooterCutscene::BeginPlay()
 {
+	Super::BeginPlay();
+
+	Body->GetAnimInstance()->OnMontageBlendingOut.AddDynamic(this, &AShooterCutscene::FinishCutscene);
+}
+
+void AShooterCutscene::PlayCutscene(UAnimMontage* Animation, const FString FinishState, const FTransform& StartingTransform)
+{
+	Body->bNoSkeletonUpdate = false;
+	Arms->bNoSkeletonUpdate = false;
+	Shooter->GetBodyMesh()->bNoSkeletonUpdate = true;
+	Shooter->GetArmsMesh()->bNoSkeletonUpdate = true;
+
 	Shooter->SetStateOverride("Cutscene");
+	ExitState = FinishState;
 
 	SetActorLocation(Shooter->GetBodyMesh()->GetComponentLocation());
 	SetActorRotation(Shooter->GetActorRotation());
@@ -44,41 +60,42 @@ void AShooterCutscene::PlayCutscene(UAnimMontage* Animation, const FString& Exit
 	Arms->GetAnimInstance()->Montage_Play(Animation);
 	Body->GetAnimInstance()->Montage_Play(Animation);
 
-	FTimerDelegate FinishDelegate;
-	FinishDelegate.BindUObject(this, &AShooterCutscene::FinishCutscene, ExitState);
-	GetWorldTimerManager().SetTimer(TimerHandle, FinishDelegate, Animation->GetPlayLength(), false);
-
-	Shooter->GetController<APlayerController>()->SetViewTargetWithBlend(this, BlendTime, EViewTargetBlendFunction::VTBlend_Cubic);
+	Shooter->GetController<APlayerController>()->SetViewTargetWithBlend(this, BlendTime, EViewTargetBlendFunction::VTBlend_Linear);
+	GetWorldTimerManager().SetTimer(TimerHandle, this, &AShooterCutscene::ReenableSkeleton, BlendTime);
 }
 
-void AShooterCutscene::FinishCutscene(const FString ExitState)
+void AShooterCutscene::ReenableSkeleton()
+{
+	Shooter->GetBodyMesh()->bNoSkeletonUpdate = false;
+	Shooter->GetArmsMesh()->bNoSkeletonUpdate = false;
+}
+
+void AShooterCutscene::FinishCutscene(UAnimMontage* Animation, bool bInterrupted)
 {
 	Arms->SetVisibility(false);
 	Body->SetVisibility(false);
 	Shooter->GetArmsMesh()->SetVisibility(true);
 	Shooter->GetBodyMesh()->SetVisibility(true);
 
-	//Moves the shooter into the location/rotation the cutscene ended in 
+	Body->bNoSkeletonUpdate = true;
+	Arms->bNoSkeletonUpdate = true;
+	
+	//Moves the shooter into the location the cutscene ended in 
 	const FName RootBone = TEXT("C_Root_jnt");
 	Shooter->SetActorLocation(Body->GetBoneLocation(RootBone) - FVector(0.f, 0.f, Shooter->GetBodyMesh()->GetRelativeLocation().Z));
-	Shooter->SetActorRotation(FRotator(0.f, Body->GetBoneQuaternion(RootBone).Rotator().Yaw, 0.f));
 
-	//Make the shooter look in the same direction the cutscene ended in, but without roll or yaw
-	const float HeadPitch = Body->GetBoneQuaternion(TEXT("C_Head_jnt")).Rotator().Pitch;
-	Shooter->GetAnchor()->SetRelativeRotation(FRotator(HeadPitch, 0.f, 0.f));
+	//Make the shooter look in the same direction the cutscene ended in
+	const FRotator LookRotation = Camera->GetComponentRotation();
+	Shooter->SetActorRotation(FRotator(0.f, LookRotation.Yaw, 0.f));
+	Shooter->GetAnchor()->SetRelativeRotation(FRotator(LookRotation.Pitch, 0.f, 0.f));
 
 	//Move camera back into position
-	Shooter->GetController<APlayerController>()->SetViewTargetWithBlend(Shooter, BlendTime, EViewTargetBlendFunction::VTBlend_Cubic);
-
-	//Put the player in the desired state once the cutscene finishes
-	FTimerDelegate TimerCallback;
-	TimerCallback.BindUObject(this, &AShooterCutscene::BlendComplete, ExitState);
-	GetWorld()->GetTimerManager().SetTimer(TimerHandle, TimerCallback, BlendTime, false);
-}
-
-void AShooterCutscene::BlendComplete(const FString ExitState)
-{
 	Shooter->SetStateOverride(ExitState);
+
+	if (Shooter->GetController<APlayerController>())
+	{
+		Shooter->GetController<APlayerController>()->SetViewTargetWithBlend(Shooter, BlendTime, EViewTargetBlendFunction::VTBlend_Linear);
+	}
 }
 
 void AShooterCutscene::BlendTowardsTransform(FTransform Transform)

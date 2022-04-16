@@ -39,6 +39,9 @@ private:
 	/** Transform of the shooter at the beginning of the cutscene*/
 	FTransform EntryTransform;
 
+	/** State to exit to*/
+	FString ExitState;
+
 	/** Timer for cutscene blends*/
 	float Timer;
 
@@ -48,16 +51,23 @@ public:
 	 *	
 	 * @param	Animation				The animation played in the cutscene
 	 * @param	ExitState				The state we put the player into upon finishing the cutscene
+	 * @param	StartingTransform		Location for the cutscene to take place
 	 */
-	void PlayCutscene(class UAnimMontage* Animation, const FString& ExitState = TEXT("Walking"), const FTransform& StartingTransform = FTransform::Identity);
+	void PlayCutscene(class UAnimMontage* Animation, const FString ExitState = TEXT("Walking"), const FTransform& StartingTransform = FTransform::Identity);
+
+
+protected:
+
+	/** Can't use a reference since string goes out of scope*/
+	UFUNCTION()
+	void FinishCutscene(UAnimMontage* Animation, bool bInterrupted);
+
+	void BeginPlay() override;
 
 private:
-	/** Can't use a reference since string goes out of scope*/
-	void FinishCutscene(const FString ExitState);
-
-	/** Returns control to the player after the cutscene finishes*/
-	void BlendComplete(const FString ExitState);
 
 	/** Interpolate position/rotation towards the blend point*/
 	void BlendTowardsTransform(FTransform Transform);
+
+	void ReenableSkeleton();
 };
