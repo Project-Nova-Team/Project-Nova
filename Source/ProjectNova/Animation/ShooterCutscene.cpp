@@ -7,42 +7,39 @@
 
 AShooterCutscene::AShooterCutscene()
 {
-	Body = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Body"));
-	SetRootComponent(Body);
-
-	Arms = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Arms"));
-	Arms->SetupAttachment(Body);
+	Mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Body"));
+	SetRootComponent(Mesh);
 
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
-	Camera->SetupAttachment(Body, TEXT("C_Head_jnt"));
+	Camera->SetupAttachment(Mesh, TEXT("C_Head_jnt"));
 	Camera->SetRelativeScale3D(FVector(.25f));
 
-	Arms->SetVisibility(false);
-	Body->SetVisibility(false);
-	Body->bNoSkeletonUpdate = true;
-	Arms->bNoSkeletonUpdate = true;
-}
-
-void AShooterCutscene::BeginPlay()
-{
-	Super::BeginPlay();
-
-	Body->GetAnimInstance()->OnMontageBlendingOut.AddDynamic(this, &AShooterCutscene::FinishCutscene);
+	Mesh->SetVisibility(false);
+	Mesh->bNoSkeletonUpdate = true;
 }
 
 void AShooterCutscene::PlayCutscene(UAnimMontage* Animation, const FString FinishState, const FTransform& StartingTransform)
 {
-	Body->bNoSkeletonUpdate = false;
-	Arms->bNoSkeletonUpdate = false;
+	StartCinematic(StartingTransform);
+	float AnimTime = Mesh->GetAnimInstance()->Montage_Play(Animation);
+	GetWorldTimerManager().SetTimer(TimerHandle, this, &AShooterCutscene::FinishCutscene, AnimTime - Animation->BlendOut.GetBlendTime());
+}
+
+void AShooterCutscene::StartCinematic(const FTransform& StartingTransform)
+{
+	Mesh->bNoSkeletonUpdate = false;
 	Shooter->GetBodyMesh()->bNoSkeletonUpdate = true;
 	Shooter->GetArmsMesh()->bNoSkeletonUpdate = true;
 
 	Shooter->SetStateOverride("Cutscene");
-	ExitState = FinishState;
+
+	Shooter->GetArmsMesh()->SetVisibility(false);
+	Shooter->GetBodyMesh()->SetVisibility(false);
+	Mesh->SetVisibility(true);
 
 	SetActorLocation(Shooter->GetBodyMesh()->GetComponentLocation());
 	SetActorRotation(Shooter->GetActorRotation());
-	
+
 	//Sloppy check
 	if (StartingTransform.GetLocation() != FVector::ZeroVector)
 	{
@@ -52,16 +49,19 @@ void AShooterCutscene::PlayCutscene(UAnimMontage* Animation, const FString Finis
 		BlendTowardsTransform(StartingTransform);
 	}
 
-	Shooter->GetArmsMesh()->SetVisibility(false);
-	Shooter->GetBodyMesh()->SetVisibility(false);
-	Arms->SetVisibility(true);
-	Body->SetVisibility(true);
-
-	Arms->GetAnimInstance()->Montage_Play(Animation);
-	Body->GetAnimInstance()->Montage_Play(Animation);
-
 	Shooter->GetController<APlayerController>()->SetViewTargetWithBlend(this, BlendTime, EViewTargetBlendFunction::VTBlend_Linear);
-	GetWorldTimerManager().SetTimer(TimerHandle, this, &AShooterCutscene::ReenableSkeleton, BlendTime);
+	GetWorldTimerManager().SetTimer(SkeletalHandle, this, &AShooterCutscene::ReenableSkeleton, BlendTime);
+}
+
+void AShooterCutscene::EndCinematic(const FString& FinishState)
+{
+	ExitState = FinishState;
+	FinishCutscene();
+}
+
+void AShooterCutscene::PlayAnimation(UAnimMontage* Animation)
+{
+	Mesh->GetAnimInstance()->Montage_Play(Animation);
 }
 
 void AShooterCutscene::ReenableSkeleton()
@@ -70,19 +70,17 @@ void AShooterCutscene::ReenableSkeleton()
 	Shooter->GetArmsMesh()->bNoSkeletonUpdate = false;
 }
 
-void AShooterCutscene::FinishCutscene(UAnimMontage* Animation, bool bInterrupted)
+void AShooterCutscene::FinishCutscene()
 {
-	Arms->SetVisibility(false);
-	Body->SetVisibility(false);
+	Mesh->SetVisibility(false);
 	Shooter->GetArmsMesh()->SetVisibility(true);
 	Shooter->GetBodyMesh()->SetVisibility(true);
 
-	Body->bNoSkeletonUpdate = true;
-	Arms->bNoSkeletonUpdate = true;
-	
+	Mesh->bNoSkeletonUpdate = true;
+
 	//Moves the shooter into the location the cutscene ended in 
 	const FName RootBone = TEXT("C_Root_jnt");
-	Shooter->SetActorLocation(Body->GetBoneLocation(RootBone) - FVector(0.f, 0.f, Shooter->GetBodyMesh()->GetRelativeLocation().Z));
+	Shooter->SetActorLocation(Mesh->GetBoneLocation(RootBone) - FVector(0.f, 0.f, Shooter->GetBodyMesh()->GetRelativeLocation().Z));
 
 	//Make the shooter look in the same direction the cutscene ended in
 	const FRotator LookRotation = Camera->GetComponentRotation();

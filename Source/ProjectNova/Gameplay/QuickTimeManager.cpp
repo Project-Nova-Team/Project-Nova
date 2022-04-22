@@ -7,129 +7,135 @@
 #include "../ShooterController.h"
 #include "../ShooterHUD.h"
 #include "Components/Image.h"
-
-AQuickTimeManager::AQuickTimeManager()
-{
-	ActionTime = 6.f;
-	InputsRequired = 15;
-}
+#include "../Animation/ShooterCutscene.h"
+#include "Animation/AnimMontage.h"
+#include "Components/CapsuleComponent.h"
 
 void AQuickTimeManager::Init()
 {
-	AShooterGameMode* GM = GetWorld()->GetAuthGameMode<AShooterGameMode>();
-
-	if (GM)
+	if (AShooterGameMode* GM = GetWorld()->GetAuthGameMode<AShooterGameMode>())
 	{
 		Shooter = GM->GetShooter();
 		QuickTimeWidget = GM->GetShooterController()->ShooterHUD->GetQTWidget();
+		Cutscene = GM->GetShooterCutscene();
 	}
 }
 
-bool AQuickTimeManager::StartQuickTime(class ABaseAI* InstigatingAI, int32 EventCount)
+FTransform AQuickTimeManager::ComputeQuickTimeLocation()
+{
+	FTransform Transform;
+
+	FVector Location = AI->GetActorLocation();
+	const FVector Offset = 
+		AI->GetActorForwardVector() * 
+		(AI->GetCapsuleComponent()->GetScaledCapsuleRadius() + Shooter->GetCollider()->GetScaledCapsuleRadius());
+
+	Location.Z -= AI->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+	Location.Z += Shooter->GetCollider()->GetScaledCapsuleHalfHeight();
+	Location += Offset;
+
+	Transform.SetLocation(Location);
+	Transform.SetRotation((-AI->GetActorForwardVector()).ToOrientationQuat());
+
+	return Transform;
+}
+
+bool AQuickTimeManager::StartQuickTime(class ABaseAI* InstigatingAI)
 {
 	//If an event is already active, fail to start a new one
-	if (bActive || EventCount < 1 || QuickTimeInputs.Num() == 0)
+	if (bActive || InstigatingAI->QuickTimeActions.Num() < 1)
 	{
 		return false;
 	}
 
 	//Setup
 	AI = InstigatingAI;
-	RequiredActions = EventCount;
 	bActive = true;
 
-	Shooter->SetStateOverride("Cutscene");
-	Shooter->QuickTimeEventStarted(AI);
-
-	//Select the first input type, random if this is a one shot quick time, first index if otherwise
-	ActiveIndex = EventCount == 1 ? FMath::RandRange(0, QuickTimeInputs.Num() - 1) : 0;
-
-	BindingHandle = Shooter->InputComponent->BindAction
-		(QuickTimeInputs[ActiveIndex].ActionName, IE_Pressed, this, &AQuickTimeManager::ReceiveInput).GetHandle();
-
-	QuickTimeWidget->KeyImage->SetBrushFromTexture(QuickTimeInputs[ActiveIndex].IdleTexture);
-	QuickTimeWidget->SetVisibility(ESlateVisibility::Visible);
-	
-	//Set the first timer for when the action completes
-	GetWorldTimerManager().SetTimer(ActionHandle, this, &AQuickTimeManager::DetermineActionResult, ActionTime, false);
-	GetWorldTimerManager().SetTimer(WidgetHandle, this, &AQuickTimeManager::ToggleTexture, WidgetToggleTime, true);
+	Cutscene->StartCinematic(ComputeQuickTimeLocation());
+	StartAction();
 
 	return true;
 }
 
-void AQuickTimeManager::StartNextAction()
+void AQuickTimeManager::StartAction()
 {
-	if (bActive && bAwaitingNextAction)
-	{
-		ActiveIndex = ActionCount;
-		bAwaitingNextAction = false;
-
-		BindingHandle = Shooter->InputComponent->BindAction
-			(QuickTimeInputs[ActiveIndex].ActionName, IE_Pressed, this, &AQuickTimeManager::ReceiveInput).GetHandle();
-
-		QuickTimeWidget->KeyImage->SetBrushFromTexture(QuickTimeInputs[ActiveIndex].IdleTexture);
-		QuickTimeWidget->SetVisibility(ESlateVisibility::Visible);
-
-		GetWorldTimerManager().SetTimer(ActionHandle, this, &AQuickTimeManager::DetermineActionResult, ActionTime, false);
-		GetWorldTimerManager().SetTimer(WidgetHandle, this, &AQuickTimeManager::ToggleTexture, WidgetToggleTime, true);
-	}
-}
-
-void AQuickTimeManager::FinishQuickTimeEvent()
-{
-	bActive = false;
-	bAwaitingNextAction = false;
-	ActionCount = 0;
-	AISuccesses = 0;
-	ShooterSuccesses = 0;
-
-	Shooter->SetStateOverride("Walking");
-
-	//this tells the AI BT the task is done
-	OnQuickTimeComplete.Broadcast();
-}
-
-void AQuickTimeManager::DetermineActionResult()
-{
-	//Clear the input binding
-	Shooter->InputComponent->RemoveActionBindingForHandle(BindingHandle);
+	CurrentAction =  NewObject<UQuickTimeAction>(this, AI->QuickTimeActions[ActionIndex].Get());
 	
+	BindingHandle = Shooter->InputComponent->BindAction(CurrentAction->RequiredInput.ActionName, IE_Pressed, this, &AQuickTimeManager::ReceiveInput).GetHandle();
 
-	//Hide widget
-	GetWorldTimerManager().ClearTimer(WidgetHandle);
-	QuickTimeWidget->SetVisibility(ESlateVisibility::Collapsed);
+	Cutscene->PlayAnimation(CurrentAction->PlayerStruggle);
+	AI->PlayAnimMontage(CurrentAction->EnemyStruggle);
+	
+	GetWorldTimerManager().SetTimer(ActionHandle, this, &AQuickTimeManager::CompleteStruggle, CurrentAction->PlayerStruggle->GetPlayLength());
+}
 
-	bool bShooterSucceeded = InputCount >= InputsRequired;
-	bool bLastAction = ++ActionCount == RequiredActions;
+void AQuickTimeManager::CompleteStruggle()
+{
+	Shooter->InputComponent->RemoveActionBindingForHandle(BindingHandle);
+	float AnimTime;
 
-	if (bShooterSucceeded)
+	bCurrentActionResult = InputCount >= CurrentAction->InputsRequired;
+	CurrentAction->ReceiveStruggleEnd(bCurrentActionResult);
+	
+	//Player succeeded during the struggle
+	if (bCurrentActionResult)
+	{	
+		Cutscene->PlayAnimation(CurrentAction->PlayerSuccess);
+		AI->PlayAnimMontage(CurrentAction->EnemySuccess);
+
+		AnimTime = CurrentAction->PlayerSuccess->GetPlayLength();
+	}
+
+	//Player failed
+	else
 	{
-		++ShooterSuccesses;
+		Cutscene->PlayAnimation(CurrentAction->PlayerFail);
+		AI->PlayAnimMontage(CurrentAction->EnemyFail);
+
+		AnimTime = CurrentAction->PlayerFail->GetPlayLength();
+	}
+
+	GetWorldTimerManager().SetTimer(ActionHandle, this, &AQuickTimeManager::CompleteResult, AnimTime);
+}
+
+void AQuickTimeManager::CompleteResult()
+{
+	CurrentAction->ReceiveActionEnd(bCurrentActionResult);
+
+	if (bCurrentActionResult && CurrentAction->DamageOnSuccess > 0.f)
+	{
+		AI->TakeDamage(CurrentAction->DamageOnSuccess, FDamageEvent(), Shooter->GetController(), Shooter);
+	}
+
+	else if(CurrentAction->DamageOnFail > 0.f)
+	{
+		Shooter->TakeDamage(CurrentAction->DamageOnFail, FDamageEvent(), AI->GetController(), AI);
+	}
+
+	if (ActionIndex + 1 < AI->QuickTimeActions.Num())
+	{
+		++ActionIndex;
+		StartAction();	
 	}
 
 	else
 	{
-		++AISuccesses;
+		bActive = false;
+		ActionIndex = 0;
+		Cutscene->EndCinematic(TEXT("Walking"));
 	}
+}
 
-	//If this wasn't the last action, flag that we are waiting for the next one
-	bAwaitingNextAction = !bLastAction;
-	InputCount = 0;
-
-	//Inform both parties the action was completed, and the result
-	AI->QuickTimeActionComplete(!bShooterSucceeded, bLastAction, AISuccesses);
-	Shooter->QuickTimeActionComplete(bShooterSucceeded, bLastAction, ShooterSuccesses);
+void AQuickTimeManager::ReceiveInput()
+{
+	InputCount++;
 }
 
 void AQuickTimeManager::ToggleTexture()
 {
 	bTextureActive = !bTextureActive;
 
-	UTexture2D* ToggledTexture = bTextureActive ? QuickTimeInputs[ActiveIndex].ActiveTexture : QuickTimeInputs[ActiveIndex].IdleTexture;
+	UTexture2D* ToggledTexture = bTextureActive ? CurrentAction->RequiredInput.ActiveTexture : CurrentAction->RequiredInput.IdleTexture;
 	QuickTimeWidget->KeyImage->SetBrushFromTexture(ToggledTexture);
-}
-
-void AQuickTimeManager::ReceiveInput()
-{
-	InputCount++;
 }

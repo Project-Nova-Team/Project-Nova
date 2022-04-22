@@ -113,20 +113,6 @@ public:
 
 	FORCEINLINE UShooterInventory* GetInventory() { return Inventory; }
 
-	/**
-	 * Executed upon receiving a notice than a QuickTime action was complete
-	 *
-	 * @param	bSucceeded				Was the Shooter victorious in this QT Action
-	 * @param	bCompleted				Was this the final action in this QT Event
-	 * @param	SuccessCount			Number of times in a given event the shooter has succeeded
-	 */
-	UFUNCTION(BlueprintImplementableEvent)
-	void QuickTimeActionComplete(bool bSucceeded, bool bCompleted, int32 SuccessCount);
-
-	/** Fires when a quick time begins*/
-	UFUNCTION(BlueprintImplementableEvent)
-	void QuickTimeEventStarted(AActor* InstigatingAI);
-
 	void SetInputEnabled(const bool bNewInputEnabled) { bInputEnabled = bNewInputEnabled; }
 
 	/** Draws debug traces for a variety of position tests if enabled*/

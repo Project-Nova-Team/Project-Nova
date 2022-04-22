@@ -31,11 +31,11 @@ void AShooterGameMode::InitGame(const FString& MapName, const FString& Options, 
 	DelayedActionManager->Initialize();
 
 	FActorSpawnParameters Params;
-	Params.Name = TEXT("Quick Time Manager");
-	QuickTimeManager = GetWorld()->SpawnActor<AQuickTimeManager>(QuickTimeManagerClass, Params);
-
 	Params.Name = TEXT("Shooter Cutscene");
 	ShooterCutscene = GetWorld()->SpawnActor<AShooterCutscene>(ShooterCutsceneClass, Params);
+
+	Params.Name = TEXT("Quick Time Manager");
+	QuickTimeManager = GetWorld()->SpawnActor<AQuickTimeManager>(QuickTimeManagerClass, Params);
 	
 	//If we can't figure out why "lighting needs rebuild" warnings wont go away, we can set this flag for builds
 	//GEngine->bSuppressMapWarnings = true;
