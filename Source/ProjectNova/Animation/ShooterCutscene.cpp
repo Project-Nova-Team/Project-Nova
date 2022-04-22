@@ -22,7 +22,10 @@ void AShooterCutscene::PlayCutscene(UAnimMontage* Animation, const FString Finis
 {
 	StartCinematic(StartingTransform);
 	float AnimTime = Mesh->GetAnimInstance()->Montage_Play(Animation);
-	GetWorldTimerManager().SetTimer(TimerHandle, this, &AShooterCutscene::FinishCutscene, AnimTime - Animation->BlendOut.GetBlendTime());
+
+	FTimerDelegate Delegate;
+	Delegate.BindUObject(this, &AShooterCutscene::EndCinematic, FinishState);
+	GetWorldTimerManager().SetTimer(TimerHandle, Delegate, AnimTime - Animation->BlendOut.GetBlendTime(), false);
 }
 
 void AShooterCutscene::StartCinematic(const FTransform& StartingTransform)
@@ -53,7 +56,7 @@ void AShooterCutscene::StartCinematic(const FTransform& StartingTransform)
 	GetWorldTimerManager().SetTimer(SkeletalHandle, this, &AShooterCutscene::ReenableSkeleton, BlendTime);
 }
 
-void AShooterCutscene::EndCinematic(const FString& FinishState)
+void AShooterCutscene::EndCinematic(const FString FinishState)
 {
 	ExitState = FinishState;
 	FinishCutscene();

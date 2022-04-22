@@ -58,7 +58,7 @@ public:
 	void StartCinematic(const FTransform& StartingTransform = FTransform::Identity);
 
 	/** Returns control back to the player*/
-	void EndCinematic(const FString& FinsihState);
+	void EndCinematic(const FString FinsihState);
 
 	/** Plays the provided montage on the cutscene rig*/
 	void PlayAnimation(class UAnimMontage* Animation);
