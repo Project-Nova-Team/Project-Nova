@@ -3,10 +3,10 @@
 #include "ShooterController.h"
 #include "ShooterHUD.h"
 #include "Player/Shooter.h"
-#include "Gameplay/HealthComponent.h"
 #include "Gameplay/QuickTimeManager.h"
 #include "Animation/ShooterCutscene.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Gameplay/ObjectiveSystem.h"
 
 AShooterGameMode::AShooterGameMode()
 {
@@ -36,6 +36,9 @@ void AShooterGameMode::InitGame(const FString& MapName, const FString& Options, 
 
 	Params.Name = TEXT("Quick Time Manager");
 	QuickTimeManager = GetWorld()->SpawnActor<AQuickTimeManager>(QuickTimeManagerClass, Params);
+
+	Params.Name = TEXT("Objective System");
+	ObjectiveSystem = GetWorld()->SpawnActor<AObjectiveSystem>(Params);
 	
 	//If we can't figure out why "lighting needs rebuild" warnings wont go away, we can set this flag for builds
 	//GEngine->bSuppressMapWarnings = true;
@@ -59,6 +62,7 @@ void AShooterGameMode::PostLogin(APlayerController* NewPlayer)
 		{
 			QuickTimeManager->Init();
 			ShooterCutscene->Shooter = Shooter;
+			ObjectiveSystem->Player = Shooter;
 		}
 	}
 }
