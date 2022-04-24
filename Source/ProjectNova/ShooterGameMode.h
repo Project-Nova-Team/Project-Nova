@@ -59,5 +59,5 @@ public:
 	FORCEINLINE AShooterController* GetShooterController() const { return ShooterController; }
 	FORCEINLINE UDelayedActionManager* GetDelayedActionManager() const { return DelayedActionManager; }
 	FORCEINLINE AShooterCutscene* GetShooterCutscene() const { return ShooterCutscene; }
-	FORCEINLINE AObjectiveSYstem* GetObjectiveSystem() const { return ObjectiveSystem; }
+	FORCEINLINE AObjectiveSystem* GetObjectiveSystem() const { return ObjectiveSystem; }
 };
