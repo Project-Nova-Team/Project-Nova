@@ -5,6 +5,7 @@
 #include "ObjectiveSystem.generated.h"
 
 class UObjectiveWidget;
+class AShooter;
 
 UENUM()
 enum EObjectWaypointType
@@ -28,7 +29,7 @@ public:
 
 	/** Whether or not this objective displays a waypoint*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Objective")
-	uint8 bUseWaypoint;
+	uint8 bUseWaypoint : 1;
 
 	/** Should this waypoint follow an actor or remain in a fixed position*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Objective")
@@ -63,13 +64,13 @@ public:
 	void Tick(float DeltaTime) override;
 
 	/** Player character reference. Set by game mode on spawn*/
-	AActor* Player;
+	AShooter* Player;
+
+	UObjectiveWidget* Widget;
 
 protected:
 
 	FObjective ActiveObjective;
-
-	UObjectiveWidget* Widget;
 
 	uint8 bWaypointActive : 1;
 
@@ -88,5 +89,5 @@ public:
 	void ClearWaypoint();
 
 	UFUNCTION(BlueprintCallable, Category = "Objective System")
-	void SetNewObjective(FObjective& NewObjective);
+	void SetNewObjective(const FObjective& NewObjective);
 };

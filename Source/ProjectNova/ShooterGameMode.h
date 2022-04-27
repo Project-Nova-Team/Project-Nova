@@ -53,6 +53,8 @@ private:
 
 	UClass* ShooterCutsceneClass;
 
+	UClass* ObjectiveSystemClass;
+
 public:
 
 	FORCEINLINE AShooter* GetShooter() const { return Shooter; }
