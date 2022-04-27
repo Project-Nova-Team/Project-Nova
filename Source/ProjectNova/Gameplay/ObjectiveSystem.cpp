@@ -60,6 +60,7 @@ void AObjectiveSystem::ClearWaypoint()
 {
 	bWaypointActive = false;
 	ArrowSprite->SetVisibility(false);
+	DistanceText->SetVisibility(false);
 }
 
 void AObjectiveSystem::SetNewObjective(const FObjective& NewObjective)
@@ -74,6 +75,7 @@ void AObjectiveSystem::SetNewObjective(const FObjective& NewObjective)
 	{
 		bWaypointActive = true;
 		ArrowSprite->SetVisibility(true);
+		DistanceText->SetVisibility(true);
 
 		if (ActiveObjective.WaypointType == WAYPOINT_Actor)
 		{
