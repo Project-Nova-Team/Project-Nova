@@ -20,6 +20,9 @@ AShooterGameMode::AShooterGameMode()
 
 	static ConstructorHelpers::FClassFinder<AShooterCutscene> CutsceneClass(TEXT("/Game/Blueprints/Animation/BP_ShooterCutscene"));
 	ShooterCutsceneClass = CutsceneClass.Class;
+
+	static ConstructorHelpers::FClassFinder<AObjectiveSystem> ObjectiveClass(TEXT("/Game/Blueprints/Systems/BP_ObjectiveSystem"));
+	ObjectiveSystemClass = ObjectiveClass.Class;
 }
 
 void AShooterGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
@@ -38,7 +41,7 @@ void AShooterGameMode::InitGame(const FString& MapName, const FString& Options, 
 	QuickTimeManager = GetWorld()->SpawnActor<AQuickTimeManager>(QuickTimeManagerClass, Params);
 
 	Params.Name = TEXT("Objective System");
-	ObjectiveSystem = GetWorld()->SpawnActor<AObjectiveSystem>(Params);
+	ObjectiveSystem = GetWorld()->SpawnActor<AObjectiveSystem>(ObjectiveSystemClass, Params);
 	
 	//If we can't figure out why "lighting needs rebuild" warnings wont go away, we can set this flag for builds
 	//GEngine->bSuppressMapWarnings = true;
@@ -63,6 +66,7 @@ void AShooterGameMode::PostLogin(APlayerController* NewPlayer)
 			QuickTimeManager->Init();
 			ShooterCutscene->Shooter = Shooter;
 			ObjectiveSystem->Player = Shooter;
+			ObjectiveSystem->Widget = ShooterController->ShooterHUD->GetObjectiveWidget();
 		}
 	}
 }

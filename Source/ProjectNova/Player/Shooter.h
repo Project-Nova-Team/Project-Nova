@@ -6,6 +6,7 @@
 #include "FirstPersonCameraComponent.h"
 #include "../Weapon/CombatComponent.h"
 #include "../Gameplay/InteractiveObject.h"
+#include "../Gameplay/ObjectiveSystem.h"
 #include "Shooter.generated.h"
 
 class UCapsuleComponent;
@@ -13,7 +14,6 @@ class UShooterStateMachine;
 class UHealthComponent;
 class UShooterInventory;
 class UAIPerceptionStimuliSourceComponent;
-class AVaultObject;
 
 DECLARE_DELEGATE_OneParam(FScan, IInteractiveObject*);
 
@@ -142,6 +142,9 @@ public:
 	/** Stops all montages running on the shooter*/
 	UFUNCTION(BlueprintCallable, Category = "Animation")
 	void StopMontages(const float BlendTime);
+
+	UFUNCTION(BlueprintCallable, Category = "Objective")
+	void StartNewObjective(const FObjective& Objective);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
 	FString StartingStateOverride;
