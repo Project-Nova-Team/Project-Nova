@@ -6,6 +6,7 @@
 
 class UHealthComponent;
 class APatrolPath;
+class UQuickTimeAction;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FLoadEvent, const bool);
 
@@ -20,6 +21,10 @@ public:
 
 	/** Multicast delegate that broadcasts when SetIsLoaded gets called*/
 	FLoadEvent OnLoadStatusChanged;
+
+	/** QT actions this AI performs during QT events*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI | Quick Time")
+	TArray<TSubclassOf<UQuickTimeAction>> QuickTimeActions;
 
 protected:
 
@@ -53,16 +58,6 @@ protected:
 	uint8 bReversedOnPath : 1;
 
 public:
-
-	/**
-	 * Executed upon receiving a notice than a QuickTime action was complete 
-	 * 
-	 * @param	bSucceeded				Was this AI victorious in this QT Action
-	 * @param	bCompleted				Was this the final action in this QT Event
-	 * @param	SuccessCount			Number of times in a given event this AI has succeeded
-	 */
-	UFUNCTION(BlueprintImplementableEvent)
-	void QuickTimeActionComplete(bool bSucceeded, bool bCompleted, int32 SuccessCount);
 
 	/** Gets health component*/
 	FORCEINLINE UHealthComponent* GetHealth() const { return Health; }

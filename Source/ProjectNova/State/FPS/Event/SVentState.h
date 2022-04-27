@@ -55,4 +55,6 @@ private:
 	void MoveAlongSpline(float DeltaTime);
 
 	void SetShooterRotation(float DeltaTime);
+
+	FVector GetEndTangent();
 };
