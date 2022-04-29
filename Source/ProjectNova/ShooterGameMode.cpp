@@ -44,7 +44,7 @@ void AShooterGameMode::InitGame(const FString& MapName, const FString& Options, 
 	ObjectiveSystem = GetWorld()->SpawnActor<AObjectiveSystem>(ObjectiveSystemClass, Params);
 	
 	//If we can't figure out why "lighting needs rebuild" warnings wont go away, we can set this flag for builds
-	//GEngine->bSuppressMapWarnings = true;
+	GEngine->bSuppressMapWarnings = true;
 }
 
 void AShooterGameMode::Tick(float DeltaTime)

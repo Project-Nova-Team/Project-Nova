@@ -77,7 +77,7 @@ protected:
 	int WaypointIndex;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-	UBillboardComponent* ArrowSprite;
+	class UBillboardComponent* ArrowSprite;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	class UTextRenderComponent* DistanceText;
@@ -90,4 +90,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Objective System")
 	void SetNewObjective(const FObjective& NewObjective);
+
+	UFUNCTION(BlueprintCallable, Category = "Objective System")
+	void ClearObjective();
 };

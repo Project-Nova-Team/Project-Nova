@@ -146,6 +146,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Objective")
 	void StartNewObjective(const FObjective& Objective);
 
+	UFUNCTION(BlueprintCallable, Category = "Objective")
+	void ClearObjective();
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
 	FString StartingStateOverride;
 
