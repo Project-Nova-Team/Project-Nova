@@ -15,10 +15,15 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UWidgetAnimation* Animation;
 
+	/** Animation played clearing objective*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UWidgetAnimation* ClearAnimation;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	class UTextBlock* TextBlock;
 
 public:
 
 	void UpdateObjectiveWidget(FText& ObjectiveText);
+	void Clear();
 };

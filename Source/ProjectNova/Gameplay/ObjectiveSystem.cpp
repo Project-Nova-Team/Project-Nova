@@ -89,3 +89,9 @@ void AObjectiveSystem::SetNewObjective(const FObjective& NewObjective)
 		}
 	}
 }
+
+void AObjectiveSystem::ClearObjective()
+{
+	ClearWaypoint();
+	Widget->Clear();
+}
