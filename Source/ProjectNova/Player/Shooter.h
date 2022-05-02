@@ -6,6 +6,7 @@
 #include "FirstPersonCameraComponent.h"
 #include "../Weapon/CombatComponent.h"
 #include "../Gameplay/InteractiveObject.h"
+#include "../Gameplay/ObjectiveSystem.h"
 #include "Shooter.generated.h"
 
 class UCapsuleComponent;
@@ -13,7 +14,6 @@ class UShooterStateMachine;
 class UHealthComponent;
 class UShooterInventory;
 class UAIPerceptionStimuliSourceComponent;
-class AVaultObject;
 
 DECLARE_DELEGATE_OneParam(FScan, IInteractiveObject*);
 
@@ -113,20 +113,6 @@ public:
 
 	FORCEINLINE UShooterInventory* GetInventory() { return Inventory; }
 
-	/**
-	 * Executed upon receiving a notice than a QuickTime action was complete
-	 *
-	 * @param	bSucceeded				Was the Shooter victorious in this QT Action
-	 * @param	bCompleted				Was this the final action in this QT Event
-	 * @param	SuccessCount			Number of times in a given event the shooter has succeeded
-	 */
-	UFUNCTION(BlueprintImplementableEvent)
-	void QuickTimeActionComplete(bool bSucceeded, bool bCompleted, int32 SuccessCount);
-
-	/** Fires when a quick time begins*/
-	UFUNCTION(BlueprintImplementableEvent)
-	void QuickTimeEventStarted(AActor* InstigatingAI);
-
 	void SetInputEnabled(const bool bNewInputEnabled) { bInputEnabled = bNewInputEnabled; }
 
 	/** Draws debug traces for a variety of position tests if enabled*/
@@ -156,6 +142,12 @@ public:
 	/** Stops all montages running on the shooter*/
 	UFUNCTION(BlueprintCallable, Category = "Animation")
 	void StopMontages(const float BlendTime);
+
+	UFUNCTION(BlueprintCallable, Category = "Objective")
+	void StartNewObjective(const FObjective& Objective);
+
+	UFUNCTION(BlueprintCallable, Category = "Objective")
+	void ClearObjective();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
 	FString StartingStateOverride;

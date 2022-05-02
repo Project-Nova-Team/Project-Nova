@@ -19,13 +19,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cutscene")
 	float BlendTime;
 
-	/** Arms mesh*/
+	/** Character mesh*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Cutscene")
-	USkeletalMeshComponent* Arms;
-
-	/** Torso and legs*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Cutscene")
-	USkeletalMeshComponent* Body;
+	USkeletalMeshComponent* Mesh;
 
 	/** Cutscene Camera*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Cutscene")
@@ -35,6 +31,9 @@ private:
 
 	/** Handle for finish cutscene timer*/
 	FTimerHandle TimerHandle;
+
+	/** Handle for skeleton updates*/
+	FTimerHandle SkeletalHandle;
 
 	/** Transform of the shooter at the beginning of the cutscene*/
 	FTransform EntryTransform;
@@ -55,14 +54,19 @@ public:
 	 */
 	void PlayCutscene(class UAnimMontage* Animation, const FString ExitState = TEXT("Walking"), const FTransform& StartingTransform = FTransform::Identity);
 
+	/** Removes control from the player and moves the camera onto the cutscene rig*/
+	void StartCinematic(const FTransform& StartingTransform = FTransform::Identity);
+
+	/** Returns control back to the player*/
+	void EndCinematic(const FString FinsihState);
+
+	/** Plays the provided montage on the cutscene rig*/
+	void PlayAnimation(class UAnimMontage* Animation);
+
 
 protected:
 
-	/** Can't use a reference since string goes out of scope*/
-	UFUNCTION()
-	void FinishCutscene(UAnimMontage* Animation, bool bInterrupted);
-
-	void BeginPlay() override;
+	void FinishCutscene();
 
 private:
 

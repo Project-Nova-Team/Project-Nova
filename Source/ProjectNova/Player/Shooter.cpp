@@ -80,6 +80,16 @@ void AShooter::StopMontages(const float BlendTime)
 	ArmsMesh->GetAnimInstance()->Montage_Stop(BlendTime);
 }
 
+void AShooter::StartNewObjective(const FObjective& Objective)
+{
+	GetWorld()->GetAuthGameMode<AShooterGameMode>()->GetObjectiveSystem()->SetNewObjective(Objective);
+}
+
+void AShooter::ClearObjective()
+{
+	GetWorld()->GetAuthGameMode<AShooterGameMode>()->GetObjectiveSystem()->ClearObjective();
+}
+
 void AShooter::BeginPlay()
 {
 	Super::BeginPlay();
