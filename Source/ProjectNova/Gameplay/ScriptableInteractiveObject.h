@@ -21,6 +21,8 @@ public:
 
 	void InteractionEvent(APawn* EventSender) override;
 
+	void SetCanInteract(const bool bValue) { bCanInteract = bValue; }
+
 protected:
 
 	/** Whether or not the object can be interacted with. */
