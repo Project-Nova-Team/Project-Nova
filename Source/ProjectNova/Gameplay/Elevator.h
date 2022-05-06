@@ -6,7 +6,6 @@
 #include "Components/BoxComponent.h"
 #include "Elevator.generated.h"
 
-class AInteractiveButton;
 class UAudioComponent;
 
 UCLASS()
@@ -24,7 +23,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void StopElevator();
 
-	void MoveDown();
+	void Tick(float DeltaTime) override;
 
 protected:
 	

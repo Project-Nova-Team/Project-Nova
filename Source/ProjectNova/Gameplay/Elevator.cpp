@@ -5,6 +5,9 @@
 
 AElevator::AElevator()
 {
+	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bStartWithTickEnabled = false;
+
 	ElevatorBody = CreateDefaultSubobject<UStaticMeshComponent>("Elevator Body");
 	SetRootComponent(ElevatorBody);
 
@@ -19,24 +22,24 @@ AElevator::AElevator()
 	Speed = 300.f;
 }
 
+void AElevator::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	const FVector Current = ElevatorPlatform->GetRelativeLocation();
+	const float Delta = GetWorld()->GetDeltaSeconds() * Speed;
+
+	ElevatorPlatform->SetRelativeLocation(FVector(Current.X, Current.Y, Current.Z - Delta));
+}
+
 void AElevator::StartElevator()
 {
 	AudioComponent->Play();
-	MovementHandle = GetWorldTimerManager().SetTimerForNextTick(this, &AElevator::MoveDown);
+	SetActorTickEnabled(true);
 }
 
 void AElevator::StopElevator()
 {
 	AudioComponent->Stop();
-	GetWorldTimerManager().ClearTimer(MovementHandle);
-}
-
-void AElevator::MoveDown()
-{
-	const FVector Current = ElevatorPlatform->GetRelativeLocation();
-	const float Delta = GetWorld()->GetDeltaSeconds() * Speed;
-
-	ElevatorPlatform->SetRelativeLocation(FVector(Current.X, Current.Y, Current.Z - Delta));
-
-	MovementHandle = GetWorldTimerManager().SetTimerForNextTick(this, &AElevator::MoveDown);
+	SetActorTickEnabled(false);
 }
