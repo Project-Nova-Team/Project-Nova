@@ -14,8 +14,8 @@ void UShooterStateMachine::Initialize(UObject* Context)
 
 	this->AddState<USWalkState>(Context, "Walking");
 	this->AddState<USRunState>(Context, "Running");
-	this->AddState<USCrouchState>(Context, "Crouching");
-	this->AddState<USVaultState>(Context, "Vaulting");
+	this->AddState<USCrouchState>(Context, "Crouching", false);
+	this->AddState<USVaultState>(Context, "Vaulting", false);
 	this->AddState<USDeathState>(Context, "Death");
 	this->AddState<USLookState>(Context, "Look");
 	this->AddState<USCutsceneState>(Context, "Cutscene");
