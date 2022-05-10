@@ -4,6 +4,8 @@
 #include "../Player/Shooter.h"
 #include "GameFramework/PlayerController.h"
 #include "DrawDebugHelpers.h"
+#include "../ShooterHUD.h"
+#include "../ShooterController.h"
 
 AShooterCutscene::AShooterCutscene()
 {
@@ -52,7 +54,12 @@ void AShooterCutscene::StartCinematic(const FTransform& StartingTransform)
 		BlendTowardsTransform(StartingTransform);
 	}
 
-	Shooter->GetController<APlayerController>()->SetViewTargetWithBlend(this, BlendTime, EViewTargetBlendFunction::VTBlend_Linear);
+	if (AShooterController* Controller = Shooter->GetController<AShooterController>())
+	{
+		Controller->ShooterHUD->SetWeaponDisplayVisibility(false);
+		Shooter->GetController<APlayerController>()->SetViewTargetWithBlend(this, BlendTime, EViewTargetBlendFunction::VTBlend_Linear);
+	}
+
 	GetWorldTimerManager().SetTimer(SkeletalHandle, this, &AShooterCutscene::ReenableSkeleton, BlendTime);
 }
 
@@ -93,9 +100,10 @@ void AShooterCutscene::FinishCutscene()
 	//Move camera back into position
 	Shooter->SetStateOverride(ExitState);
 
-	if (Shooter->GetController<APlayerController>())
+	if (AShooterController* Controller = Shooter->GetController<AShooterController>())
 	{
-		Shooter->GetController<APlayerController>()->SetViewTargetWithBlend(Shooter, BlendTime, EViewTargetBlendFunction::VTBlend_Linear);
+		Controller->ShooterHUD->SetWeaponDisplayVisibility(true);
+		Controller->SetViewTargetWithBlend(Shooter, BlendTime, EViewTargetBlendFunction::VTBlend_Linear);
 	}
 }
 
