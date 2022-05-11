@@ -6,6 +6,7 @@
 #include "FirstPersonCameraComponent.h"
 #include "../Weapon/CombatComponent.h"
 #include "../Gameplay/InteractiveObject.h"
+#include "../Gameplay/ObjectiveSystem.h"
 #include "Shooter.generated.h"
 
 class UCapsuleComponent;
@@ -13,22 +14,12 @@ class UShooterStateMachine;
 class UHealthComponent;
 class UShooterInventory;
 class UAIPerceptionStimuliSourceComponent;
-class AVaultObject;
 
 DECLARE_DELEGATE_OneParam(FScan, IInteractiveObject*);
 
 struct FShooterInput
 {
 	FShooterInput() { }
-
-	/** 
-	* Runs within the shooter's Tick to handle any input states that need to be watched 
-	* @param	DeltaTime				Time slice 
-	*/
-	void Tick(const float DeltaTime);
-
-	/** Watches the crouch input values so any substates can avoid re-implementing the same checks for crouching/prone*/
-	void HandleCrouchInputStates(const float DeltaTime);
 
 	/** Shooter this input state applies to*/
 	AShooter* Owner;
@@ -42,17 +33,11 @@ struct FShooterInput
 	/** Whether or not the player is pressing the interact button*/
 	uint8 bIsTryingToInteract : 1;
 
-	/** Whether or not the player is pressing the crouch button*/
-	uint8 bIsHoldingCrouch : 1;
-
 	/** The previous ticks's state of the crouch input*/
 	uint8 bWasHoldingCrouch: 1;
 
 	/** Whether or not crouch input has been released after its been pressed*/
 	uint8 bIsTryingToCrouch : 1;
-
-	/** Whether or not crouch input has been held long enough go prone*/
-	uint8 bIsTryingToProne : 1;
 
 	/** Whether or not the player is pressing the sprint button*/
 	uint8 bIsTryingToSprint : 1;
@@ -117,6 +102,8 @@ public:
 	/** Returns the Arms Mesh component of this shooter*/
 	FORCEINLINE USkeletalMeshComponent* GetArmsMesh() const { return ArmsMesh; }
 
+	FORCEINLINE USkeletalMeshComponent* GetWeaponArmsMesh() const { return WeaponArmsMesh; }
+
 	/** Returns the Shooter Movement component attached to this shooter*/
 	FORCEINLINE UShooterMovementComponent* GetShooterMovement() const { return ShooterMovement; }
 
@@ -127,20 +114,6 @@ public:
 	FORCEINLINE UShooterStateMachine* GetStateMachine() { return StateMachine; }
 
 	FORCEINLINE UShooterInventory* GetInventory() { return Inventory; }
-
-	/**
-	 * Executed upon receiving a notice than a QuickTime action was complete
-	 *
-	 * @param	bSucceeded				Was the Shooter victorious in this QT Action
-	 * @param	bCompleted				Was this the final action in this QT Event
-	 * @param	SuccessCount			Number of times in a given event the shooter has succeeded
-	 */
-	UFUNCTION(BlueprintImplementableEvent)
-	void QuickTimeActionComplete(bool bSucceeded, bool bCompleted, int32 SuccessCount);
-
-	/** Fires when a quick time begins*/
-	UFUNCTION(BlueprintImplementableEvent)
-	void QuickTimeEventStarted(AActor* InstigatingAI);
 
 	void SetInputEnabled(const bool bNewInputEnabled) { bInputEnabled = bNewInputEnabled; }
 
@@ -156,13 +129,29 @@ public:
 	UFUNCTION()
 	void HandleDeath();
 
+	void EquipWeapon();
+
 	/** Forces state to change to the given state name*/
 	UFUNCTION(BlueprintCallable, Category = "State")
-	void SetStateOverride(const FString NewState);
+	void SetStateOverride(const FString& NewState);
 
 	/** Plays an animation designed for a cutscene. */
 	UFUNCTION(BlueprintCallable, Category = "Animation")
-	void PlayCutsceneAnimation(UAnimMontage* Montage, bool bSetState = true);
+	void PlayCutsceneAnimation(UAnimMontage* Montage, const FTransform& StartingTransform, const FString& ExitState = TEXT("Walking"));
+
+	/** Plays a montage for a unique situation without changing state*/
+	UFUNCTION(BlueprintCallable, Category = "Animation")
+	void PlayUniqueAnimation(UAnimMontage* Montage);
+
+	/** Stops all montages running on the shooter*/
+	UFUNCTION(BlueprintCallable, Category = "Animation")
+	void StopMontages(const float BlendTime);
+
+	UFUNCTION(BlueprintCallable, Category = "Objective")
+	void StartNewObjective(const FObjective& Objective);
+
+	UFUNCTION(BlueprintCallable, Category = "Objective")
+	void ClearObjective();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
 	FString StartingStateOverride;
@@ -187,6 +176,9 @@ private:
 
 	UPROPERTY(Category = Mesh, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	USkeletalMeshComponent* ArmsMesh;
+
+	UPROPERTY(Category = Mesh, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	USkeletalMeshComponent* WeaponArmsMesh;
 
 	UPROPERTY(Category = Shooter, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	UShooterMovementComponent* ShooterMovement;
@@ -224,9 +216,6 @@ private:
 	/** Casts a trace from the camera to see if there is an object nearby we can interact with*/	
 	void ScanInteractiveObject();
 
-	/** Called upon the completion of a cutscene animation. This reparents the camera to the appropriate component*/
-	void FinishCutsceneAnimation();
-
 	///		 Begin Input Bindings	   ///
 
 	void ShootPress();
@@ -242,8 +231,7 @@ private:
 	void LookInputY(const float Value)	{ InputState.LookY = Value; }
 	void VaultPress()					{ InputState.bIsTryingToVault = true; }
 	void VaultRelease()					{ InputState.bIsTryingToVault = false; }
-	void CrouchPress()					{ InputState.bIsHoldingCrouch = true; }
-	void CrouchRelease()				{ InputState.bIsHoldingCrouch = false; }
+	void CrouchPress()					{ InputState.bIsTryingToCrouch = !InputState.bIsTryingToCrouch; }
 	void InteractPress()				{ InputState.bIsTryingToInteract = true; }
 	void InteractRelease()				{ InputState.bIsTryingToInteract = false; }
 	void SprintPress()					{ InputState.bIsTryingToSprint = true; }

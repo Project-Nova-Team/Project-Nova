@@ -1,14 +1,17 @@
 #include "ShooterAnimInstance.h"
+#include "Components/SceneComponent.h"
 #include "../Player/Shooter.h"
+#include "../State/FPS/ShooterStateMachine.h"
 #include "../Weapon/Gun.h"
+
+#include "DrawDebugHelpers.h"
 
 UShooterAnimInstance::UShooterAnimInstance()
 {
-	bUseDefaultLocomotion = true;
-
 	LookSwayMultiplier = 10.f;
 	MoveSwayMultiplier = 10.f;
 	SwaySpeed = 5.f;
+	AlphaHeadRotation = 0.f;
 
 #if WITH_EDITORONLY_DATA
 	bLiveUpdates = true;
@@ -37,26 +40,7 @@ void UShooterAnimInstance::ReceiveWeaponSwitch(const AWeapon* NewWeapon)
 		AlphaIK = 0.f;
 	}
 
-	ELocomotionType Type = NewWeapon ? NewWeapon->AnimData.LocomotionType : LT_Default;
-
-	switch (Type)
-	{
-	case LT_Default:
-		bUseDefaultLocomotion = true;
-		bUsePistolLocomotion = false;
-		bUseRifleLocomotion = false;
-		break;
-	case LT_Pistol:
-		bUseDefaultLocomotion = false;
-		bUsePistolLocomotion = true;
-		bUseRifleLocomotion = false;
-		break;
-	case LT_Rifle:
-		bUseDefaultLocomotion = false;
-		bUsePistolLocomotion = false;
-		bUseRifleLocomotion = true;
-		break;
-	}
+	bWeaponLocomotion = NewWeapon != nullptr;
 }
 
 void UShooterAnimInstance::NativeInitializeAnimation()
@@ -77,7 +61,7 @@ void UShooterAnimInstance::NativeInitializeAnimation()
 		Shooter->GetCombat()->OnSwap.BindUObject(this, &UShooterAnimInstance::ReceiveSwap);
 		Shooter->GetCombat()->OnAnimCancel.BindUObject(this, &UShooterAnimInstance::ReceiveAnimStop);
 		OnMontageEnded.AddDynamic(this, &UShooterAnimInstance::ReceiveMontageEnded);
-		OnMontageStarted.AddDynamic(this, &UShooterAnimInstance::ReciveMontageStarted);
+		OnMontageStarted.AddDynamic(this, &UShooterAnimInstance::ReciveMontageStarted);		
 	}
 }
 
@@ -86,7 +70,7 @@ void UShooterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	if (Shooter)
 	{
 		bIsFalling = !Shooter->GetShooterMovement()->bIsOnGround;
-
+			
 		if (Shooter->GetInput()->bIsMoving)
 		{
 			AnalogModifier = Shooter->GetInput()->bIsRunning ? 2.f : 1.f;
@@ -100,7 +84,9 @@ void UShooterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		if (AlphaIK > 0.f)
 		{
 			ComputeWeaponSway(DeltaSeconds);
-		}	
+		}
+
+		HeadBoneRotation = Shooter->GetAnchor()->GetRelativeRotation();
 	}
 }
 
@@ -138,7 +124,7 @@ void UShooterAnimInstance::ComputeWeaponSway(const float DeltaSeconds)
 		RTargetLocation = HeldWeapon->AnimData.RTargetLocationOffset;
 		LTargetLocation = HeldWeapon->AnimData.LTargetLocationOffset;
 	}
-#endif	
+#endif
 
 	//Computes IK rotation and position for left effector
 	FTransform Transform = HeldWeapon->GetMesh()->GetSocketTransform(UCombatComponent::SecondarySocketName);

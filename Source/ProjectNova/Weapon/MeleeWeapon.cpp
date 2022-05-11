@@ -2,6 +2,7 @@
 #include "Weapon.h"
 #include "Components/SphereComponent.h"
 #include "DamageTypeMelee.h"
+#include "CombatComponent.h"
 
 AMeleeWeapon::AMeleeWeapon()
 {
@@ -30,12 +31,7 @@ void AMeleeWeapon::SetCombatComponent(UCombatComponent* NewOwner)
 	if (NewOwner != nullptr)
 	{
 		OwnerActor = TraceOrigin->GetOwner();
-
-		//Leaves area to be improved
-		if (USkeletalMeshComponent* OwnerMesh = OwnerActor->FindComponentByClass<USkeletalMeshComponent>())
-		{
-			OwnerAnimInstance = OwnerMesh->AnimScriptInstance;
-		}
+		OwnerAnimInstance = NewOwner->GetAttachmentMesh()->GetAnimInstance();
 	}
 
 	else

@@ -27,12 +27,4 @@ private:
 	 * Crouch input requested	AND its possible to stand up at this position
 	 */
 	void CheckForWalkState();
-
-	/**
-	 * Changes state to proning if...
-	 *
-	 * Grounded
-	 * Prone input requested
-	 */
-	void CheckForProneState();
 };

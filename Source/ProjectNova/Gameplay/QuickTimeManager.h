@@ -2,25 +2,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "QuickTimeAction.h"
 #include "QuickTimeManager.generated.h"
-
-USTRUCT(BlueprintType)
-struct FQuickTimeInput
-{
-	GENERATED_BODY()
-
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	FName ActionName;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	UTexture2D* IdleTexture;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	UTexture2D* ActiveTexture;
-};
-
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FQuickTimeEventCompletion);
 
 /**
  * This class is responsible for handling quick time events that occur
@@ -30,9 +13,6 @@ UCLASS()
 class PROJECTNOVA_API AQuickTimeManager : public AActor
 {
 	GENERATED_BODY()
-	
-public:	
-	AQuickTimeManager();
 
 protected:
 
@@ -40,53 +20,29 @@ protected:
 	UPROPERTY(BlueprintReadOnly)
 	uint8 bActive : 1;
 
-	/** Number of seconds a quick time action takes before returning the result*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Quick Time")
-	float ActionTime;
-
 	/** Number of seconds between flicker of the UI widget showing the necessary key to press*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Quick Time")
 	float WidgetToggleTime;
-
-	/** Number of presses required for a success during a quick time*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Quick Time")
-	int32 InputsRequired;
-
-	/** Collection of InputActions and their respecitve on screen mash textures*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Quick Time")
-	TArray<FQuickTimeInput> QuickTimeInputs;
-
-	UPROPERTY(BlueprintAssignable)
-	FQuickTimeEventCompletion OnQuickTimeComplete;
 
 private:
 
 	/** Binding handle for requested input event*/
 	int32 BindingHandle;
 
-	/** Number of actions completed in this quick time event*/
-	int32 ActionCount;
-
-	/** Number of actions required to complete this quick time event*/
-	int32 RequiredActions;
-
-	/** Number of inputs received during a particular action*/
+	/** Number of inputs received during the current action*/
 	int32 InputCount;
 
-	/** Selected InputAction*/
-	int32 ActiveIndex;
+	/** Index of the current QT action running*/
+	int32 ActionIndex;
 
-	/** True if an action has been completed but is awaiting the next action in the event*/
-	uint8 bAwaitingNextAction : 1;
+	/** Action currently being played*/
+	UQuickTimeAction* CurrentAction;
 
 	/** Flag for displayed texture state*/
 	uint8 bTextureActive : 1;
 
-	/** Number of success the AI has had in this event*/
-	int32 AISuccesses;
-
-	/** Number of success the shooter has had in this event*/
-	int32 ShooterSuccesses;
+	/** Result of the current action, fail or success if the player entered the right input*/
+	uint8 bCurrentActionResult : 1;
 
 	/** Handle responsible for ending an action after ActionTime*/
 	FTimerHandle ActionHandle;
@@ -94,42 +50,47 @@ private:
 	/** Handle responsible for flipinng between active and inactive texture*/
 	FTimerHandle WidgetHandle;
 
-
 	class AShooter* Shooter;
 
 	class ABaseAI* AI;
+
+	class AShooterCutscene* Cutscene;
 
 	/** HUD element responsible for displaying UI information*/
 	class UQuickTimeWidget* QuickTimeWidget;
 
 public:	
 
+	/** Initializes necessary services*/
+	void Init();
+
 	/** 
-	 * Initiates the quick time sequence with the provided number of necessary actions needed to complete
+	 * Initiates a quick time sequence
 	 *
 	 * @param	InstigatingAI	The AI actor involved in this quick time
-	 * @param	EventCount		Number of quick time actions required to complete this event
 	 * 
 	 * @returns	True if a quicktime event was successfully started
 	 */
 	UFUNCTION(BlueprintCallable)
-	bool StartQuickTime(class ABaseAI* InstigatingAI, int32 EventCount = 1);
+	bool StartQuickTime(class ABaseAI* InstigatingAI);
 
-	/** If a quick time event is active, Calling this will display actually begin the next */
-	UFUNCTION(BlueprintCallable)
-	void StartNextAction();
+private:
 
-	/** Called to clear the quick time event and allow new ones to occur*/
-	UFUNCTION(BlueprintCallable)
-	void FinishQuickTimeEvent();
+	/** Creates a transform that places the cutscene in front of the AI and looking at them*/
+	FTransform ComputeQuickTimeLocation();
 
-	void Init();
+	/** Starts an action playing it to completion*/
+	void StartAction();
 
-protected:
+	/** Upon completing a struggle, determine the result*/
+	void CompleteStruggle();
 
-	void DetermineActionResult();
+	/** Called upon completion of an action. Starts a new action if one exists*/
+	void CompleteResult();
 
+	/** Increments input count when receiving proper QT input*/
+	void ReceiveInput();
+
+	/** Swaps texture on the quick time widget*/
 	void ToggleTexture();
-
-	void ReceiveInput(); 
 };

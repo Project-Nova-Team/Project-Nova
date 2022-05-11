@@ -1,9 +1,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include <ProjectNova/State/FPS/Event/SVentState.h>
 #include "Animation/AnimInstance.h"
 #include "ShooterAnimInstance.generated.h"
 
+class UShooterStateMachine;
 class AWeapon;
 
 UCLASS()
@@ -17,6 +19,15 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
 	UAnimMontage* MeleeAttackMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
+	UAnimMontage* VentEnterMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
+	UAnimMontage* VentExitMontage;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Animation")
+	uint8 bIsInVent : 1;
 
 protected:
 
@@ -33,17 +44,14 @@ protected:
 	uint8 bLiveUpdates : 1;
 #endif
 
+	/** Makes the camera follow the head bones transform*/
+	UPROPERTY(BlueprintReadOnly, Category = "Animation")
+	uint8 bApplyHeadTracking : 1;
 
 	/***	Locomotion		***/
 
 	UPROPERTY(BlueprintReadOnly, Category = "Animation")
-	uint8 bUseDefaultLocomotion : 1;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Animation")
-	uint8 bUsePistolLocomotion : 1;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Animation")
-	uint8 bUseRifleLocomotion : 1;
+	uint8 bWeaponLocomotion : 1;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Animation")
 	uint8 bIsFalling : 1;
@@ -96,6 +104,14 @@ protected:
 	/** IK Blending Alpha. 1 when weapon is held, 0 if otherwise or when in montage*/
 	UPROPERTY(BlueprintReadOnly, Category = "Animation")
 	float AlphaIK;
+
+	/** Rotation to apply to the head bone*/
+	UPROPERTY(BlueprintReadOnly, Category = "Animation")
+	FRotator HeadBoneRotation;
+
+	/** Alpha blend of the head rotation*/
+	UPROPERTY(BlueprintReadOnly, Category = "Animation")
+	float AlphaHeadRotation;
 
 	/***	Montage		***/
 

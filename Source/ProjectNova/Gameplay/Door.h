@@ -80,7 +80,7 @@ protected:
 	virtual void MaybeChangeDoorState();
 
 	/** This function is run by the delayed action manager to lerp the door positions over time*/
-	void OverTimeTransition(const EDoorState TargetState);
+	void OverTimeTransition(const EDoorState TargetState, bool bUpdateState = true);
 
 	void SetIsLockedImpl(const bool Value);
 
@@ -98,6 +98,12 @@ protected:
 	/** Invoked when the door starts closing*/
 	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "Door Closed"))
 	void ReceiveDoorClose();
+
+	UFUNCTION(BlueprintCallable)
+	void OpenDoor(bool bUpdateState);
+
+	UFUNCTION(BlueprintCallable)
+	void CloseDoor(bool bUpdateState);
 
 #if WITH_EDITORONLY_DATA
 

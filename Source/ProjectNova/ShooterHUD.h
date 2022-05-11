@@ -10,6 +10,7 @@ class AShooter;
 class UCombatComponent;
 class UUserWidget;
 class UQuickTimeWidget;
+class UObjectiveWidget;
 
 UCLASS()
 class PROJECTNOVA_API AShooterHUD : public AHUD
@@ -23,7 +24,11 @@ public:
 	/** Displays pause menu widget */
 	void SetPauseDisplay(const bool bShowPauseMenu);
 
+	void SetWeaponDisplayVisibility(const bool bNewVisibility);
+
 	UQuickTimeWidget* GetQTWidget() const { return QuickTimeWidget; }
+
+	UObjectiveWidget* GetObjectiveWidget() const { return ObjectiveWidget; }
 
 protected:
 
@@ -48,6 +53,9 @@ protected:
 
 	UPROPERTY(BlueprintReadWrite, Category = "HUD")
 	UQuickTimeWidget* QuickTimeWidget;
+
+	UPROPERTY(BlueprintReadWrite, Category = "HUD")
+	UObjectiveWidget* ObjectiveWidget;
 
 	// Pause Screen Related Widgets //
 
@@ -81,15 +89,8 @@ protected:
 	void BuildBlueprintWidgets();
 
 private:
-	FDelegateHandle InteractionDelegateHandle;
-
 	/** Internal function that executes relevant interaction prompt updates in blueprint*/
 	void ReceiveInteractionUpdate(IInteractiveObject* Info);
-
-	/** Internal function that executes relevant interaction prompt updates in blueprint*/
-	void RevokeIfObjectDisabled(IInteractiveObject* Info);
-
-	void ReceiveInteractionEvent(APawn* EventSender);
 
 	/** Executed upon receiving death event of shooter. Enables death screen widget and hides others*/
 	UFUNCTION()

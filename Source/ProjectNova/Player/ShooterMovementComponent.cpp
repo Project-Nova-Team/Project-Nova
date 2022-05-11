@@ -37,14 +37,9 @@ UShooterMovementComponent::UShooterMovementComponent()
 	CrouchMaxSpeed = 250.f;
 	CrouchTime = 1.f;
 
-	CrawlSpeed = 125.f;
-	ProneAcceleration = 400.f;
-	ProneMaxSpeed = 100.f;
-	ProneInputTime = 0.25f;
-	
-	DiveMinSpeed = 750.f;
-	DiveVerticalImpulse = 1000.f;
-	DiveHorizontalImpulse = 300.f;
+	VentSpeed = 5.f;
+	VentTurnSpeed = 15.f;
+	VentCameraLocation = FVector(-6.75f, 4.565f, -66.11f);
 }
 
 void UShooterMovementComponent::BeginPlay()
