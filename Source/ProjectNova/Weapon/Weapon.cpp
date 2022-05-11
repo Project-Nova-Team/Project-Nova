@@ -2,6 +2,7 @@
 #include "CombatComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "../Player/Shooter.h"
 
 AWeapon::AWeapon()
 {
@@ -78,5 +79,11 @@ void AWeapon::InteractionEvent(APawn* EventSender)
 	if (UCombatComponent* Combat = EventSender->FindComponentByClass<UCombatComponent>())
 	{
 		Combat->PickUpWeapon(this);
+	}
+
+	//hack
+	if (AShooter* Shooter = Cast<AShooter>(EventSender))
+	{
+		Shooter->EquipWeapon();
 	}
 }

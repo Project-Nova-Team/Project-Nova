@@ -79,7 +79,7 @@ void UCombatComponent::PickUpWeapon(AWeapon* NewWeapon)
 
 	NewWeapon->GetMesh()->SetSimulatePhysics(false);
 	NewWeapon->GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	NewWeapon->AttachToComponent(AttachmentMesh, FAttachmentTransformRules::KeepRelativeTransform, WeaponSocketName);
+	NewWeapon->AttachToComponent(AttachmentMesh, FAttachmentTransformRules::KeepWorldTransform, WeaponSocketName);
 
 	NewWeapon->SetCombatComponent(this);
 	OnWeaponAdd.ExecuteIfBound(NewWeapon);

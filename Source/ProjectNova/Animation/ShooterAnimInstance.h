@@ -51,13 +51,7 @@ protected:
 	/***	Locomotion		***/
 
 	UPROPERTY(BlueprintReadOnly, Category = "Animation")
-	uint8 bUseDefaultLocomotion : 1;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Animation")
-	uint8 bUsePistolLocomotion : 1;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Animation")
-	uint8 bUseRifleLocomotion : 1;
+	uint8 bWeaponLocomotion : 1;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Animation")
 	uint8 bIsFalling : 1;

@@ -102,6 +102,8 @@ public:
 	/** Returns the Arms Mesh component of this shooter*/
 	FORCEINLINE USkeletalMeshComponent* GetArmsMesh() const { return ArmsMesh; }
 
+	FORCEINLINE USkeletalMeshComponent* GetWeaponArmsMesh() const { return WeaponArmsMesh; }
+
 	/** Returns the Shooter Movement component attached to this shooter*/
 	FORCEINLINE UShooterMovementComponent* GetShooterMovement() const { return ShooterMovement; }
 
@@ -126,6 +128,8 @@ public:
 	/** Sets the death state in the state machine when the shooter dies*/
 	UFUNCTION()
 	void HandleDeath();
+
+	void EquipWeapon();
 
 	/** Forces state to change to the given state name*/
 	UFUNCTION(BlueprintCallable, Category = "State")
@@ -172,6 +176,9 @@ private:
 
 	UPROPERTY(Category = Mesh, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	USkeletalMeshComponent* ArmsMesh;
+
+	UPROPERTY(Category = Mesh, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	USkeletalMeshComponent* WeaponArmsMesh;
 
 	UPROPERTY(Category = Shooter, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	UShooterMovementComponent* ShooterMovement;

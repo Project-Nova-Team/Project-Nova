@@ -42,8 +42,11 @@ AShooter::AShooter()
 	ArmsMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Arms"));
 	ArmsMesh->SetupAttachment(Collider);
 
+	WeaponArmsMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Weapon"));
+	WeaponArmsMesh->SetupAttachment(CameraAnchor);
+
 	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("Combat"));
-	Combat->SetUpConstruction(ArmsMesh, Camera, &InputState.bIsRunning);
+	Combat->SetUpConstruction(WeaponArmsMesh, Camera, &InputState.bIsRunning);
 
 	Health = CreateDefaultSubobject<UHealthComponent>(TEXT("Health"));
 	PerceptionSource = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("Stimulus Source"));
@@ -56,6 +59,12 @@ AShooter::AShooter()
 
 	bInputEnabled = true;
 	StartingStateOverride.Empty();
+}
+
+void AShooter::EquipWeapon()
+{
+	ArmsMesh->SetVisibility(false);
+	WeaponArmsMesh->SetVisibility(true);
 }
 
 void AShooter::SetStateOverride(const FString& NewState)

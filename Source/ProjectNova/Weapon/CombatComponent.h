@@ -133,6 +133,8 @@ public:
 	/** Returns component responsible for mesh traces*/
 	FORCEINLINE USceneComponent* GetTraceOrigin() const { return TraceOrigin; }
 
+	FORCEINLINE USkeletalMeshComponent* GetAttachmentMesh() const { return AttachmentMesh; }
+
 	/** Returns whether or not this component updates it's owner's HUD*/
 	FORCEINLINE bool GetUpdatesHUD() const { return bUpdatesHUD; }
 
