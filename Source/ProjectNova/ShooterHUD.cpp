@@ -42,6 +42,11 @@ void AShooterHUD::SetPauseDisplay(const bool bShowPauseMenu)
 	}
 }
 
+void AShooterHUD::SetWeaponDisplayVisibility(const bool bNewVisibility)
+{
+	WeaponDisplayWidget->SetVisibility(bNewVisibility ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+}
+
 void AShooterHUD::ShowDeathDisplay()
 {
 	PlayerOwner->bShowMouseCursor = true;

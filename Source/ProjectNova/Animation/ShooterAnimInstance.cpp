@@ -8,8 +8,6 @@
 
 UShooterAnimInstance::UShooterAnimInstance()
 {
-	bUseDefaultLocomotion = true;
-
 	LookSwayMultiplier = 10.f;
 	MoveSwayMultiplier = 10.f;
 	SwaySpeed = 5.f;
@@ -42,26 +40,7 @@ void UShooterAnimInstance::ReceiveWeaponSwitch(const AWeapon* NewWeapon)
 		AlphaIK = 0.f;
 	}
 
-	ELocomotionType Type = NewWeapon ? NewWeapon->AnimData.LocomotionType : LT_Default;
-
-	switch (Type)
-	{
-	case LT_Default:
-		bUseDefaultLocomotion = true;
-		bUsePistolLocomotion = false;
-		bUseRifleLocomotion = false;
-		break;
-	case LT_Pistol:
-		bUseDefaultLocomotion = false;
-		bUsePistolLocomotion = true;
-		bUseRifleLocomotion = false;
-		break;
-	case LT_Rifle:
-		bUseDefaultLocomotion = false;
-		bUsePistolLocomotion = false;
-		bUseRifleLocomotion = true;
-		break;
-	}
+	bWeaponLocomotion = NewWeapon != nullptr;
 }
 
 void UShooterAnimInstance::NativeInitializeAnimation()

@@ -115,22 +115,32 @@ void ADoor::MaybeChangeDoorState()
 {
 	if (ShouldOpen())
 	{
-		ReceiveDoorOpen();
-		State = EDS_Changing;
-		Handle = GetWorld()->GetAuthGameMode<AShooterGameMode>()->GetDelayedActionManager()->StartOverTimeAction(
-			this, &ADoor::OverTimeTransition, DoorTransitionTime, EDS_Open);
+		OpenDoor(true);
 	}
 
 	else if (ShouldClose())
 	{
-		ReceiveDoorClose();
-		State = EDS_Changing;
-		Handle = GetWorld()->GetAuthGameMode<AShooterGameMode>()->GetDelayedActionManager()->StartOverTimeAction(
-			this, &ADoor::OverTimeTransition, DoorTransitionTime, EDS_Closed);
+		CloseDoor(true);
 	}
 }
 
-void ADoor::OverTimeTransition(const EDoorState TargetState)
+void ADoor::OpenDoor(bool bUpdateState)
+{
+	ReceiveDoorOpen();
+	State = EDS_Changing;
+	Handle = GetWorld()->GetAuthGameMode<AShooterGameMode>()->GetDelayedActionManager()->StartOverTimeAction(
+		this, &ADoor::OverTimeTransition, DoorTransitionTime, EDS_Open, bUpdateState);
+}
+
+void ADoor::CloseDoor(bool bUpdateState)
+{
+	ReceiveDoorClose();
+	State = EDS_Changing;
+	Handle = GetWorld()->GetAuthGameMode<AShooterGameMode>()->GetDelayedActionManager()->StartOverTimeAction(
+		this, &ADoor::OverTimeTransition, DoorTransitionTime, EDS_Closed, bUpdateState);
+}
+
+void ADoor::OverTimeTransition(const EDoorState TargetState, bool bUpdateState /*=true*/)
 {
 	//Doors are always side by side so the side we choose doesn't really matter since we'll just flip the axis for each side anyways
 	const FVector Right = FVector::RightVector;
@@ -153,7 +163,11 @@ void ADoor::OverTimeTransition(const EDoorState TargetState)
 	if (Handle->CurrentActionProgress >= 1.f)
 	{
 		State = TargetState;
-		MaybeChangeDoorState();
+
+		if (bUpdateState)
+		{
+			MaybeChangeDoorState();
+		}	
 	}
 }
 
