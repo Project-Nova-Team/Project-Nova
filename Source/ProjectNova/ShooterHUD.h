@@ -24,6 +24,8 @@ public:
 	/** Displays pause menu widget */
 	void SetPauseDisplay(const bool bShowPauseMenu);
 
+	void SetWeaponDisplayVisibility(const bool bNewVisibility);
+
 	UQuickTimeWidget* GetQTWidget() const { return QuickTimeWidget; }
 
 	UObjectiveWidget* GetObjectiveWidget() const { return ObjectiveWidget; }
