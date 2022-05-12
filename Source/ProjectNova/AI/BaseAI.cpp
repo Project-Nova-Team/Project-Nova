@@ -14,6 +14,7 @@ ABaseAI::ABaseAI()
 	Health->OnRevive.AddDynamic(this, &ABaseAI::OnRevive);
 
 	bIsLoaded = true;
+	bUseControllerRotationYaw = false;
 
 	//Gurantees we aren't ticking animation when this AI isn't loaded which is a nice performance boost
 	GetMesh()->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
