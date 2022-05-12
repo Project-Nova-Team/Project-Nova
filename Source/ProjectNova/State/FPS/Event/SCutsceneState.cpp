@@ -9,6 +9,8 @@ void USCutsceneState::OnEnter()
 	{
 		Weapon->GetRootComponent()->SetVisibility(false);
 	}
+
+	Shooter->GetInput()->bIsMoving = false;
 }
 
 
