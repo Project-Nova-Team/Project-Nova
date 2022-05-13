@@ -19,11 +19,6 @@ ABaseAIController::ABaseAIController()
 
 void ABaseAIController::SetLogicEnabled(const bool bEnableLogic)
 {
-	if (bEnableLogic == bLogicEnabled)
-	{
-		return;
-	}
-
 	bLogicEnabled = bEnableLogic;
 
 	SetSensesEnabled(bEnableLogic);
@@ -125,14 +120,16 @@ void ABaseAIController::OnPossess(APawn* InPawn)
 		PerceptionComponent->OnTargetPerceptionUpdated.AddDynamic(this, &ABaseAIController::PerceptionUpdated);
 		Handle = AIPawn->OnLoadStatusChanged.AddUObject(this, &ABaseAIController::SetLogicEnabled);
 		bLogicEnabled = AIPawn->GetIsLoaded();
-		
-		if (bLogicEnabled)
-		{
-			SetSensesEnabled(true);
+			
+		SetSensesEnabled(true);
 
-			//Note that this overrides bStartLogicOnPosses and starts the tree regardless of that value
-			RunBehaviorTree(BehaviorTreeAsset);
-		}		
+		//Note that this overrides bStartLogicOnPosses and starts the tree regardless of that value
+		RunBehaviorTree(BehaviorTreeAsset);
+		
+		if (!bLogicEnabled)
+		{
+			AIPawn->SetIsLoaded(false);
+		}
 	}
 }
 

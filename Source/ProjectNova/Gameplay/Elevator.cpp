@@ -16,7 +16,7 @@ AElevator::AElevator()
 	ElevatorPlatform->SetCollisionProfileName(TEXT("BlockAllDynamic"));
 
 	AudioComponent = CreateDefaultSubobject<UAudioComponent>("Audio Component");
-	AudioComponent->SetupAttachment(ElevatorBody);
+	AudioComponent->SetupAttachment(ElevatorPlatform);
 	AudioComponent->bAutoActivate = false;
 
 	Speed = 300.f;
@@ -26,8 +26,9 @@ void AElevator::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	const float Direction = bMoveUp ? -1 : 1;
 	const FVector Current = ElevatorPlatform->GetRelativeLocation();
-	const float Delta = GetWorld()->GetDeltaSeconds() * Speed;
+	const float Delta = GetWorld()->GetDeltaSeconds() * Speed * Direction;
 
 	ElevatorPlatform->SetRelativeLocation(FVector(Current.X, Current.Y, Current.Z - Delta));
 }

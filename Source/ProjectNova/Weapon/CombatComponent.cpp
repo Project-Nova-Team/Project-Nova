@@ -11,6 +11,17 @@ UCombatComponent::UCombatComponent()
 	PrimaryComponentTick.bStartWithTickEnabled = true;
 }
 
+void UCombatComponent::SetEnabled(bool bEnabled)
+{
+	bDisabled = !bEnabled;
+
+	if (GetHeldWeapon())
+	{
+		GetHeldWeapon()->SetActorHiddenInGame(bDisabled);
+		AttachmentMesh->SetVisibility(bEnabled);
+	}
+}
+
 void UCombatComponent::BeginPlay()
 {
 	Super::BeginPlay();

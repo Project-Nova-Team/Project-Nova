@@ -2,5 +2,6 @@
 
 void USDeathState::OnEnter()
 {
+	Shooter->GetInput()->bIsMoving = false;
 	//@todo
 }

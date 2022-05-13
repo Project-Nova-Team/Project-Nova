@@ -39,8 +39,12 @@ protected:
 	UAudioComponent* AudioComponent;
 
 	/** Units per second the elevator moves down*/
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Door")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Elevator")
 	float Speed;
+
+	/** Move up or down*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Elevator")
+	uint8 bMoveUp : 1;
 
 	/** Handle for movement*/
 	FTimerHandle MovementHandle;

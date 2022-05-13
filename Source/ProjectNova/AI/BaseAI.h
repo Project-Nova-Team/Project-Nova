@@ -49,6 +49,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI | Patrol")
 	int32 PointMemoryCapacity;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI | Death")
+	class UAnimMontage* DeathMontage;
+
 	/** Current collection of points remembered by this AI*/
 	UPROPERTY(BlueprintReadWrite, Transient)
 	TArray<int32> RememberedPoints;

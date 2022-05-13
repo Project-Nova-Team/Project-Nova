@@ -18,6 +18,8 @@ void USVentState::OnEnter()
 
 	SplineLength = Vent->GetSpline()->GetSplineLength();
 	CurrentProgress = CrawlDirection == CD_Forward ? 0.f : SplineLength;
+
+	Shooter->GetCombat()->SetEnabled(false);
 }
 
 void USVentState::OnExit()
@@ -26,6 +28,8 @@ void USVentState::OnExit()
 
 	Vent->bInUse = false;
 	SetAnimState(false);
+
+	Shooter->GetCombat()->SetEnabled(true);
 }
 
 void USVentState::Tick(float DeltaTime)

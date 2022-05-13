@@ -40,6 +40,7 @@ void AShooterCutscene::StartCinematic(const FTransform& StartingTransform)
 
 	Shooter->GetArmsMesh()->SetVisibility(false);
 	Shooter->GetBodyMesh()->SetVisibility(false);
+	Shooter->GetWeaponArmsMesh()->SetVisibility(false);
 	Mesh->SetVisibility(true);
 
 	SetActorLocation(Shooter->GetBodyMesh()->GetComponentLocation());
@@ -83,8 +84,19 @@ void AShooterCutscene::ReenableSkeleton()
 void AShooterCutscene::FinishCutscene()
 {
 	Mesh->SetVisibility(false);
-	Shooter->GetArmsMesh()->SetVisibility(true);
+	
 	Shooter->GetBodyMesh()->SetVisibility(true);
+
+	if (Shooter->GetCombat()->GetHeldWeapon())
+	{
+		Shooter->GetWeaponArmsMesh()->SetVisibility(true);	
+	}
+
+	else
+	{
+		Shooter->GetArmsMesh()->SetVisibility(true);
+	}
+	
 
 	Mesh->bNoSkeletonUpdate = true;
 

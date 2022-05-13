@@ -98,6 +98,9 @@ private:
 	/** True if the attack binding is currently being held down*/
 	uint8 bIsTryingToAttack : 1;
 
+	/** Can any combat component related actions take place*/
+	uint8 bDisabled : 1;
+
 	/** True if the owner is running which prevents attacks*/
 	const bool* bIsRunning;
 
@@ -138,17 +141,19 @@ public:
 	/** Returns whether or not this component updates it's owner's HUD*/
 	FORCEINLINE bool GetUpdatesHUD() const { return bUpdatesHUD; }
 
+	void SetEnabled(bool bEnabled);
+
 protected:
 
 	void BeginPlay() override;
 
 private:
 
-	FORCEINLINE bool IsActionLocked() const { return (GetHeldWeapon() == nullptr) || *bIsRunning || bIsReloading || bIsInAnimation || bIsSwapping; }
+	FORCEINLINE bool IsActionLocked() const { return (GetHeldWeapon() == nullptr) || *bIsRunning || bIsReloading || bIsInAnimation || bIsSwapping || bDisabled; }
 
-	FORCEINLINE bool IsNonSwapLocked() const { return (GetHeldWeapon() == nullptr) || bIsInAnimation || bIsAimed; }
+	FORCEINLINE bool IsNonSwapLocked() const { return (GetHeldWeapon() == nullptr) || bIsInAnimation || bIsAimed || bDisabled; }
 
-	FORCEINLINE bool IsReloadLocked() const { return (GetHeldWeapon() == nullptr) || bIsReloading || bIsInAnimation || bIsAimed; }
+	FORCEINLINE bool IsReloadLocked() const { return (GetHeldWeapon() == nullptr) || bIsReloading || bIsInAnimation || bIsAimed || bDisabled; }
 
 	void NotifyWeaponChange();
 

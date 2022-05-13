@@ -2,6 +2,7 @@
 #include "../Gameplay/HealthComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/PawnMovementComponent.h"
+#include "Animation/AnimInstance.h"
 
 #if WITH_EDITOR
 	#include "Components/BillboardComponent.h"
@@ -15,11 +16,6 @@ ABaseAI::ABaseAI()
 
 	bIsLoaded = true;
 	bUseControllerRotationYaw = false;
-
-	//Gurantees we aren't ticking animation when this AI isn't loaded which is a nice performance boost
-	GetMesh()->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
-	GetMesh()->SetCollisionProfileName("Ragdoll");
-	GetMovementComponent()->bUpdateOnlyIfRendered = true;
 
 #if WITH_EDITOR
 	SpriteComponent = CreateEditorOnlyDefaultSubobject<UBillboardComponent>(TEXT("Sprite"));
@@ -41,13 +37,7 @@ ABaseAI::ABaseAI()
 
 void ABaseAI::SetIsLoaded(const bool bLoadAI)
 {
-	SetActorTickEnabled(bLoadAI);
-	PrimaryActorTick.bStartWithTickEnabled = bLoadAI;
-	GetMovementComponent()->SetComponentTickEnabled(bLoadAI);
-	GetMovementComponent()->PrimaryComponentTick.bStartWithTickEnabled = bLoadAI;
-
 	GetMesh()->SetVisibility(bLoadAI);
-	GetCapsuleComponent()->SetCollisionEnabled(bLoadAI ? ECollisionEnabled::QueryAndPhysics : ECollisionEnabled::NoCollision);
 	OnLoadStatusChanged.Broadcast(bLoadAI);
 
 	bIsLoaded = bLoadAI;
@@ -59,16 +49,18 @@ void ABaseAI::SetIsLoaded(const bool bLoadAI)
 
 void ABaseAI::OnDeath()
 {
-	GetMesh()->SetAnimationMode(EAnimationMode::AnimationCustomMode);
+	GetMesh()->GetAnimInstance()->Montage_Play(DeathMontage);
 	GetCapsuleComponent()->SetCollisionProfileName(TEXT("IgnoreOnlyPawn"));
-	GetMesh()->SetSimulatePhysics(true);	
+	//GetMesh()->SetAnimationMode(EAnimationMode::AnimationCustomMode);
+	//GetMesh()->SetSimulatePhysics(true);
 }
 
 void ABaseAI::OnRevive()
 {
-	GetMesh()->SetSimulatePhysics(false);
+	GetMesh()->GetAnimInstance()->StopAllMontages(0.f);
 	GetCapsuleComponent()->SetCollisionProfileName(TEXT("Pawn"));
-	GetMesh()->SetAnimationMode(EAnimationMode::AnimationBlueprint);
+	//GetMesh()->SetSimulatePhysics(false);
+	//GetMesh()->SetAnimationMode(EAnimationMode::AnimationBlueprint);
 }
 
 #if WITH_EDITOR
